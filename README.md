@@ -74,6 +74,9 @@ Run `bin/sync-skills.sh` from the toolkit repo to automatically populate a targe
 ```bash
 # Sync Angular framework + Shared rules/skills + Docker/Postgres infra tools into target project
 ./bin/sync-skills.sh --framework angular --infra docker,postgres --target /path/to/my-angular-app
+
+# Sync Shared rules/skills only into any repository (framework optional)
+./bin/sync-skills.sh --shared --target /path/to/my-project
 ```
 
 ### 2. Symlink skills for local development (Approach 2: Live Updates Mode)
@@ -83,6 +86,9 @@ Run `bin/link-skills.sh` to create symlinks from your target project's `.agents/
 ```bash
 # Symlink Angular context for live updates
 ./bin/link-skills.sh --framework angular --infra docker,postgres --target /path/to/my-angular-app
+
+# Symlink Shared context only
+./bin/link-skills.sh --shared --target /path/to/my-project
 ```
 
 ### 3. Sync updates into a project that already has copied
