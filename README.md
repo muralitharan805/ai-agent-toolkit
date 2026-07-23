@@ -73,6 +73,7 @@ this repo is continuosly updated with new skills, rules, workflows. Pull the lat
 ### 4. Generating new Skills, Rules, or Workflows with AI
 
 This repository includes built-in AI generator workflows (supporting prompts in English, Tamil, or Thanglish):
+- **Generate Agent Suite (Smart Evaluation)**: `shared/generators/workflows/generate-agent-suite.md` → Evaluates a scenario, determines required components (Skill, Rule, Workflow), and generates the suite.
 - **Generate Skill**: `shared/generators/workflows/generate-skill.md` → Creates `[framework|infra|shared]/[topic]/skills/[skill-name]/SKILL.md`
 - **Generate Rule**: `shared/generators/workflows/generate-rule.md` → Creates `[framework|infra|shared]/[topic]/rules/[rule-name].md`
 - **Generate Workflow**: `shared/generators/workflows/generate-workflow.md` → Creates `[framework|infra|shared]/[topic]/workflows/[workflow-name].md`
