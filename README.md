@@ -70,9 +70,10 @@ copy the folder from  agent-toolkit/frameworks/<framword-name>/skills, rules, wo
 
 this repo is continuosly updated with new skills, rules, workflows. Pull the latest framework + shared skills from the toolkit and overwrites the local copies.
 
-### 4. Generating new Skills, Rules, or Workflows with AI
+### 4. Generating & Consolidating Agent Context with AI
 
-This repository includes built-in AI generator workflows (supporting prompts in English, Tamil, or Thanglish):
+This repository includes built-in AI generator & consolidation workflows (supporting prompts in English, Tamil, or Thanglish):
+- **Consolidate & Group Toolkit**: `shared/generators/workflows/consolidate-agent-toolkit.md` → Audits workspace, groups related skills/rules/workflows by topic, merges duplicates without data loss, and auto-syncs README.
 - **Generate Agent Suite (Smart Evaluation)**: `shared/generators/workflows/generate-agent-suite.md` → Evaluates a scenario, inspects workspace for existing files (upsert), and generates/updates the suite.
 - **Generate Skill**: `shared/generators/workflows/generate-skill.md` → Creates or updates `[framework|infra|shared]/[topic]/skills/[skill-name]/SKILL.md`
 - **Generate Rule**: `shared/generators/workflows/generate-rule.md` → Creates or updates `[framework|infra|shared]/[topic]/rules/[rule-name].md`
@@ -81,11 +82,13 @@ This repository includes built-in AI generator workflows (supporting prompts in 
 #### ⚡ Shorthand Triggers (Fast Prompting)
 
 Instead of typing out full requests, you can use these shorthand prefixes directly in your chat:
-- `suite: <topic>` (e.g., `suite: Angular Signals Form`)
-- `context: <topic>` (e.g., `context: NestJS JWT Auth`)
+- `consolidate:` or `grouping:` → Triggers full workspace audit, semantic grouping, merging & cleanup.
+- `suite: <topic>` (e.g., `suite: Angular Signals Form`) → Triggers smart evaluation & suite generation.
+- `context: <topic>` (e.g., `context: NestJS JWT Auth`) → Triggers smart evaluation & suite generation.
 
 #### 🪓 Slash Commands
 
+- `/consolidate-agent-toolkit` — Full workspace audit & topic grouping/consolidation
 - `/generate-agent-suite` — Smart evaluation & suite generation
 - `/generate-skill` — Single Skill generation
 - `/generate-rule` — Single Rule generation
