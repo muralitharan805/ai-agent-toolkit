@@ -42,6 +42,10 @@ agent-toolkit/
 │       └── skills/
 │
 ├── shared/                # Cross-cutting, topic-based agent context
+│   ├── finance/           # Double-entry personal accounting, EMI, pgvector
+│   │   ├── skills/
+│   │   ├── rules/
+│   │   └── workflows/
 │   ├── generators/       # AI Skill, Rule, & Workflow generator workflows
 │   │   └── workflows/
 │   ├── git/              # Git conventions & commit standards
