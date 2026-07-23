@@ -51,12 +51,24 @@ This workflow provides step-by-step instructions to configure a newly generated 
      .catch((err) => console.error(err));
    ```
 
-### Step 3: Scaffold Domain Folder Architecture
-Create the domain folder hierarchy under `src/app/`:
+### Step 3: Scaffold Enterprise Master Directory Architecture
+Scaffold the complete 14-point Master Directory layout under `src/`:
 ```bash
-mkdir -p src/app/core/guards src/app/core/interceptors src/app/core/services
-mkdir -p src/app/shared/components src/app/shared/directives src/app/shared/pipes
-mkdir -p src/app/features
+# Core Layer
+mkdir -p src/app/core/guards src/app/core/interceptors src/app/core/services src/app/core/strategies src/app/core/handlers
+
+# Shared UI & Utilities Layer
+mkdir -p src/app/shared/components/toast-notification src/app/shared/components/confirm-dialog
+mkdir -p src/app/shared/components/loading-spinner src/app/shared/components/skeleton-loader
+mkdir -p src/app/shared/components/empty-state src/app/shared/components/pagination
+mkdir -p src/app/shared/layouts/main-layout src/app/shared/layouts/auth-layout
+mkdir -p src/app/shared/directives src/app/shared/pipes src/app/shared/validators
+
+# Domain Features & Testing Layer
+mkdir -p src/app/features src/app/testing
+
+# Global Styling & Tokens Layer
+mkdir -p src/styles
 ```
 
 ### Step 4: Configure Global Root Component

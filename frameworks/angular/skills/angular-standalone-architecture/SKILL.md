@@ -16,18 +16,42 @@ Guide the agent in structuring, scaffolding, and configuring modern Standalone A
      - `provideHttpClient(withInterceptors([authInterceptor, errorInterceptor]))`
      - `provideExperimentalZonelessChangeDetection()` or standard zone configuration.
 
-2. **Domain-Driven Directory Layout**:
-   - Organise code into strict architectural boundaries:
-     ```
-     src/app/
-     ├── core/               # App singletons, global interceptors, authentication guards
-     ├── shared/             # Reusable UI components, pipes, directives, design tokens
-     └── features/           # Bounded domain feature modules
-         └── [feature-name]/
-             ├── data-access/ # Services, stores, API clients
-             ├── feature-shell/ # Routing, top-level feature page components
-             ├── ui/          # Dumb presentational components
-             └── models/      # TypeScript interfaces and domain types
+2. **Domain-Driven Directory Layout & Master Scaffolding**:
+   - Organise code into strict architectural boundaries following the 14-Point Master Scaffolding Specification:
+     ```text
+     src/
+     ├── app/
+     │   ├── core/                        # 🛡️ Core Infrastructure & Application Singletons
+     │   │   ├── guards/                  # Security Route Guards (auth.guard, guest.guard, role.guard)
+     │   │   ├── interceptors/            # Functional HTTP Interceptors (auth, error, loading, api-prefix, cache)
+     │   │   ├── services/                # Core Singletons (api.service, auth.service, notification.service, storage.service, loading.service)
+     │   │   ├── strategies/              # Route & SEO Strategies (page-title.strategy, preload.strategy)
+     │   │   └── handlers/                # Uncaught Exception Handlers (global-error.handler)
+     │   │
+     │   ├── shared/                      # 🎨 Reusable UI Components, Directives, Pipes & Layouts
+     │   │   ├── components/              # Reusable UI Widgets (toast-notification, confirm-dialog, loading-spinner, skeleton-loader, empty-state, pagination)
+     │   │   ├── layouts/                 # Base App Page Shells (main-layout, auth-layout)
+     │   │   ├── directives/              # Custom Utility Directives (has-permission.directive, autofocus.directive)
+     │   │   ├── pipes/                   # Custom Utility Pipes (truncate.pipe, relative-time.pipe, currency-format.pipe)
+     │   │   └── validators/              # Typed Reactive Form Custom Validators (password-match, no-whitespace)
+     │   │
+     │   ├── features/                    # 📦 Bounded Domain Feature Modules (Modular 4-Subfolder Pattern)
+     │   │   └── [feature-name]/          # Domain Features (e.g., 'users', 'products', 'orders')
+     │   │       ├── data-access/         # Signal Store & Feature Services (user-store.service.ts, user-api.service.ts)
+     │   │       ├── feature-shell/       # Container Smart Page Components & Feature Routes (user-list-page, users.routes.ts)
+     │   │       ├── ui/                  # Presentational Dumb Components (user-card, user-table, user-form-modal)
+     │   │       └── models/              # TypeScript Interfaces, DTOs & Enums (user.model.ts)
+     │   │
+     │   ├── testing/                     # 🧪 Testing Harnesses & Mocks (mock-api.service, mock-auth.service)
+     │   ├── app.config.ts                # ⚙️ Application Bootstrap Config (Zoneless, Router, HttpClient, TitleStrategy)
+     │   ├── app.routes.ts                # 🛣️ Top-level App Routes (Lazy-loaded Features)
+     │   └── app.component.ts             # 🚀 Root Standalone Shell Component (`<router-outlet />`)
+     │
+     └── styles/                          # 🎨 Global Styling & Theme System Tokens
+         ├── _variables.scss              # CSS Tokens / Material 3 System Variables (`--mat-sys-*`)
+         ├── _typography.scss             # Font scale, headings & body text styles
+         ├── _utilities.scss              # Global helper CSS classes (`.flex-between`, `.skeleton-box`)
+         └── styles.scss                  # Main global SCSS entry point
      ```
 
 3. **Functional Router Routing & Lazy Loading**:
