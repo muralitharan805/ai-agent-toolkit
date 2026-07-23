@@ -10,6 +10,15 @@ Every project's `.agents/` folder tends to be written once and then drift — di
 - Existing projects can pull in updates without hand-copying files.
 - Framework-specific knowledge (Angular, NestJS, Strapi, Docker, Postgres, Redis...) lives in one place instead of being duplicated per repo.
 
+## Google Antigravity IDE Compatibility ⚡
+
+This repository is 100% natively compatible with **Google Antigravity IDE**:
+
+- **Native `.agents/` Discovery**: Target directories map directly to `.agents/skills/`, `.agents/rules/`, and `.agents/workflows/` for automatic IDE indexing.
+- **Strict GUI-Compatible Frontmatter**: Follows exact YAML frontmatter schemas (`name`, `description`, `trigger: always_on`, `trigger: glob`, `trigger: manual`) to render cleanly in Antigravity's UI.
+- **Slash Commands & Shorthand Triggers**: Designed to respond instantly to native slash commands (`/generate-agent-suite`, `/consolidate-agent-toolkit`) and prompt prefixes (`suite:`, `consolidate:`).
+- **Hot Symlink Reloading**: Uses `bin/link-skills.sh` to allow real-time agent context updates in consumer projects without requiring IDE restarts or re-indexing.
+
 ## Structure
 
 ```
