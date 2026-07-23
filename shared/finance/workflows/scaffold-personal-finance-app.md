@@ -57,7 +57,14 @@ Follow this step-by-step workflow to scaffold a full-stack personal finance appl
    - `NetWorthDashboardComponent`: Dynamic card metrics showing total Assets, total Liabilities, and calculated Net Worth.
    - `FinancialForecastingComponent` & `ScenarioSimulatorWorkspaceComponent`: Interactive "What-If" multi-year scenario simulation workspace with custom inflation rates per category, salary growth sliders, and Deficit warning banner.
 
-### Step 4: Verification & Integration Testing
+### Step 4: Automated Project Documentation (README.md)
+Generate a comprehensive, professional `README.md` file in the root of the scaffolded application containing:
+- **Project Name**: `NidhiFlow` (Personal Finance & Net Worth Intelligence Engine).
+- **Core Architecture Summary**: Formal Double-Entry Bookkeeping ($\sum \text{Debits} = \sum \text{Credits}$), The Accounting Equation, EMI Amortization, 7-Dimensional Forecasting Simulator, and PostgreSQL `pgvector` AI Category Search.
+- **Tech Stack Specification**: Angular 21 (Signals) + NestJS TypeScript + PostgreSQL `pgvector`.
+- **Local Setup & Development Commands**: Database migration commands, `npm run start:dev` for backend, and `npm run start` for frontend.
+
+### Step 5: Verification & Integration Testing
 1. Run backend tests to verify unbalanced transactions are rejected with `400 Bad Request`.
 2. Post a sample daily expense entry (e.g. Debit: `EXPENSE: Groceries` ₹1500, Credit: `ASSET: Bank Account` ₹1500). Verify Assets decrease, Expenses increase, and Net Worth updates accurately.
 3. Add a sample loan (e.g. Home Loan ₹2,500,000 at 8.5% for 240 months). Verify EMI payoff date is correctly projected.
