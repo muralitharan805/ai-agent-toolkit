@@ -58,13 +58,23 @@ agent-toolkit/
 
 ## Usage
 
-### 1. Scaffold a brand-new project
+### 1. Sync skills into an existing project (Approach 1: One-Command Copy Sync)
 
-once you setup or run you project ( any framword). create .agents directory in you project. inside .agents directory we manage skills, rules, workflows.
+Run `bin/sync-skills.sh` from the toolkit repo to automatically populate a target project's `.agents/` folder with framework, shared, and infra skills/rules/workflows:
 
-### 2. Add skills to an existing project
+```bash
+# Sync Angular framework + Shared rules/skills + Docker/Postgres infra tools into target project
+./bin/sync-skills.sh --framework angular --infra docker,postgres --target /path/to/my-angular-app
+```
 
-copy the folder from  agent-toolkit/frameworks/<framword-name>/skills, rules, workflows and paste into .agents/skills, rules, workflows.
+### 2. Symlink skills for local development (Approach 2: Live Updates Mode)
+
+Run `bin/link-skills.sh` to create symlinks from your target project's `.agents/` directory pointing back to `ai-agent-toolkit`. Any update made in the toolkit will instantly reflect live in your local project!
+
+```bash
+# Symlink Angular context for live updates
+./bin/link-skills.sh --framework angular --infra docker,postgres --target /path/to/my-angular-app
+```
 
 ### 3. Sync updates into a project that already has copied
 
