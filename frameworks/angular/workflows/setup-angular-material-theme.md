@@ -15,7 +15,7 @@ Scaffold and configure Angular Material in an Angular application with a central
 1. **Install Angular Material & CDK**:
    Run `ng add @angular/material` or manually install dependencies:
    ```bash
-   npm install @angular/material @angular/cdk
+   pnpm add @angular/material @angular/cdk
    ```
 
 2. **Create Centralized SCSS Theme Architecture**:
