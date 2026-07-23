@@ -1,12 +1,6 @@
 ---
-description: "Audits the entire agent-toolkit workspace, discovers fragmented or overlapping skills/rules/workflows, semantically merges them by topic, cleans up duplicates, and syncs README.md."
+description: "Audits the entire agent-toolkit workspace, discovers fragmented skills/rules/workflows, semantically merges them by topic, cleans up duplicates, and syncs README.md. Triggered by 'consolidate:', 'grouping:', or '/consolidate-agent-toolkit'."
 trigger: manual
-aliases:
-  - "consolidate:"
-  - "consolidate toolkit"
-  - "grouping:"
-  - "group and consolidate"
-  - "/consolidate-agent-toolkit"
 ---
 
 # Consolidate Agent Toolkit (`consolidate-agent-toolkit`)

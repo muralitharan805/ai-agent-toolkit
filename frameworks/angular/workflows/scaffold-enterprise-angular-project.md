@@ -1,6 +1,6 @@
 ---
+description: "Automated workflow to scaffold all 14 core enterprise infrastructure layers in a new or existing Angular 19+ project (ApiService, Auth Signals, functional interceptors, guards, title strategy, layout shells, SCSS theme tokens). Triggered by 'scaffold-angular:', 'scaffold:', or '/scaffold-enterprise-angular-project'."
 trigger: manual
-description: "Automated workflow to scaffold all 14 core enterprise infrastructure layers in a new or existing Angular 19+ project (ApiService, Auth Signals, functional interceptors, guards, title strategy, layout shells, SCSS theme tokens)."
 ---
 # Scaffold Enterprise Angular Project Workflow
 

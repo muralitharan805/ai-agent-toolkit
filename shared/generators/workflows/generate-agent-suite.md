@@ -1,12 +1,6 @@
 ---
-description: "Smart orchestrator workflow that analyzes a scenario, inspects workspace for existing skills/rules/workflows, determines required components, and creates or updates them accordingly."
+description: "Smart orchestrator workflow that analyzes a scenario, inspects workspace for existing skills/rules/workflows, determines required components, and creates or updates them. Triggered by 'suite:', 'context:', or '/generate-agent-suite'."
 trigger: manual
-aliases:
-  - "suite:"
-  - "agent suite"
-  - "agent context"
-  - "context:"
-  - "/generate-agent-suite"
 ---
 
 # Generate Agent Suite (`generate-agent-suite`)

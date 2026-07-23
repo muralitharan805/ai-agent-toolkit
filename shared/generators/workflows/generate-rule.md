@@ -1,5 +1,5 @@
 ---
-description: "Workflow to analyze development constraints (English, Tamil, or Thanglish) and create or update strict workspace rule files under topic directories."
+description: "Workflow to analyze development constraints (English, Tamil, or Thanglish) and create or update strict workspace rule files under topic directories. Triggered by 'rule:', 'generate-rule:', or '/generate-rule'."
 trigger: manual
 ---
 

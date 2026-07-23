@@ -1,5 +1,5 @@
 ---
-description: "Workflow to analyze complex processes (English, Tamil, or Thanglish) and create or update structured workflow files under topic directories."
+description: "Workflow to analyze complex processes (English, Tamil, or Thanglish) and create or update structured workflow files under topic directories. Triggered by 'workflow:', 'generate-workflow:', or '/generate-workflow'."
 trigger: manual
 ---
 

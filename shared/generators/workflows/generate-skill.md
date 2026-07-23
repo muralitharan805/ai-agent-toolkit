@@ -1,5 +1,5 @@
 ---
-description: "Workflow to analyze user scenarios (English, Tamil, or Thanglish) and create or update production-ready SKILL.md files under topic directories with senior principal engineer expertise."
+description: "Workflow to analyze user scenarios (English, Tamil, or Thanglish) and create or update production-ready SKILL.md files under topic directories with senior principal engineer expertise. Triggered by 'skill:', 'generate-skill:', or '/generate-skill'."
 trigger: manual
 ---
 
