@@ -5,7 +5,7 @@ trigger: manual
 
 # Scaffold Personal Finance & Net Worth Web Application (SPA)
 
-Follow this step-by-step workflow to scaffold a full-stack personal finance application using Angular 21, NestJS, and PostgreSQL with `pgvector`.
+Follow this step-by-step workflow to scaffold a full-stack personal finance application using Angular 21, NestJS, and PostgreSQL with `pgvector`. Compatible both for fresh initializations and pre-scaffolded Angular / NestJS enterprise projects.
 
 ## Steps
 
@@ -17,8 +17,8 @@ Follow this step-by-step workflow to scaffold a full-stack personal finance appl
    - `loans_emi` and `amortization_schedules`.
    - `forecasting_scenarios` and `scenario_category_inflations` (for what-if multi-year inflation modeling).
 
-### Step 2: NestJS Backend Scaffolding
-1. Initialize NestJS app:
+### Step 2: NestJS Backend Domain Integration
+1. Initialize NestJS app *(Skip if already scaffolded via CLI / Layer 2 Framework Scaffold)*:
    ```bash
    npx -y @nestjs/cli new backend --strict --package-manager npm
    ```
@@ -41,21 +41,21 @@ Follow this step-by-step workflow to scaffold a full-stack personal finance appl
    - Calculate annual income growth or stagnation: $I_t = I_0 \times (1 + g)^t$.
    - Detect Deficit Crossover Point ($I_t < E_t + \text{EMI}_t$) and project cumulative Net Worth ($NW_t$).
 
-### Step 3: Angular 21 SPA Frontend Scaffolding
-1. Initialize Angular 21 project with standalone components:
+### Step 3: Angular 21 SPA Frontend Domain Integration
+1. Initialize Angular 21 project *(Skip if already scaffolded via CLI / Layer 2 Framework Scaffold)*:
    ```bash
-   npx -y @angular/cli new angular-frontend --standalone --style=css --routing=true
+   npx -y @angular/cli new frontend --standalone --style=css --routing=true
    ```
 2. Install Angular Material / Charting libraries:
    ```bash
    npm install @angular/cdk chart.js ng2-charts
    ```
 3. Build Core Components:
-   - `AccountHeadManagerComponent`: Tree view of Chart of Accounts classified under The Accounting Equation.
+   - `AccountHeadManagerComponent` & `ChartOfAccountsTreeComponent`: Tree view of Chart of Accounts classified under The Accounting Equation with automatic balance rollups.
    - `DailySpendingEntryComponent`: Dynamic Debit/Credit line item table with instant live visual balance indicator.
    - `EmiPayoffCountdownComponent`: Loan amortization countdown bar showing remaining installments, interest saved, and payoff date.
    - `NetWorthDashboardComponent`: Dynamic card metrics showing total Assets, total Liabilities, and calculated Net Worth.
-   - `FinancialForecastingComponent`: Interactive "What-If" multi-year scenario simulation workspace with custom inflation rates per category, salary growth sliders, and Deficit warning banner.
+   - `FinancialForecastingComponent` & `ScenarioSimulatorWorkspaceComponent`: Interactive "What-If" multi-year scenario simulation workspace with custom inflation rates per category, salary growth sliders, and Deficit warning banner.
 
 ### Step 4: Verification & Integration Testing
 1. Run backend tests to verify unbalanced transactions are rejected with `400 Bad Request`.
