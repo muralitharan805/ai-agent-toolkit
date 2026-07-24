@@ -1,14 +1,14 @@
 ---
 name: angular-material-styling
-description: "Guidelines and architecture for prioritizing Angular Material UI components (Tables, Inputs, Dropdowns, Buttons), default Dark Theme initialization with Signal-based toggle, centralizing Google Fonts SCSS typography, and applying M3 design tokens across Angular applications."
+description: "Guidelines and architecture for prioritizing Angular Material UI components (Tables, Inputs, Dropdowns, Buttons), default Dark Theme initialization with OS detection & Signal toggle, centralizing Google Fonts SCSS typography, and applying M3 design tokens across Angular applications."
 ---
 # Goal
-Enforce Angular Material (`@angular/material`) as the mandatory primary UI component library for all standard user interface controls, initialize **Dark Theme as default** with a Signal-based theme switcher, integrate Google Fonts SCSS typography (`Inter`, `Roboto`, `Outfit`), and implement strict fallback guidelines.
+Enforce Angular Material (`@angular/material`) as the mandatory primary UI component library for all standard user interface controls, initialize **Dark Theme as default** (with OS preference detection fallback) using a Signal-based theme switcher, integrate Google Fonts SCSS typography (`Inter`, `Roboto`, `Outfit`), and implement strict fallback guidelines.
 
 # Instructions
 
-1. **Dark Theme Default & Reactive Switching**:
-   - Initialize the application in **Dark Mode by default** (`isDarkMode = signal<boolean>(true)`).
+1. **Dark Theme Default & OS Detection**:
+   - Initialize the application in **Dark Mode by default** (`isDarkMode = signal<boolean>(true)`), detecting OS settings (`prefers-color-scheme`) if no stored preference exists.
    - Implement a singleton `ThemeService` using Angular Signals to toggle themes, save user preferences in `localStorage`, and update the root `<html>` element class (`.dark-theme` / `.light-theme`).
    - Include a user theme toggle component (`<app-theme-toggle>`) in the header shell or main toolbar.
 
@@ -36,7 +36,7 @@ Enforce Angular Material (`@angular/material`) as the mandatory primary UI compo
 
 # Examples
 
-## 1. Reactive Theme Service (Dark Default)
+## 1. Reactive Theme Service (Dark Default + OS Aware)
 ```typescript
 // src/app/core/services/theme.service.ts
 import { Injectable, signal, effect, inject, DOCUMENT } from '@angular/core';
@@ -46,7 +46,7 @@ export class ThemeService {
   private readonly document = inject(DOCUMENT);
   private readonly STORAGE_KEY = 'nidhiflow-theme-mode';
 
-  // Default state is TRUE (Dark Mode active by default)
+  // Default state is Dark Mode (true), checking saved preference & OS mode
   readonly isDarkMode = signal<boolean>(this.getSavedPreference());
 
   constructor() {
@@ -73,6 +73,12 @@ export class ThemeService {
   private getSavedPreference(): boolean {
     const saved = localStorage.getItem(this.STORAGE_KEY);
     if (saved) return saved === 'dark';
+
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      if (window.matchMedia('(prefers-color-scheme: light)').matches) return false;
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return true;
+    }
+
     return true; // Default to Dark Mode if no stored preference
   }
 }
@@ -106,33 +112,7 @@ export class ThemeToggleComponent {
 }
 ```
 
-## 3. Global SCSS Theme Setup (Dark Default)
-```scss
-// src/styles.scss
-@use './styles/theme' as app-theme;
-@use '@angular/material' as mat;
-
-// Default root styling initializes with Dark Theme
-html, html.dark-theme {
-  @include mat.all-component-themes(app-theme.$dark-theme);
-  color-scheme: dark;
-  font-family: var(--app-font-body, 'Inter', sans-serif);
-}
-
-html.light-theme {
-  @include mat.all-component-colors(app-theme.$light-theme);
-  color-scheme: light;
-}
-
-body {
-  margin: 0;
-  background-color: var(--mat-sys-background);
-  color: var(--mat-sys-on-background);
-  min-height: 100vh;
-}
-```
-
 # Constraints
-- Do NOT make Light Theme the default setting; applications MUST default to Dark Theme.
+- Do NOT make Light Theme the default setting; applications MUST default to Dark Theme with OS detection fallback.
 - Do NOT use standard HTML `<input>`, `<select>`, `<button>`, or `<table>` when corresponding Angular Material components exist.
 - Do NOT hardcode arbitrary static font-family strings (`font-family: Arial`) or CSS hex colors (`#ffffff`, `#000000`).

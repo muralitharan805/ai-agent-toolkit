@@ -1,16 +1,16 @@
 ---
 trigger: always_on
-description: "Mandates Angular Material UI as primary component library, enforces Dark Theme as default with a Signal-based light/dark theme toggle, global SCSS theme tokens, and Google Fonts typography across all Angular app surfaces."
+description: "Mandates Angular Material UI as primary component library, enforces Dark Theme as default with OS system preference detection, Signal-based light/dark theme toggle, global SCSS theme tokens, and Google Fonts typography."
 ---
 # Angular Material Primary Component, Dark Theme Default & SCSS Theme Rule
 
 ## Description
-This rule mandates Angular Material (`@angular/material`) as the primary UI component library for all standard UI elements across Angular applications. It also enforces **Dark Theme as the default initial application state** with a Signal-based theme toggle mechanism, a centralized SCSS theme design system, and modern Google Fonts typography (`Inter`, `Roboto`, `Outfit`, `Plus Jakarta Sans`).
+This rule mandates Angular Material (`@angular/material`) as the primary UI component library for all standard UI elements across Angular applications. It also enforces **Dark Theme as the default initial application state** (with OS preference detection fallback), a Signal-based theme toggle mechanism, a centralized SCSS theme design system, and modern Google Fonts typography (`Inter`, `Roboto`, `Outfit`, `Plus Jakarta Sans`).
 
 ## Constraints
 
-### 1. Default Dark Theme & Toggle Mechanism
-- **Dark Mode Default**: Applications MUST initialize in **Dark Theme** by default (`isDarkMode = signal<boolean>(true)`), applying the dark theme class/token configuration on application startup.
+### 1. Default Dark Theme, OS Preference & Toggle Mechanism
+- **Dark Mode Default & System Detection**: Applications MUST initialize in **Dark Theme by default**, checking `localStorage` first, then evaluating `window.matchMedia('(prefers-color-scheme: dark)')`, defaulting to `true` (Dark Mode).
 - **Reactive Theme Service**: Application MUST provide a reactive `ThemeService` using Angular Signals to control dark/light mode state, persisting user selection in `localStorage` and syncing the root `<html>` element CSS class (`.dark-theme` / `.light-theme`).
 - **Interactive UI Toggle**: Header or shell layout MUST include a user-accessible theme toggle control (`<mat-slide-toggle>` or `<button mat-icon-button>` with `dark_mode`/`light_mode` Material icons).
 
@@ -36,7 +36,7 @@ This rule mandates Angular Material (`@angular/material`) as the primary UI comp
 
 ## Examples
 
-- **Correct Reactive Theme Service Implementation (Default Dark Mode):**
+- **Correct Reactive Theme Service Implementation (OS Aware & Dark Default):**
 ```typescript
 // src/app/core/services/theme.service.ts
 import { Injectable, signal, effect, inject, DOCUMENT } from '@angular/core';
@@ -46,7 +46,7 @@ export class ThemeService {
   private readonly document = inject(DOCUMENT);
   private readonly STORAGE_KEY = 'app-theme-preference';
 
-  // Default initial state is Dark Theme (true)
+  // Default initial state is OS preference aware, defaulting to Dark Theme (true)
   readonly isDarkMode = signal<boolean>(this.getInitialThemePreference());
 
   constructor() {
@@ -71,6 +71,12 @@ export class ThemeService {
   private getInitialThemePreference(): boolean {
     const saved = localStorage.getItem(this.STORAGE_KEY);
     if (saved) return saved === 'dark';
+
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      if (window.matchMedia('(prefers-color-scheme: light)').matches) return false;
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return true;
+    }
+
     return true; // Default to dark theme if no preference saved
   }
 }

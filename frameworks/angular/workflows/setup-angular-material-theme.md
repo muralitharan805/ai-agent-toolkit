@@ -1,11 +1,11 @@
 ---
-description: "Step-by-step workflow to configure Angular Material UI with Dark Theme as default, Signal ThemeService, theme toggle component, M3 SCSS palettes, and Google Fonts typography. Triggered by 'material-theme:', 'setup-material:', or '/setup-angular-material-theme'."
+description: "Step-by-step workflow to configure Angular Material UI with Dark Theme as default, OS preference detection, Signal ThemeService, theme toggle component, M3 SCSS palettes, and Google Fonts typography. Triggered by 'material-theme:', 'setup-material:', or '/setup-angular-material-theme'."
 trigger: manual
 ---
 # Setup Angular Material Dark Theme Default & Theme Toggle Workflow
 
 ## Objective
-Scaffold and configure Angular Material (`@angular/material`) in an Angular project with **Dark Theme enabled as default**, a Signal-driven reactive `ThemeService`, a header theme toggle button, centralized SCSS M3 palettes, and Google Fonts typography (`Inter`, `Roboto`, `Outfit`).
+Scaffold and configure Angular Material (`@angular/material`) in an Angular project with **Dark Theme enabled as default** (supporting OS preference detection), a Signal-driven reactive `ThemeService`, a header theme toggle button, centralized SCSS M3 palettes, and Google Fonts typography (`Inter`, `Roboto`, `Outfit`).
 
 ## Prerequisites
 - Existing Angular application (v15+) with SCSS enabled (`schematics: { "@schematics/angular:component": { "style": "scss" } }`).
@@ -119,7 +119,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 ```
 
-### Step 6: Create Reactive `ThemeService` (Dark Mode Default)
+### Step 6: Create Reactive `ThemeService` (Dark Mode Default + OS Aware)
 Create `src/app/core/services/theme.service.ts`:
 ```typescript
 import { Injectable, signal, effect, inject, DOCUMENT } from '@angular/core';
@@ -129,7 +129,7 @@ export class ThemeService {
   private readonly document = inject(DOCUMENT);
   private readonly STORAGE_KEY = 'app-theme-preference';
 
-  // Default state is TRUE (Dark Mode active by default)
+  // Default state is Dark Mode (true), checking saved preference & OS mode
   readonly isDarkMode = signal<boolean>(this.getSavedPreference());
 
   constructor() {
@@ -156,6 +156,12 @@ export class ThemeService {
   private getSavedPreference(): boolean {
     const saved = localStorage.getItem(this.STORAGE_KEY);
     if (saved) return saved === 'dark';
+
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      if (window.matchMedia('(prefers-color-scheme: light)').matches) return false;
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return true;
+    }
+
     return true; // Default to dark theme if no stored preference
   }
 }
@@ -196,4 +202,4 @@ export class ThemeToggleComponent {
 - [ ] Verify all Material components (`mat-table`, `mat-form-field`, `mat-select`, `mat-card`, `mat-dialog`) seamlessly transition colors on theme switch.
 
 ## Expected Output
-An enterprise Angular application configured with Dark Theme as default, an interactive Signal-driven theme switcher, persisted preferences, and full Material 3 token alignment.
+An enterprise Angular application configured with Dark Theme as default, OS preference detection, an interactive Signal-driven theme switcher, persisted preferences, and full Material 3 token alignment.
