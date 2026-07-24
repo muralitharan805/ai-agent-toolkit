@@ -52,6 +52,9 @@ agent-toolkit/
 │   │   └── skills/
 │   ├── security/         # Secret masking & OWASP rules
 │   │   └── rules/
+│   ├── logging/           # Correlation ID tracing, JSON logs, secret masking
+│   │   ├── skills/
+│   │   └── rules/
 │   └── code-quality/     # Clean code & type safety standards
 │       └── rules/
 │
