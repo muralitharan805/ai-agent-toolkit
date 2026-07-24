@@ -37,9 +37,12 @@ agent-toolkit/
 │   │   ├── rules/
 │   │   └── workflows/
 │   ├── postgres/
-│   │   └── skills/
+│   │   ├── skills/
+│   │   └── rules/
 │   └── redis/
-│       └── skills/
+│       ├── skills/
+│       ├── rules/
+│       └── workflows/
 │
 ├── shared/                # Cross-cutting, topic-based agent context
 │   ├── finance/           # Double-entry personal accounting, EMI, pgvector
