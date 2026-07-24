@@ -1,25 +1,33 @@
 ---
 name: containerization-best-practices
-description: "Enterprise guidelines, multi-stage Dockerfile patterns, entrypoint migration scripts, Prisma Alpine binary targets, multi-environment Docker Compose setups (dev, prod, shared, existing-infra cost saver), non-root security compliance, container healthchecks, and README execution instructions."
+description: "Universal dynamic containerization guidelines, multi-stage Dockerfile patterns for any tech stack (Node/TypeScript, Python, Go, Java, PHP, Rust), split Docker Compose setups (dev, prod, shared, existing-infra cost saver) for any database/middleware (Postgres, MySQL, MongoDB, Redis, Kafka, RabbitMQ, MinIO), non-root security compliance, healthchecks, and README execution instructions."
 ---
 
-# Enterprise Containerization & Multi-Environment Docker Suite
+# Universal Dynamic Containerization & Multi-Environment Docker Suite
 
 ## Goal
-Guide developers and AI coding agents in authoring production-grade multi-stage Dockerfiles, database migration entrypoint scripts, modular multi-environment Docker Compose architectures (`docker-compose.yml`, `docker-compose.override.yml`, `docker-compose.prod.yml`, `docker-compose.shared.yml`, `docker-compose.existing-infra.yml`), and container execution documentation.
+Guide developers and AI coding agents in dynamically generating production-grade multi-stage Dockerfiles and modular Docker Compose architectures for **ANY programming language, framework, database, or middleware stack** (Node.js/NestJS/Angular/Next.js, Python/FastAPI/Django, Go, Java/Spring Boot, PHP/Laravel, Rust, PostgreSQL, MySQL, MongoDB, Redis, Kafka, RabbitMQ, MinIO, etc.).
 
 ---
 
-# Multi-Stage Dockerfile Architecture & Entrypoint Protocol
+# Universal Stack Detection & Multi-Stage Dockerfile Engine
 
-### Principles:
-1. **Layer Caching**: Copy lockfiles (`package.json`, `pnpm-lock.yaml`) and run dependency installation before copying source code.
-2. **Minimal Runtime Footprint**: Use multi-stage builds so build tools, TypeScript compilers, and dev dependencies are omitted from the final runner image.
-3. **Prisma Alpine Binary Target Alignment**: For Prisma ORM projects in Alpine containers, ensure `binaryTargets = ["native", "linux-musl-openssl-3.0.x"]` is specified in `schema.prisma`.
-4. **Non-Root Execution Compliance**: Execute application processes under an unprivileged user (`USER node`).
-5. **Database Migration Entrypoint Script (`docker-entrypoint.sh`)**: Wrap application startup in an entrypoint script that automatically runs database migrations (`prisma migrate deploy` / `pnpm db:migrate`) prior to starting the Node process.
+The agent MUST dynamically inspect the project repository structure to identify the runtime stack, package manager, and build tool:
 
-### Enterprise NestJS Multi-Stage Dockerfile Pattern (`Dockerfile`):
+| Detected Stack File | Language / Runtime | Build Tool / Package Manager | Base Image Standard | Runner Target |
+| :--- | :--- | :--- | :--- | :--- |
+| `package.json` | Node.js / TypeScript | `pnpm` / `npm` / `yarn` | `node:20-alpine` | `node dist/main.js` / `nginx:alpine` |
+| `requirements.txt` / `pyproject.toml` | Python | `pip` / `poetry` | `python:3.11-slim` | `uvicorn main:app --host 0.0.0.0` |
+| `go.mod` | Go | Go Modules | `golang:1.22-alpine` (builder) ➔ `alpine:latest` | `./main` |
+| `pom.xml` / `build.gradle` | Java / Kotlin | Maven / Gradle | `eclipse-temurin:21-jdk` ➔ `eclipse-temurin:21-jre-alpine` | `java -jar app.jar` |
+| `composer.json` | PHP | Composer | `php:8.3-fpm-alpine` + `nginx:alpine` | `php-fpm` |
+| `Cargo.toml` | Rust | Cargo | `rust:1.75-slim` ➔ `debian:bookworm-slim` | `./app` |
+
+---
+
+# Multi-Stage Build Patterns Across Major Stacks
+
+### 1. Node.js / TypeScript (NestJS / Express / Next.js)
 
 ```dockerfile
 # Stage 1: Dependency Caching
@@ -27,221 +35,132 @@ FROM node:20-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-COPY prisma ./prisma/
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.cache/pnpm pnpm install --frozen-lockfile
 
-# Stage 2: Compilation & Asset Build
+# Stage 2: Compilation
 FROM node:20-alpine AS builder
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN pnpm prisma generate
 RUN pnpm build
 RUN pnpm prune --prod
 
-# Stage 3: Production Lightweight Runner
+# Stage 3: Runner
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Install openssl for Prisma binary compatibility
-RUN apk add --no-req --no-cache openssl
-
-# Copy production artifacts & entrypoint
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 COPY docker-entrypoint.sh ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-
-# Make entrypoint executable
 RUN chmod +x docker-entrypoint.sh
-
-# Security Hardening
 USER node
 EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/v1/health || exit 1
-
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "dist/main.js"]
 ```
 
-### Production Entrypoint Script (`docker-entrypoint.sh`):
+### 2. Python (FastAPI / Django / Flask)
 
-```bash
-#!/bin/sh
-set -e
+```dockerfile
+# Stage 1: Builder
+FROM python:3.11-slim AS builder
+WORKDIR /app
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-echo "🚀 Running Database Migrations..."
-if [ -f "./prisma/schema.prisma" ]; then
-  pnpm prisma migrate deploy
-fi
+# Stage 2: Production Runner
+FROM python:3.11-slim AS runner
+WORKDIR /app
+ENV PATH="/opt/venv/bin:$PATH"
+COPY --from=builder /opt/venv /opt/venv
+COPY . .
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
 
-echo "✅ Database Migrations Complete. Starting Application..."
-exec "$@"
+### 3. Go (Gin / Fiber / Echo)
+
+```dockerfile
+# Stage 1: Build
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o server .
+
+# Stage 2: Minimal Alpine Runner
+FROM alpine:3.19 AS runner
+RUN apk add --no-cache ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /app/server .
+RUN adduser -D -u 10001 appuser
+USER appuser
+EXPOSE 8080
+CMD ["./server"]
 ```
 
 ---
 
-# `.dockerignore` Security Standard
+# Universal Dynamic Multi-Environment Docker Compose Architecture
 
-Every project MUST contain a strict `.dockerignore` file to prevent leaking secrets, local dependencies, and git history into container build contexts:
+The Compose generator MUST dynamically adapt service blocks based on detected or user-requested infrastructure components:
 
-```dockerignore
-node_modules
-dist
-coverage
-.git
-.gitignore
-.env
-.env.*
-*.log
-docker-compose*.yml
-Dockerfile
-.antigravity
-.agents
-```
+### Universal Infrastructure Map:
+
+| Infrastructure Service | Docker Image Standard | Default Port | Native Healthcheck Test |
+| :--- | :--- | :--- | :--- |
+| **PostgreSQL + pgvector** | `ankane/pgvector:v0.5.1` / `postgis/postgis:16-3.5-alpine` | `5432` | `["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]` |
+| **MySQL / MariaDB** | `mysql:8.0` / `mariadb:11` | `3306` | `["CMD", "mysqladmin", "ping", "-h", "localhost"]` |
+| **MongoDB** | `mongo:7.0` | `27017` | `["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]` |
+| **Redis / KeyDB** | `redis:7.2-alpine` | `6379` | `["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]` |
+| **RabbitMQ** | `rabbitmq:3.12-management-alpine` | `5672`, `15672` | `["CMD", "rabbitmq-diagnostics", "-q", "ping"]` |
+| **Apache Kafka** | `confluentinc/cp-kafka:7.5.0` | `9092` | `["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]` |
+| **Meilisearch** | `getmeili/meilisearch:v1.6` | `7700` | `["CMD", "curl", "-f", "http://localhost:7700/health"]` |
+| **MinIO (S3 Storage)** | `minio/minio:latest` | `9000`, `9001` | `["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]` |
 
 ---
 
-# Deployment Modes & Docker Compose Architecture
+### Deployment Modes:
 
-Support two deployment modes depending on resource availability and infrastructure budget:
-
-1. **Mode A: Standalone Infrastructure Mode (Default)**: Creates isolated application and dedicated Postgres/Redis containers for the project.
-2. **Mode B: Shared Infrastructure Cost-Optimization Mode (Low-Resource VPS / POC)**: Connects to existing globally running PostgreSQL/Redis Docker containers on a shared Docker network (`shared-infra-network`), saving RAM, CPU, and disk storage.
+1. **Mode A: Standalone Infrastructure Mode (Default)**: Creates isolated application and dedicated DB/middleware containers for the project.
+2. **Mode B: Shared Infrastructure Cost-Optimization Mode (Low-Resource VPS / POC)**: Connects to existing globally running DB/middleware Docker containers on a shared Docker network (`shared-infra-network`), saving RAM, CPU, and disk storage.
 
 ---
 
-### File Structure Overview:
-```
+### Universal Split Compose File Structure:
+```text
 project-root/
 ├── Dockerfile
 ├── docker-entrypoint.sh
 ├── .dockerignore
-├── docker-compose.yml              # Base shared service definitions & networks
-├── docker-compose.override.yml     # Development overrides (hot-reloading, bind mounts)
-├── docker-compose.prod.yml         # Production overrides (restart policies, limits)
-├── docker-compose.shared.yml       # Standalone DB dependencies (Postgres + pgvector, Redis)
-└── docker-compose.existing-infra.yml # Shared DB mode (connects to existing Postgres/Redis container)
-```
-
----
-
-### Mode A: Standalone Database Compose (`docker-compose.shared.yml`)
-Spawns dedicated PostgreSQL (`ankane/pgvector`) and Redis containers for this project:
-
-```yaml
-version: '3.8'
-
-services:
-  postgres:
-    image: ankane/pgvector:v0.5.1
-    container_name: nidhi-postgres
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
-      POSTGRES_DB: ${DB_NAME:-nidhiflow}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - nidhi-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: nidhi-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redisdata:/data
-    networks:
-      - nidhi-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-```
-
----
-
-### Mode B: Shared Infrastructure Cost-Optimization Compose (`docker-compose.existing-infra.yml`)
-Connects application container to an existing running PostgreSQL/Redis container via an external Docker network:
-
-```yaml
-version: '3.8'
-
-services:
-  app:
-    environment:
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres123}@shared-postgres:5432/${DB_NAME:-nidhiflow_db}?schema=public
-      - REDIS_HOST=shared-redis
-      - REDIS_PORT=6379
-    networks:
-      - shared-infra-network
-
-networks:
-  shared-infra-network:
-    external: true
+├── docker-compose.yml              # Base service definitions & networks
+├── docker-compose.override.yml     # Local Development overrides (hot-reloading, bind mounts)
+├── docker-compose.prod.yml         # Production overrides (restart policies, resource limits)
+├── docker-compose.shared.yml       # Standalone DB/middleware dependencies
+└── docker-compose.existing-infra.yml # Shared DB mode (connects to existing shared containers)
 ```
 
 ---
 
 # README Execution Documentation Standard
 
-Every project containerized with Docker MUST contain a dedicated section in `README.md` explaining exact commands for local development vs production deployment across both Standalone and Shared Infrastructure modes.
-
-### README Template Section:
-
-```markdown
-## 🐳 Docker Containerization & Execution Guide
-
-### 1. Mode A: Standalone Local Development (Dedicated DBs)
-Starts application container with dedicated local PostgreSQL & Redis containers:
-
-```bash
-# Start standalone dev environment with hot-reloading & DB dependencies
-docker compose -f docker-compose.shared.yml -f docker-compose.yml up -d
-
-# View application logs
-docker compose logs -f app
-
-# Stop dev environment
-docker compose down
-```
-
-### 2. Mode B: Shared Infrastructure Cost-Saver Mode (Existing Postgres/Redis)
-Connects to an existing shared PostgreSQL & Redis container on a shared server to save RAM & storage:
-
-```bash
-# 1. Create shared external network (if not existing)
-docker network create shared-infra-network || true
-
-# 2. Launch application attached to existing shared DB container
-docker compose -f docker-compose.yml -f docker-compose.existing-infra.yml up -d
-```
-```
+Every generated Docker setup MUST include a dedicated section in `README.md` explaining exact commands for local development vs production deployment across both Standalone and Shared Infrastructure modes.
 
 ---
 
-# User Clarification Protocol
+# Dynamic User Clarification Protocol
 
-If environment variables, database credentials, exposed ports, or service dependencies are ambiguous during Docker setup:
-1. **STOP** before writing invalid configurations.
-2. Ask the user two specific questions:
-   - **Q1**: Do you want **Standalone Mode** (new dedicated Postgres/Redis containers) or **Shared Infrastructure Mode** (attach to existing Postgres/Redis container)?
-   - **Q2**: What is the target database name and port mapping?
-3. Generate the precise Dockerfile, entrypoint script, and Compose setup based on user inputs.
+If the tech stack, database type, environment variables, exposed ports, or deployment mode are ambiguous:
+1. **STOP** before writing invalid or hardcoded configurations.
+2. Prompt the user with specific options:
+   - **Stack & Package Manager**: (Node/NestJS, Python, Go, Java, PHP, Rust, etc.)
+   - **Database / Middleware**: (PostgreSQL, MySQL, MongoDB, Redis, RabbitMQ, Kafka, MinIO, etc.)
+   - **Deployment Mode**: (Standalone dedicated containers vs Shared existing container network)
+3. Generate the precise Dockerfile and Compose setup matching the user's answers.
