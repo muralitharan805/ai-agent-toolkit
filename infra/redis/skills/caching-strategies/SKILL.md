@@ -1,111 +1,67 @@
 ---
 name: caching-strategies
-description: "Enterprise guidelines for production-grade Redis caching, visual console logging for cache hits (cached) vs misses (database query), fault-tolerant DB fallbacks, TTL management, and mutation cache invalidation."
+description: "Enterprise guidelines for production-grade Redis caching, global cache enablement (REDIS_CACHE_GLOBAL_ENABLED), blacklist exclusions (@NoCache() / CACHE_DISABLED_ROUTES), custom TTL decorators (@UseCache(600)), visual console logging for cache hits vs misses, fault-tolerant DB fallbacks, and mutation cache invalidation."
 ---
 
 # Enterprise Redis Caching & Visual Logging Interceptor Architecture
 
 ## Goal
-Guide developers and AI coding agents in implementing production-grade Redis caching in backend applications (NestJS / Node.js). Enforces fault-tolerant fallback, key namespacing, cache invalidation on data mutations, and **visual console logging that explicitly differentiates Cache HITs `(cached - 2ms)` from Cache MISSES `(database query - 85ms)`**.
+Guide developers and AI coding agents in implementing production-grade Redis caching in backend applications (NestJS / Node.js). Supports **Global Cache Enablement (`REDIS_CACHE_GLOBAL_ENABLED=true`)**, **Blacklist Exclusions (`@NoCache()` / `CACHE_DISABLED_ROUTES`)**, and **Custom Route TTL Overrides (`@UseCache(600)`)**. Features fault-tolerant fallback, key namespacing, cache invalidation on data mutations, and **visual console logging that explicitly differentiates Cache HITs `(cached - 2ms)` from Cache MISSES `(database query - 85ms)` and Cache BYPASSES**.
 
 ---
 
 # Core Redis Caching Principles
 
-1. **Cache Key Namespacing**: Use colon-delimited key namespacing: `<app>:cache:<domain>:<endpoint>:<query_md5>` (e.g. `nidhiflow:cache:users:list:a8f9b2`).
-2. **Explicit TTL Expiration**: All cached keys MUST have an explicit TTL (default: 300 seconds / 5 minutes) to prevent stale memory bloat.
-3. **Fault-Tolerant Fallback**: If Redis connection is down, log a warning and transparently execute the database query without throwing HTTP 500 errors.
-4. **Visual Console Logging**: Every request intercepted by the caching layer MUST produce a clear console log entry explicitly displaying `(cached)` vs `(database query)` with execution duration.
-5. **Mutation Cache Invalidation**: Data mutation endpoints (`POST`, `PATCH`, `DELETE`) MUST invalidate related cache keys (e.g. `nidhiflow:cache:users:*`).
+1. **Global Cache Enablement (`REDIS_CACHE_GLOBAL_ENABLED=true`)**: When enabled in `.env`, all GET routes are cached automatically by default.
+2. **Dual Exclusion Mechanisms**:
+   - **Decorator Exclusion (`@NoCache()`)**: Explicitly bypasses caching for specific controller endpoints.
+   - **Config Blacklist (`CACHE_DISABLED_ROUTES=/api/v1/users/me,/api/v1/health`)**: Comma-separated list of route prefixes excluded from caching.
+3. **Custom TTL Decorator (`@UseCache(ttlSeconds)`)**: Allows setting custom cache duration (e.g. `@UseCache(600)` for 10 minutes) or forcing cache enablement when global mode is OFF.
+4. **Cache Key Namespacing**: Use colon-delimited key namespacing: `<app>:cache:<domain>:<endpoint>:<query_md5>` (e.g. `nidhiflow:cache:users:list:a8f9b2`).
+5. **Fault-Tolerant Fallback**: If Redis connection is down, log a warning and transparently execute the database query without throwing HTTP 500 errors.
+6. **Visual Console Logging**: Every request intercepted by the caching layer MUST produce a clear console log entry explicitly displaying `(cached)` vs `(database query)`.
 
 ---
 
 # Production NestJS Redis Implementation
 
-### 1. Redis Cache Service (`redis-cache.service.ts`)
+### 1. Cache Custom Decorators (`cache.decorators.ts`)
 
 ```typescript
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
+import { SetMetadata } from '@nestjs/common';
 
-@Injectable()
-export class RedisCacheService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(RedisCacheService.name);
-  private client: Redis;
-  private isConnected = false;
+export const IS_CACHE_ENABLED_KEY = 'isCacheEnabled';
+export const IS_CACHE_DISABLED_KEY = 'isCacheDisabled';
+export const CACHE_TTL_KEY = 'cacheTTL';
 
-  constructor(private readonly configService: ConfigService) {}
+/**
+ * Opt-In / Custom TTL Decorator: Enables Redis caching & sets custom duration for a GET endpoint.
+ * @param ttlSeconds Custom TTL in seconds (e.g. 600 for 10 minutes)
+ * 
+ * @example
+ * @Get()
+ * @UseCache(600)
+ * findAll() { ... }
+ */
+export const UseCache = (ttlSeconds = 300) => (target: any, key?: any, descriptor?: any) => {
+  SetMetadata(IS_CACHE_ENABLED_KEY, true)(target, key, descriptor);
+  SetMetadata(CACHE_TTL_KEY, ttlSeconds)(target, key, descriptor);
+};
 
-  onModuleInit() {
-    const host = this.configService.get<string>('REDIS_HOST', 'localhost');
-    const port = this.configService.get<number>('REDIS_PORT', 6379);
-    const password = this.configService.get<string>('REDIS_PASSWORD', '');
-
-    this.client = new Redis({
-      host,
-      port,
-      password: password || undefined,
-      retryStrategy: (times) => Math.min(times * 100, 3000), // Max 3s retry interval
-      maxRetriesPerRequest: 2,
-    });
-
-    this.client.on('connect', () => {
-      this.isConnected = true;
-      this.logger.log(`✅ Connected to Redis Server at ${host}:${port}`);
-    });
-
-    this.client.on('error', (err) => {
-      this.isConnected = false;
-      this.logger.warn(`⚠️ Redis Connection Error: ${err.message}. Falling back to DB queries.`);
-    });
-  }
-
-  onModuleDestroy() {
-    this.client.disconnect();
-  }
-
-  async get<T>(key: string): Promise<T | null> {
-    if (!this.isConnected) return null;
-    try {
-      const data = await this.client.get(key);
-      return data ? JSON.parse(data) : null;
-    } catch (error) {
-      this.logger.warn(`Failed to read key ${key} from Redis: ${error.message}`);
-      return null;
-    }
-  }
-
-  async set(key: string, value: any, ttlSeconds = 300): Promise<void> {
-    if (!this.isConnected) return;
-    try {
-      await this.client.set(key, JSON.stringify(value), 'EX', ttlSeconds);
-    } catch (error) {
-      this.logger.warn(`Failed to write key ${key} to Redis: ${error.message}`);
-    }
-  }
-
-  async delByPattern(pattern: string): Promise<void> {
-    if (!this.isConnected) return;
-    try {
-      const stream = this.client.scanStream({ match: pattern, count: 100 });
-      stream.on('data', (keys: string[]) => {
-        if (keys.length > 0) {
-          const pipeline = this.client.pipeline();
-          keys.forEach((k) => pipeline.del(k));
-          pipeline.exec();
-        }
-      });
-    } catch (error) {
-      this.logger.warn(`Failed to clear cache pattern ${pattern}: ${error.message}`);
-    }
-  }
-}
+/**
+ * Explicit Bypass Decorator: Forcefully disables caching for a specific endpoint.
+ * 
+ * @example
+ * @Get('me')
+ * @NoCache()
+ * getProfile() { ... }
+ */
+export const NoCache = () => SetMetadata(IS_CACHE_DISABLED_KEY, true);
 ```
 
 ---
 
-### 2. HTTP Cache Interceptor with Visual Logger (`http-cache.interceptor.ts`)
+### 2. Config-Driven & Flexible HTTP Cache Interceptor (`http-cache.interceptor.ts`)
 
 ```typescript
 import {
@@ -115,35 +71,81 @@ import {
   CallHandler,
   Logger,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Request, Response } from 'express';
 import { RedisCacheService } from './redis-cache.service';
+import { IS_CACHE_ENABLED_KEY, IS_CACHE_DISABLED_KEY, CACHE_TTL_KEY } from './cache.decorators';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class HttpCacheInterceptor implements NestInterceptor {
   private readonly logger = new Logger('HttpCache');
 
-  constructor(private readonly redisCacheService: RedisCacheService) {}
+  constructor(
+    private readonly redisCacheService: RedisCacheService,
+    private readonly reflector: Reflector,
+    private readonly configService: ConfigService,
+  ) {}
 
   async intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const ctx = context.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
 
-    // Cache ONLY GET requests
+    // Rule 1: Cache ONLY GET requests
     if (request.method !== 'GET') {
       return next.handle();
     }
 
+    // Rule 2: Check explicit @NoCache() decorator exclusion
+    const isExplicitlyDisabledByDecorator = this.reflector.getAllAndOverride<boolean>(
+      IS_CACHE_DISABLED_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    if (isExplicitlyDisabledByDecorator) {
+      return next.handle();
+    }
+
+    // Rule 3: Check Config Blacklist (CACHE_DISABLED_ROUTES)
+    const blacklistConfig = this.configService.get<string>('CACHE_DISABLED_ROUTES', '');
+    const blacklistedRoutes = blacklistConfig ? blacklistConfig.split(',').map((r) => r.trim()) : [];
+    if (blacklistedRoutes.some((route) => request.path.startsWith(route))) {
+      return next.handle();
+    }
+
+    // Rule 4: Evaluate Caching Decision (Global Flag OR Decorator @UseCache OR Config Whitelist)
+    const isGlobalCacheEnabled = this.configService.get<boolean>('REDIS_CACHE_GLOBAL_ENABLED', true);
+
+    const isDecoratorEnabled = this.reflector.getAllAndOverride<boolean>(
+      IS_CACHE_ENABLED_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    const whitelistConfig = this.configService.get<string>('CACHE_ENABLED_ROUTES', '');
+    const whitelistedRoutes = whitelistConfig ? whitelistConfig.split(',').map((r) => r.trim()) : [];
+    const isWhitelistedInConfig = whitelistedRoutes.some((route) => request.path.startsWith(route));
+
+    const shouldCache = isGlobalCacheEnabled || isDecoratorEnabled || isWhitelistedInConfig;
+
+    if (!shouldCache) {
+      return next.handle();
+    }
+
+    // Determine custom TTL (from @UseCache(ttl) or default 300s)
+    const customTTL =
+      this.reflector.getAllAndOverride<number>(CACHE_TTL_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) || 300;
+
     const startTime = Date.now();
-    
-    // Generate deterministic cache key from URL & query string
     const urlHash = crypto.createHash('md5').update(request.originalUrl).digest('hex').substring(0, 8);
     const cacheKey = `nidhiflow:cache:${request.path.replace(/\//g, ':')}:${urlHash}`;
 
-    // Try reading from Redis Cache
+    // Read from Redis Cache
     const cachedData = await this.redisCacheService.get(cacheKey);
 
     if (cachedData) {
@@ -171,8 +173,8 @@ export class HttpCacheInterceptor implements NestInterceptor {
           `🔍 [CACHE MISS] ${request.method} ${request.originalUrl} (database query - ${duration}ms)`
         );
 
-        // Store result in Redis asynchronously (5 minutes TTL)
-        await this.redisCacheService.set(cacheKey, data, 300);
+        // Store result in Redis asynchronously with configured TTL
+        await this.redisCacheService.set(cacheKey, data, customTTL);
       }),
     );
   }
@@ -181,22 +183,24 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
 ---
 
-### 3. Console Output Specification
+### 3. Environment Configuration Template (`.env.example`)
 
-When routes are accessed, NestJS console logs MUST clearly highlight cache hits vs database queries:
+```env
+# Master Redis Cache Toggle (true = All GET routes cached by default)
+REDIS_CACHE_GLOBAL_ENABLED=true
 
-```text
-# First Request (Cache Miss - Fetches from PostgreSQL):
-[Nest] 18400  - 07/24/2026, 8:12:00 AM     LOG [HttpCache] 🔍 [CACHE MISS] GET /api/v1/users?page=1 (database query - 85ms)
+# Blacklist Routes (Excluded from caching even if global mode is true)
+CACHE_DISABLED_ROUTES=/api/v1/users/me,/api/v1/health,/api/v1/auth
 
-# Second Request (Cache Hit - Served directly from Redis):
-[Nest] 18400  - 07/24/2026, 8:12:05 AM     LOG [HttpCache] ⚡ [CACHE HIT] GET /api/v1/users?page=1 (cached - 2ms)
+# Whitelist Routes (Only used if REDIS_CACHE_GLOBAL_ENABLED=false)
+CACHE_ENABLED_ROUTES=/api/v1/reports
 ```
 
 ---
 
 # Verification Protocols
 
-1. **Visual Log Test**: Execute `curl http://localhost:3000/api/v1/users` twice; verify the second call prints `⚡ [CACHE HIT] ... (cached - Xms)` in NestJS logger console.
-2. **HTTP Header Test**: Verify second HTTP response contains header `X-Cache: HIT`.
-3. **Failover Test**: Stop Redis container (`docker compose stop redis`); verify backend logs warning and serves response from database without throwing errors.
+1. **Global Cache Test**: Set `REDIS_CACHE_GLOBAL_ENABLED=true`; verify GET `/api/v1/users` is cached on 2nd request.
+2. **Decorator Exclusion Test**: Add `@NoCache()` to `GET /api/v1/users/me`; verify it is NEVER cached.
+3. **Config Blacklist Test**: Add `/api/v1/health` to `CACHE_DISABLED_ROUTES`; verify requests to `/api/v1/health` bypass cache completely.
+4. **Custom TTL Test**: Add `@UseCache(600)` to `GET /api/v1/reports`; verify key is written to Redis with 600s TTL.
