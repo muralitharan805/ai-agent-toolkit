@@ -1,22 +1,23 @@
 ---
 name: containerization-best-practices
-description: "Enterprise guidelines, multi-stage Dockerfile patterns, multi-environment Docker Compose setups (dev, prod, shared, existing-infra cost saver), non-root security compliance, container healthchecks, and README execution instructions."
+description: "Enterprise guidelines, multi-stage Dockerfile patterns, entrypoint migration scripts, Prisma Alpine binary targets, multi-environment Docker Compose setups (dev, prod, shared, existing-infra cost saver), non-root security compliance, container healthchecks, and README execution instructions."
 ---
 
 # Enterprise Containerization & Multi-Environment Docker Suite
 
 ## Goal
-Guide developers and AI coding agents in authoring production-grade multi-stage Dockerfiles, modular multi-environment Docker Compose architectures (`docker-compose.yml`, `docker-compose.override.yml`, `docker-compose.prod.yml`, `docker-compose.shared.yml`, `docker-compose.existing-infra.yml`), and container execution documentation.
+Guide developers and AI coding agents in authoring production-grade multi-stage Dockerfiles, database migration entrypoint scripts, modular multi-environment Docker Compose architectures (`docker-compose.yml`, `docker-compose.override.yml`, `docker-compose.prod.yml`, `docker-compose.shared.yml`, `docker-compose.existing-infra.yml`), and container execution documentation.
 
 ---
 
-# Multi-Stage Dockerfile Architecture
+# Multi-Stage Dockerfile Architecture & Entrypoint Protocol
 
 ### Principles:
 1. **Layer Caching**: Copy lockfiles (`package.json`, `pnpm-lock.yaml`) and run dependency installation before copying source code.
 2. **Minimal Runtime Footprint**: Use multi-stage builds so build tools, TypeScript compilers, and dev dependencies are omitted from the final runner image.
-3. **Non-Root Execution Compliance**: Execute application processes under an unprivileged user (`USER node`).
-4. **Health Check & Signal Handling**: Implement `HEALTHCHECK` instructions and handle OS signals (`SIGTERM`/`SIGINT`) gracefully.
+3. **Prisma Alpine Binary Target Alignment**: For Prisma ORM projects in Alpine containers, ensure `binaryTargets = ["native", "linux-musl-openssl-3.0.x"]` is specified in `schema.prisma`.
+4. **Non-Root Execution Compliance**: Execute application processes under an unprivileged user (`USER node`).
+5. **Database Migration Entrypoint Script (`docker-entrypoint.sh`)**: Wrap application startup in an entrypoint script that automatically runs database migrations (`prisma migrate deploy` / `pnpm db:migrate`) prior to starting the Node process.
 
 ### Enterprise NestJS Multi-Stage Dockerfile Pattern (`Dockerfile`):
 
@@ -26,6 +27,7 @@ FROM node:20-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma/
 RUN pnpm install --frozen-lockfile
 
 # Stage 2: Compilation & Asset Build
@@ -34,6 +36,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN pnpm prisma generate
 RUN pnpm build
 RUN pnpm prune --prod
 
@@ -43,11 +46,18 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy production artifacts
+# Install openssl for Prisma binary compatibility
+RUN apk add --no-req --no-cache openssl
+
+# Copy production artifacts & entrypoint
 COPY package.json pnpm-lock.yaml ./
+COPY docker-entrypoint.sh ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+
+# Make entrypoint executable
+RUN chmod +x docker-entrypoint.sh
 
 # Security Hardening
 USER node
@@ -56,7 +66,44 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/v1/health || exit 1
 
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "dist/main.js"]
+```
+
+### Production Entrypoint Script (`docker-entrypoint.sh`):
+
+```bash
+#!/bin/sh
+set -e
+
+echo "🚀 Running Database Migrations..."
+if [ -f "./prisma/schema.prisma" ]; then
+  pnpm prisma migrate deploy
+fi
+
+echo "✅ Database Migrations Complete. Starting Application..."
+exec "$@"
+```
+
+---
+
+# `.dockerignore` Security Standard
+
+Every project MUST contain a strict `.dockerignore` file to prevent leaking secrets, local dependencies, and git history into container build contexts:
+
+```dockerignore
+node_modules
+dist
+coverage
+.git
+.gitignore
+.env
+.env.*
+*.log
+docker-compose*.yml
+Dockerfile
+.antigravity
+.agents
 ```
 
 ---
@@ -74,6 +121,7 @@ Support two deployment modes depending on resource availability and infrastructu
 ```
 project-root/
 ├── Dockerfile
+├── docker-entrypoint.sh
 ├── .dockerignore
 ├── docker-compose.yml              # Base shared service definitions & networks
 ├── docker-compose.override.yml     # Development overrides (hot-reloading, bind mounts)
@@ -136,11 +184,9 @@ Connects application container to an existing running PostgreSQL/Redis container
 ```yaml
 version: '3.8'
 
-# Connects to existing running shared infrastructure container
 services:
   app:
     environment:
-      # Connects to shared Postgres DB host via external network
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres123}@shared-postgres:5432/${DB_NAME:-nidhiflow_db}?schema=public
       - REDIS_HOST=shared-redis
       - REDIS_PORT=6379
@@ -148,7 +194,6 @@ services:
       - shared-infra-network
 
 networks:
-  # External Docker network shared across multiple projects on the same server
   shared-infra-network:
     external: true
 ```
@@ -182,22 +227,11 @@ docker compose down
 Connects to an existing shared PostgreSQL & Redis container on a shared server to save RAM & storage:
 
 ```bash
-# 1. Ensure shared external network exists
+# 1. Create shared external network (if not existing)
 docker network create shared-infra-network || true
 
 # 2. Launch application attached to existing shared DB container
 docker compose -f docker-compose.yml -f docker-compose.existing-infra.yml up -d
-
-# 3. Execute database migrations for the new project DB
-docker compose exec app pnpm db:migrate
-```
-
-### 3. Production Deployment Mode
-Run production containers using the production override (`docker-compose.prod.yml`):
-
-```bash
-# Build & launch production containers in detached mode
-docker compose -f docker-compose.shared.yml -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 ```
 
@@ -210,4 +244,4 @@ If environment variables, database credentials, exposed ports, or service depend
 2. Ask the user two specific questions:
    - **Q1**: Do you want **Standalone Mode** (new dedicated Postgres/Redis containers) or **Shared Infrastructure Mode** (attach to existing Postgres/Redis container)?
    - **Q2**: What is the target database name and port mapping?
-3. Generate the precise Dockerfile and Compose setup based on user inputs.
+3. Generate the precise Dockerfile, entrypoint script, and Compose setup based on user inputs.
