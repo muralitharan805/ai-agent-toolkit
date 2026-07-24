@@ -5,9 +5,9 @@ description: "Best practices, architecture specifications, directory structures,
 # NestJS Enterprise Scaffolding Skill
 
 ## Goal
-Guide developers and AI coding agents in bootstrapping production-grade NestJS backend applications adhering to the 12-point Enterprise Scaffolding Architecture.
+Guide developers and AI coding agents in bootstrapping production-grade NestJS backend applications adhering to the 20-Point Enterprise Scaffolding Architecture (executed via 12 automated pipeline steps).
 
-## 12-Point Enterprise Architecture Blueprint
+## 20-Point Enterprise Architecture Blueprint
 
 ### 1. Directory Tree Structure (`src/`)
 ```
