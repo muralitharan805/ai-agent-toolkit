@@ -45,7 +45,11 @@ Create `src/core/core.module.ts` as `@Global()` providing `GlobalHttpExceptionFi
 Create:
 - `src/database/prisma.service.ts` with `onModuleInit` and `onModuleDestroy` connection hooks.
 - `prisma/seed.ts` (Automated DB Seeder script populating initial roles, configuration, and dev mock data).
-- Add `"db:migrate": "prisma migrate dev"` and `"db:seed": "ts-node prisma/seed.ts"` to `package.json`.
+- Add `"db:migrate": "prisma migrate dev"`, `"db:push": "prisma db push"`, and `"db:seed": "ts-node prisma/seed.ts"` to `package.json`.
+- Execute initial version-controlled migration generation to create `prisma/migrations/` directory:
+```bash
+pnpm prisma migrate dev --name init
+```
 
 ### Step 7: Implement Health Check Module (Point 9)
 Create `src/health/health.controller.ts` utilizing `@nestjs/terminus` to monitor DB and system resources.
