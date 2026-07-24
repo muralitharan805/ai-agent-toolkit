@@ -1,15 +1,20 @@
 ---
 trigger: always_on
-description: "Mandates Angular Material UI as the primary component framework (Tables, Buttons, Form Inputs, Dropdowns, Dialogs) and enforces global SCSS theme tokens and Google Fonts typography across all Angular app surfaces."
+description: "Mandates Angular Material UI as primary component library, enforces Dark Theme as default with a Signal-based light/dark theme toggle, global SCSS theme tokens, and Google Fonts typography across all Angular app surfaces."
 ---
-# Angular Material Primary Component & SCSS Theme Rule
+# Angular Material Primary Component, Dark Theme Default & SCSS Theme Rule
 
 ## Description
-This rule mandates Angular Material (`@angular/material`) as the primary UI component library for all standard UI elements across Angular applications. It also enforces a centralized SCSS theme design system integrated with modern Google Fonts typography (`Inter`, `Roboto`, `Outfit`, `Plus Jakarta Sans`), prohibiting hardcoded hex colors, arbitrary inline font declarations, or non-theme custom styling.
+This rule mandates Angular Material (`@angular/material`) as the primary UI component library for all standard UI elements across Angular applications. It also enforces **Dark Theme as the default initial application state** with a Signal-based theme toggle mechanism, a centralized SCSS theme design system, and modern Google Fonts typography (`Inter`, `Roboto`, `Outfit`, `Plus Jakarta Sans`).
 
 ## Constraints
 
-### 1. Angular Material First Component Policy
+### 1. Default Dark Theme & Toggle Mechanism
+- **Dark Mode Default**: Applications MUST initialize in **Dark Theme** by default (`isDarkMode = signal<boolean>(true)`), applying the dark theme class/token configuration on application startup.
+- **Reactive Theme Service**: Application MUST provide a reactive `ThemeService` using Angular Signals to control dark/light mode state, persisting user selection in `localStorage` and syncing the root `<html>` element CSS class (`.dark-theme` / `.light-theme`).
+- **Interactive UI Toggle**: Header or shell layout MUST include a user-accessible theme toggle control (`<mat-slide-toggle>` or `<button mat-icon-button>` with `dark_mode`/`light_mode` Material icons).
+
+### 2. Angular Material First Component Policy
 - The agent MUST prioritize Angular Material components for all standard user interface elements:
   - **Tables & Data Grids**: `<table mat-table>`, `<mat-paginator>`, `matSort`.
   - **Buttons & Actions**: `mat-button`, `mat-flat-button`, `mat-stroked-button`, `mat-icon-button`, `mat-fab`.
@@ -20,79 +25,80 @@ This rule mandates Angular Material (`@angular/material`) as the primary UI comp
   - **Selection Controls**: `<mat-checkbox>`, `<mat-radio-button>`, `<mat-slide-toggle>`.
   - **Feedback & Overlays**: `<mat-tooltip>`, `<mat-menu>`, `MatSnackBar`, `<mat-progress-bar>`, `<mat-spinner>`.
 
-### 2. Restrictive Component Fallback Policy
-- Alternative third-party component libraries or custom component builds are permitted ONLY IF Angular Material lacks a native equivalent or specific required feature (e.g., complex multi-layered data grid, rich text editor).
-- When a fallback custom component is created, it MUST consume global CSS custom properties (`var(--mat-sys-*)`) and typography variables to ensure 100% visual and structural theme harmony.
+### 3. Restrictive Component Fallback Policy
+- Alternative third-party component libraries or custom component builds are permitted ONLY IF Angular Material lacks a native equivalent or specific required feature.
+- When a fallback custom component is created, it MUST consume global CSS custom properties (`var(--mat-sys-*)`) to ensure 100% theme harmony across both light and dark modes.
 
-### 3. Centralized SCSS Theme & Google Fonts Typography Architecture
-- **Google Fonts Loading**: High-legibility Google Fonts (e.g., `Inter`, `Roboto`, `Outfit`, or `Plus Jakarta Sans`) MUST be loaded globally in `index.html` or `src/styles.scss`.
-- **Global Theme Tokens**: All colors, surface elevations, rounded corners, and font scales MUST originate from the centralized theme setup in `src/styles/_theme.scss` and `src/styles/_typography.scss`.
-- **Material 3 Token Consumption**: Components MUST use M3 tokens (e.g., `var(--mat-sys-primary)`, `var(--mat-sys-on-surface)`, `var(--mat-sys-surface-container)`) instead of hardcoded hex values (`#1976d2`) or static RGB colors.
-- **No Unscoped Internal Overrides**: The agent MUST NOT use `::ng-deep` to override component internal CSS unless scoped strictly inside a parent selector using M3 custom property declarations.
+### 4. Centralized SCSS Theme & Google Fonts Typography Architecture
+- **Google Fonts Loading**: High-legibility Google Fonts (`Inter`, `Roboto`, `Outfit`, `Plus Jakarta Sans`) MUST be loaded globally in `index.html`.
+- **Global Theme Tokens**: All colors, surface elevations, rounded corners, and font scales MUST originate from `src/styles/_theme.scss` and `src/styles/_typography.scss`.
+- **Material 3 Token Consumption**: Components MUST use M3 tokens (e.g., `var(--mat-sys-primary)`, `var(--mat-sys-surface-container)`) instead of hardcoded hex values (`#1976d2`).
 
 ## Examples
 
-- **Correct Component Implementation (Material UI First):**
-```html
-<!-- src/app/features/users/user-list.component.html -->
-<div class="user-container">
-  <mat-form-field appearance="outline" class="search-field">
-    <mat-label>Filter Department</mat-label>
-    <mat-select [formControl]="departmentControl">
-      <mat-option value="all">All Departments</mat-option>
-      <mat-option value="engineering">Engineering</mat-option>
-      <mat-option value="design">Design</mat-option>
-    </mat-select>
-  </mat-form-field>
+- **Correct Reactive Theme Service Implementation (Default Dark Mode):**
+```typescript
+// src/app/core/services/theme.service.ts
+import { Injectable, signal, effect, inject, DOCUMENT } from '@angular/core';
 
-  <table mat-table [dataSource]="dataSource" class="mat-elevation-z1">
-    <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef> Name </th>
-      <td mat-cell *matCellDef="let element"> {{element.name}} </td>
-    </ng-container>
+@Injectable({ providedIn: 'root' })
+export class ThemeService {
+  private readonly document = inject(DOCUMENT);
+  private readonly STORAGE_KEY = 'app-theme-preference';
 
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
+  // Default initial state is Dark Theme (true)
+  readonly isDarkMode = signal<boolean>(this.getInitialThemePreference());
 
-  <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+  constructor() {
+    effect(() => {
+      const dark = this.isDarkMode();
+      const root = this.document.documentElement;
+      if (dark) {
+        root.classList.add('dark-theme');
+        root.classList.remove('light-theme');
+      } else {
+        root.classList.add('light-theme');
+        root.classList.remove('dark-theme');
+      }
+      localStorage.setItem(this.STORAGE_KEY, dark ? 'dark' : 'light');
+    });
+  }
 
-  <button mat-flat-button color="primary" (click)="addUser()">
-    Add New User
-  </button>
-</div>
-```
+  toggleTheme(): void {
+    this.isDarkMode.update(prev => !prev);
+  }
 
-- **Correct SCSS Styling (Consuming Global Theme Tokens & Google Fonts):**
-```scss
-// src/styles/_typography.scss
-@use '@angular/material' as mat;
-
-$typography-config: (
-  plain-family: "'Inter', 'Roboto', sans-serif",
-  brand-family: "'Outfit', 'Plus Jakarta Sans', sans-serif",
-  bold-weight: 700,
-  medium-weight: 500,
-  regular-weight: 400
-);
-
-// Component SCSS using Material CSS variables
-.user-container {
-  background-color: var(--mat-sys-surface-container-low);
-  color: var(--mat-sys-on-surface);
-  font-family: var(--app-font-body, 'Inter', sans-serif);
-  padding: 1.5rem;
-  border-radius: var(--mat-sys-corner-large, 16px);
+  private getInitialThemePreference(): boolean {
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    if (saved) return saved === 'dark';
+    return true; // Default to dark theme if no preference saved
+  }
 }
 ```
 
-- **Incorrect Implementation (Hardcoded Hex & Legacy HTML Controls):**
-```html
-<!-- Violates Material First Policy and Theme Tokens -->
-<div style="background-color: #f5f5f5; font-family: Arial;">
-  <select style="color: #333;"> <!-- Legacy HTML Select instead of mat-select -->
-    <option>Engineering</option>
-  </select>
-  <button style="background: #1976d2; color: white;">Save</button> <!-- Inline hardcoded colors -->
-</div>
+- **Correct Header Theme Toggle Component:**
+```typescript
+// src/app/shared/components/theme-toggle/theme-toggle.component.ts
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ThemeService } from '../../../core/services/theme.service';
+
+@Component({
+  selector: 'app-theme-toggle',
+  standalone: true,
+  imports: [MatButtonModule, MatIconModule, MatTooltipModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <button mat-icon-button
+            [matTooltip]="themeService.isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+            (click)="themeService.toggleTheme()">
+      <mat-icon>{{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+  `
+})
+export class ThemeToggleComponent {
+  readonly themeService = inject(ThemeService);
+}
 ```

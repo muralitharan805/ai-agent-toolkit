@@ -1,26 +1,26 @@
 ---
-description: "Step-by-step workflow to configure Angular Material UI, integrate Google Fonts typography, setup M3 SCSS theme palettes, and enforce primary Material UI components across Angular applications. Triggered by 'material-theme:', 'setup-material:', or '/setup-angular-material-theme'."
+description: "Step-by-step workflow to configure Angular Material UI with Dark Theme as default, Signal ThemeService, theme toggle component, M3 SCSS palettes, and Google Fonts typography. Triggered by 'material-theme:', 'setup-material:', or '/setup-angular-material-theme'."
 trigger: manual
 ---
-# Setup Angular Material SCSS Theme & Google Fonts Typography Workflow
+# Setup Angular Material Dark Theme Default & Theme Toggle Workflow
 
 ## Objective
-Scaffold and configure Angular Material (`@angular/material`) as the primary UI component framework in an Angular project. Establish a centralized SCSS theme structure with Google Fonts typography (`Inter`, `Roboto`, `Outfit`, `Plus Jakarta Sans`) and CSS custom property design tokens supporting dark and light theme switching.
+Scaffold and configure Angular Material (`@angular/material`) in an Angular project with **Dark Theme enabled as default**, a Signal-driven reactive `ThemeService`, a header theme toggle button, centralized SCSS M3 palettes, and Google Fonts typography (`Inter`, `Roboto`, `Outfit`).
 
 ## Prerequisites
 - Existing Angular application (v15+) with SCSS enabled (`schematics: { "@schematics/angular:component": { "style": "scss" } }`).
-- Node.js and Angular CLI installed.
+- Node.js and Angular CLI / pnpm installed.
 
 ## Execution Steps
 
 ### Step 1: Install Angular Material & CDK
-Install the mandatory Angular Material packages:
+Install mandatory Angular Material packages:
 ```bash
 pnpm add @angular/material @angular/cdk
 ```
 
 ### Step 2: Inject Google Fonts into `src/index.html`
-Add high-legibility Google Fonts links to the `<head>` of `src/index.html`:
+Add Google Fonts and Material Icons in `src/index.html`:
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,8 +49,8 @@ $app-typography: mat.define-theme((
 ));
 ```
 
-### Step 4: Create Centralized SCSS Theme Architecture
-Create `src/styles/_theme.scss` defining palettes, M3 theme configuration, and dark mode switches:
+### Step 4: Create SCSS Theme Palettes & Configurations
+Create `src/styles/_theme.scss`:
 ```scss
 @use '@angular/material' as mat;
 @use './typography' as app-type;
@@ -60,18 +60,7 @@ Create `src/styles/_theme.scss` defining palettes, M3 theme configuration, and d
 $primary-palette: mat.$azure-palette;
 $tertiary-palette: mat.$blue-palette;
 
-$light-theme: mat.define-theme((
-  color: (
-    theme-type: light,
-    primary: $primary-palette,
-    tertiary: $tertiary-palette,
-  ),
-  typography: (
-    plain-family: var(--app-font-body),
-    brand-family: var(--app-font-heading),
-  )
-));
-
+// Default Dark Theme Palette
 $dark-theme: mat.define-theme((
   color: (
     theme-type: dark,
@@ -83,28 +72,45 @@ $dark-theme: mat.define-theme((
     brand-family: var(--app-font-heading),
   )
 ));
+
+// Alternate Light Theme Palette
+$light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: $primary-palette,
+    tertiary: $tertiary-palette,
+  ),
+  typography: (
+    plain-family: var(--app-font-body),
+    brand-family: var(--app-font-heading),
+  )
+));
 ```
 
-### Step 5: Configure Global Styles in `src/styles/styles.scss`
-Include global tokens and root theme application:
+### Step 5: Configure Default Dark Theme in Global `src/styles/styles.scss`
+Enforce Dark Theme as the default root theme:
 ```scss
 @use './styles/theme' as app-theme;
 @use '@angular/material' as mat;
 
-html {
-  @include mat.all-component-themes(app-theme.$light-theme);
+// Dark Theme is applied by DEFAULT on root html
+html, html.dark-theme {
+  @include mat.all-component-themes(app-theme.$dark-theme);
+  color-scheme: dark;
   font-family: var(--app-font-body);
 }
 
-html.dark-theme {
-  @include mat.all-component-colors(app-theme.$dark-theme);
+// Light Theme applies when explicitly toggled by user
+html.light-theme {
+  @include mat.all-component-colors(app-theme.$light-theme);
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  font-family: var(--app-font-body);
   background-color: var(--mat-sys-background);
   color: var(--mat-sys-on-background);
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -113,17 +119,81 @@ h1, h2, h3, h4, h5, h6 {
 }
 ```
 
-### Step 6: Material First UI Component Mapping Checklist
-Ensure components throughout the application use Angular Material primitives:
-- [ ] **Table**: Replace native HTML `<table>` with `<table mat-table>` and `<mat-paginator>`.
-- [ ] **Button**: Replace `<button>` with `<button mat-flat-button color="primary">`.
-- [ ] **Input**: Replace `<input>` with `<mat-form-field appearance="outline"><input matInput></mat-form-field>`.
-- [ ] **Dropdown**: Replace `<select>` with `<mat-select><mat-option></mat-option></mat-select>`.
-- [ ] **Dialog**: Use `MatDialog` service with `<mat-dialog-content>`.
-- [ ] **Card & Panel**: Replace generic container `<div>` elements with `<mat-card>`.
+### Step 6: Create Reactive `ThemeService` (Dark Mode Default)
+Create `src/app/core/services/theme.service.ts`:
+```typescript
+import { Injectable, signal, effect, inject, DOCUMENT } from '@angular/core';
 
-### Step 7: Fallback Component Audit
-Audit all non-Material components (e.g. specialized charts or third-party widgets) to verify they consume `var(--mat-sys-*)` tokens for background, border, text color, and typography.
+@Injectable({ providedIn: 'root' })
+export class ThemeService {
+  private readonly document = inject(DOCUMENT);
+  private readonly STORAGE_KEY = 'app-theme-preference';
+
+  // Default state is TRUE (Dark Mode active by default)
+  readonly isDarkMode = signal<boolean>(this.getSavedPreference());
+
+  constructor() {
+    effect(() => {
+      const dark = this.isDarkMode();
+      const root = this.document.documentElement;
+      
+      if (dark) {
+        root.classList.add('dark-theme');
+        root.classList.remove('light-theme');
+      } else {
+        root.classList.add('light-theme');
+        root.classList.remove('dark-theme');
+      }
+      
+      localStorage.setItem(this.STORAGE_KEY, dark ? 'dark' : 'light');
+    });
+  }
+
+  toggleTheme(): void {
+    this.isDarkMode.update(prev => !prev);
+  }
+
+  private getSavedPreference(): boolean {
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    if (saved) return saved === 'dark';
+    return true; // Default to dark theme if no stored preference
+  }
+}
+```
+
+### Step 7: Create Header Theme Toggle Component
+Create `src/app/shared/components/theme-toggle/theme-toggle.component.ts`:
+```typescript
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ThemeService } from '../../../core/services/theme.service';
+
+@Component({
+  selector: 'app-theme-toggle',
+  standalone: true,
+  imports: [MatButtonModule, MatIconModule, MatTooltipModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <button mat-icon-button
+            [matTooltip]="themeService.isDarkMode() ? 'Switch to Light Theme' : 'Switch to Dark Theme'"
+            (click)="themeService.toggleTheme()"
+            aria-label="Toggle Dark/Light Theme">
+      <mat-icon>{{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+  `
+})
+export class ThemeToggleComponent {
+  readonly themeService = inject(ThemeService);
+}
+```
+
+### Step 8: Material Component & Theme Verification Checklist
+- [ ] Verify `<html>` loads with `.dark-theme` class by default.
+- [ ] Verify `<app-theme-toggle>` toggles `.dark-theme` / `.light-theme` class on root `<html>`.
+- [ ] Verify theme choice persists across browser reloads via `localStorage`.
+- [ ] Verify all Material components (`mat-table`, `mat-form-field`, `mat-select`, `mat-card`, `mat-dialog`) seamlessly transition colors on theme switch.
 
 ## Expected Output
-A unified Angular Material UI infrastructure with central SCSS theme palettes and Google Fonts typography globally applied across all components, tables, inputs, dropdowns, buttons, and custom fallbacks.
+An enterprise Angular application configured with Dark Theme as default, an interactive Signal-driven theme switcher, persisted preferences, and full Material 3 token alignment.
