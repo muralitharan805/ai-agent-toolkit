@@ -17,7 +17,7 @@ This repository is 100% natively compatible with **Google Antigravity IDE**:
 - **Native `.agents/` Discovery**: Target directories map directly to `.agents/skills/`, `.agents/rules/`, and `.agents/workflows/` for automatic IDE indexing.
 - **Strict GUI-Compatible Frontmatter**: Follows exact YAML frontmatter schemas (`name`, `description`, `trigger: always_on`, `trigger: glob`, `trigger: manual`) to render cleanly in Antigravity's UI.
 - **Slash Commands & Shorthand Triggers**: Designed to respond instantly to native slash commands (`/generate-agent-suite`, `/consolidate-agent-toolkit`) and prompt prefixes (`suite:`, `consolidate:`).
-- **Hot Symlink Reloading**: Uses `bin/link-skills.sh` to allow real-time agent context updates in consumer projects without requiring IDE restarts or re-indexing.
+- **Direct Copy Sync**: Uses `bin/sync-skills.sh` to copy physical files directly into `.agents/` without symbolic links.
 
 ## Structure
 
@@ -66,7 +66,6 @@ agent-toolkit/
 │
 └── bin/                    # Scripts to scaffold/sync skills into real projects
     ├── scaffold-angular.sh
-    ├── link-skills.sh
     └── sync-skills.sh
 ```
 
@@ -80,9 +79,9 @@ agent-toolkit/
 
 ## Usage
 
-### 1. Sync skills into an existing project (Approach 1: One-Command Copy Sync)
+### Sync skills into an existing project (Direct Physical Copy Sync)
 
-Run `bin/sync-skills.sh` from the toolkit repo to automatically populate a target project's `.agents/` folder with framework, shared, and infra skills/rules/workflows:
+Run `bin/sync-skills.sh` from the toolkit repo to automatically copy framework, shared, and infra skills/rules/workflows directly as physical files into a target project's `.agents/` directory:
 
 ```bash
 # Sync Angular framework + Shared rules/skills + Docker/Postgres infra tools into target project
@@ -90,18 +89,6 @@ Run `bin/sync-skills.sh` from the toolkit repo to automatically populate a targe
 
 # Sync Shared rules/skills only into any repository (framework optional)
 ./bin/sync-skills.sh --shared --target /path/to/my-project
-```
-
-### 2. Symlink skills for local development (Approach 2: Live Updates Mode)
-
-Run `bin/link-skills.sh` to create symlinks from your target project's `.agents/` directory pointing back to `ai-agent-toolkit`. Any update made in the toolkit will instantly reflect live in your local project!
-
-```bash
-# Symlink Angular context for live updates
-./bin/link-skills.sh --framework angular --infra docker,postgres --target /path/to/my-angular-app
-
-# Symlink Shared context only
-./bin/link-skills.sh --shared --target /path/to/my-project
 ```
 
 ### 3. Sync updates into a project that already has copied

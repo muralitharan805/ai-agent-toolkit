@@ -96,10 +96,10 @@ copy_category() {
           local dest_skill_dir="${TARGET_AGENTS_DIR}/skills/${skill_name}"
           echo "  [Skill] Syncing ${skill_name}..."
           
-          # Remove existing symlink or directory before copy to avoid same file errors
+          # Remove existing symlink or directory before copy
           rm -rf "$dest_skill_dir"
           mkdir -p "$dest_skill_dir"
-          cp -r "${skill_dir}"/* "${dest_skill_dir}/"
+          cp -r "${skill_dir}/." "${dest_skill_dir}/"
         fi
       done
     else
@@ -133,11 +133,11 @@ if [[ -n "$FRAMEWORK" ]]; then
   copy_category "$FRAMEWORK_PATH" "workflows"
 fi
 
-# 2. Sync Shared Context (Git, Security, Code Quality, Package Management, etc.)
+# 2. Sync Shared Context (Git, Security, Code Quality, Package Management, Generators, etc.)
 if [[ "$SYNC_SHARED" == true && -d "${TOOLKIT_ROOT}/shared" ]]; then
   echo "🌐 Syncing Shared Context..."
   for topic_dir in "${TOOLKIT_ROOT}/shared"/*; do
-    if [[ -d "$topic_dir" && "$(basename "$topic_dir")" != "generators" ]]; then
+    if [[ -d "$topic_dir" ]]; then
       copy_category "$topic_dir" "skills"
       copy_category "$topic_dir" "rules"
       copy_category "$topic_dir" "workflows"
