@@ -62,6 +62,14 @@ agent-toolkit/
 │   ├── logging/           # Correlation ID tracing, JSON logs, secret masking
 │   │   ├── skills/
 │   │   └── rules/
+│   ├── seyalicraft/       # Seyalicraft Ecosystem, product suites (seyalicraft.com, NidhiFlow, CivicPath) & repo map
+│   │   ├── skills/
+│   │   ├── rules/
+│   │   └── workflows/
+│   ├── civicpath/         # CivicPath product domain: GIS GeoJSON, civic issue state machine, PII protection
+│   │   ├── skills/
+│   │   ├── rules/
+│   │   └── workflows/
 │   └── code-quality/     # Clean code, JSDoc, & strict type safety standards
 │       ├── skills/
 │       └── rules/
