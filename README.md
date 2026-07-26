@@ -49,7 +49,9 @@ agent-toolkit/
 │   │   ├── skills/
 │   │   ├── rules/
 │   │   └── workflows/
-│   ├── generators/       # AI Skill, Rule, & Workflow generator workflows
+│   ├── generators/       # AI Skill, Rule, & Workflow authoring context
+│   │   ├── skills/
+│   │   ├── rules/
 │   │   └── workflows/
 │   ├── git/              # Git conventions & commit standards
 │   │   └── skills/
@@ -58,7 +60,8 @@ agent-toolkit/
 │   ├── logging/           # Correlation ID tracing, JSON logs, secret masking
 │   │   ├── skills/
 │   │   └── rules/
-│   └── code-quality/     # Clean code & type safety standards
+│   └── code-quality/     # Clean code, JSDoc, & strict type safety standards
+│       ├── skills/
 │       └── rules/
 │
 └── bin/                    # Scripts to scaffold/sync skills into real projects

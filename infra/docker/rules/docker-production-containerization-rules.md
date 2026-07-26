@@ -11,8 +11,23 @@ Enforces mandatory constraints for authoring production Docker container images,
 ## Constraints
 
 ### 1. Non-Root Container Execution Rule
-- Final production runner images MUST execute under an unprivileged user (e.g. `USER node`).
+- Final production runner images MUST execute under an unprivileged user (e.g. `USER node` or `USER 10001`).
 - Running application containers as `root` in production is STRICTLY FORBIDDEN.
+
+```dockerfile
+# Correct implementation
+FROM node:20-alpine
+WORKDIR /app
+COPY --chown=node:node . .
+USER node
+CMD ["node", "server.js"]
+
+# Incorrect implementation (FORBIDDEN: Missing USER instruction defaults to root)
+FROM node:20-alpine
+WORKDIR /app
+COPY . .
+CMD ["node", "server.js"]
+```
 
 ### 2. Multi-Environment Compose Separation Rule
 - Local development configs (bind volume mounts, hot-reloading watchers) MUST reside exclusively in `docker-compose.override.yml`.
