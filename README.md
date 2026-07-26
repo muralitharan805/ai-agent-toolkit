@@ -53,8 +53,10 @@ agent-toolkit/
 │   │   ├── skills/
 │   │   ├── rules/
 │   │   └── workflows/
-│   ├── git/              # Git conventions & commit standards
-│   │   └── skills/
+│   ├── git/              # Git conventions, commit standards, Issue & PR automation
+│   │   ├── skills/
+│   │   ├── rules/
+│   │   └── workflows/
 │   ├── security/         # Secret masking & OWASP rules
 │   │   └── rules/
 │   ├── logging/           # Correlation ID tracing, JSON logs, secret masking
