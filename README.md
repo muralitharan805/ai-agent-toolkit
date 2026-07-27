@@ -125,9 +125,9 @@ Instead of typing out full requests, you can use these shorthand prefixes direct
 - `suite: <topic>` (e.g., `suite: Angular Signals Form`) → Triggers smart evaluation & suite generation.
 - `context: <topic>` (e.g., `context: NestJS JWT Auth`) → Triggers smart evaluation & suite generation.
 
-#### 🪓 Slash Commands
+- `/deploy-angular-cloudflare` — Deploy Angular SSR to Cloudflare Pages/Workers
+- `/deploy-angular-spa-cloudflare` — Deploy Angular SPA (CSR) with _redirects fallback to Cloudflare Pages
 
-- `/consolidate-agent-toolkit` — Full workspace audit & topic grouping/consolidation
 - `/generate-agent-suite` — Smart evaluation & suite generation
 - `/generate-skill` — Single Skill generation
 - `/generate-rule` — Single Rule generation
