@@ -70,6 +70,10 @@ agent-toolkit/
 │   │   ├── skills/
 │   │   ├── rules/
 │   │   └── workflows/
+│   ├── docker-dev-infra/  # Dev Infra project domain: Postgres pgvector, Redis, modular Compose microservices
+│   │   ├── skills/
+│   │   ├── rules/
+│   │   └── workflows/
 │   └── code-quality/     # Clean code, JSDoc, & strict type safety standards
 │       ├── skills/
 │       └── rules/
