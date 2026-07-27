@@ -129,6 +129,8 @@ Instead of typing out full requests, you can use these shorthand prefixes direct
 
 - `/deploy-angular-cloudflare` — Deploy Angular SSR to Cloudflare Pages/Workers
 - `/deploy-angular-spa-cloudflare` — Deploy Angular SPA (CSR) with _redirects fallback to Cloudflare Pages
+- `/setup-angular-responsive-layout` — Scaffold Angular Material responsive BreakpointObserver layout & ScreenService
+
 
 - `/generate-agent-suite` — Smart evaluation & suite generation
 - `/generate-skill` — Single Skill generation
