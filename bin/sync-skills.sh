@@ -15,6 +15,7 @@ TOOLKIT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TARGET_DIR="./"
 FRAMEWORK=""
 INFRA_MODULES=""
+DOMAINS=""
 SYNC_SHARED=true
 
 usage() {
@@ -24,13 +25,14 @@ Usage: $(basename "$0") [options]
 Options:
   -f, --framework <name>   Framework name (e.g., angular, nestjs, strapi-v5)
   -i, --infra <tools>      Comma-separated infra tools (e.g., docker, postgres, redis, cloudflare)
-  -s, --shared             Explicitly include shared context (enabled by default)
+  -d, --domain <names>     Comma-separated domain modules (e.g., nidhiflow, civicpath, seyalicraft, docker-dev-infra)
+  -s, --shared             Include common shared context (enabled by default)
   -t, --target <path>      Target project root directory (default: current directory "./")
   -h, --help               Display this help message
 
 Examples:
-  $(basename "$0") --framework angular --target /path/to/app
-  $(basename "$0") --shared --target /path/to/app
+  $(basename "$0") --framework angular --domain nidhiflow --target /path/to/app
+  $(basename "$0") --domain civicpath --target /path/to/app
   $(basename "$0") --framework angular --infra docker,postgres --target /path/to/app
 EOF
   exit 0
@@ -45,6 +47,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -i|--infra)
       INFRA_MODULES="$2"
+      shift 2
+      ;;
+    -d|--domain)
+      DOMAINS="$2"
       shift 2
       ;;
     -s|--shared)
@@ -74,6 +80,7 @@ echo "Toolkit Source : ${TOOLKIT_ROOT}"
 echo "Target Project : ${TARGET_DIR}"
 [[ -n "$FRAMEWORK" ]] && echo "Framework      : ${FRAMEWORK}"
 [[ -n "$INFRA_MODULES" ]] && echo "Infra Tools    : ${INFRA_MODULES}"
+[[ -n "$DOMAINS" ]] && echo "Domain Modules : ${DOMAINS}"
 echo "Shared Context : Enabled"
 echo "------------------------------------------------------------------"
 
@@ -133,10 +140,13 @@ if [[ -n "$FRAMEWORK" ]]; then
   copy_category "$FRAMEWORK_PATH" "workflows"
 fi
 
-# 2. Sync Shared Context (Git, Security, Code Quality, Package Management, Generators, etc.)
+# 2. Sync Common Shared Context (Git, Security, Code Quality, Package Management, Generators, Logging)
+COMMON_SHARED_TOPICS=("code-quality" "git" "logging" "package-management" "security" "generators")
+
 if [[ "$SYNC_SHARED" == true && -d "${TOOLKIT_ROOT}/shared" ]]; then
-  echo "🌐 Syncing Shared Context..."
-  for topic_dir in "${TOOLKIT_ROOT}/shared"/*; do
+  echo "🌐 Syncing Common Shared Context..."
+  for topic in "${COMMON_SHARED_TOPICS[@]}"; do
+    topic_dir="${TOOLKIT_ROOT}/shared/${topic}"
     if [[ -d "$topic_dir" ]]; then
       copy_category "$topic_dir" "skills"
       copy_category "$topic_dir" "rules"
@@ -145,7 +155,24 @@ if [[ "$SYNC_SHARED" == true && -d "${TOOLKIT_ROOT}/shared" ]]; then
   done
 fi
 
-# 3. Sync Requested Infra Tools
+# 3. Sync Specific Product Domain Modules (e.g., nidhiflow, civicpath, seyalicraft, docker-dev-infra, ai-agent-toolkit)
+if [[ -n "$DOMAINS" ]]; then
+  IFS=',' read -ra DOMAIN_ARRAY <<< "$DOMAINS"
+  for domain_name in "${DOMAIN_ARRAY[@]}"; do
+    domain_trimmed="$(echo "$domain_name" | xargs)"
+    DOMAIN_PATH="${TOOLKIT_ROOT}/shared/${domain_trimmed}"
+    if [[ -d "$DOMAIN_PATH" ]]; then
+      echo "🎯 Syncing Domain Module Context: ${domain_trimmed}"
+      copy_category "$DOMAIN_PATH" "skills"
+      copy_category "$DOMAIN_PATH" "rules"
+      copy_category "$DOMAIN_PATH" "workflows"
+    else
+      echo "Warning: Domain module '${domain_trimmed}' not found under shared/. Skipping."
+    fi
+  done
+fi
+
+# 4. Sync Requested Infra Tools
 if [[ -n "$INFRA_MODULES" ]]; then
   IFS=',' read -ra INFRA_ARRAY <<< "$INFRA_MODULES"
   for infra in "${INFRA_ARRAY[@]}"; do
