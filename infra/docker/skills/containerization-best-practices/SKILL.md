@@ -27,6 +27,8 @@ The agent MUST dynamically inspect the project repository structure to identify 
 
 # Multi-Stage Build Patterns Across Major Stacks
 
+**Universal Optimization Note (Layer Caching):** Every multi-stage build below is designed to explicitly cache dependencies in Stage 1 (e.g., `package.json`, `requirements.txt`, `go.mod`). The first time an image is built, it will take time to download these dependencies. For all subsequent builds, as long as the dependency files haven't changed, Docker will reuse the cached layer, making the build nearly instantaneous even if the source code changes.
+
 ### 1. Node.js / TypeScript (NestJS / Express / Next.js)
 
 ```dockerfile
@@ -149,9 +151,33 @@ project-root/
 
 ---
 
+# Security & Optimization Standards
+
+To ensure production-grade security and minimal image sizes, the agent MUST implement the following:
+
+1. **`.dockerignore` standard**: A `.dockerignore` file MUST be generated for every project to prevent secret leakage and cache busting. It MUST include:
+   - `.env`, `.env.*` (Prevents leaking secrets into the image)
+   - `.git/`, `.github/` (Reduces build context size)
+   - `node_modules/`, `venv/`, `target/` (Prevents copying host-specific binaries)
+2. **Non-Root Execution**: Containers MUST NOT run as root in the final runner stage. The agent MUST explicitly create a non-root user (e.g., `USER node`, `USER appuser`) and assign proper ownership before the `USER` directive.
+
+---
+
+# Environment Variables & Security Standard
+
+The agent MUST NEVER hardcode environment variables (e.g., database credentials, API keys, secrets) directly inside the `Dockerfile`. All environment values MUST be passed dynamically at runtime using `.env` files or the host environment.
+
+The agent MUST:
+1. **Create or update `.env.example`**: Generate or update `.env.example` file containing all required environment variables for the project.
+2. **Embed Commands in `.env.example`**: Include explicit Docker CLI / Compose commands as comments at the top of `.env.example` (e.g., `# Run: docker run --env-file .env -p 3000:3000 my-app`) to show how to execute the container using these variables.
+
+---
+
 # README Execution Documentation Standard
 
-Every generated Docker setup MUST include a dedicated section in `README.md` explaining exact commands for local development vs production deployment across both Standalone and Shared Infrastructure modes.
+Every generated Docker setup MUST include a dedicated section in `README.md` explaining:
+1. **Environment Setup**: Instructions to copy `.env.example` to `.env` and configure the necessary values.
+2. **Execution Commands**: Exact commands for local development vs production deployment across both Standalone and Shared Infrastructure modes.
 
 ---
 
