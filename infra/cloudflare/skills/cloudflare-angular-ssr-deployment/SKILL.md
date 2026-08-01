@@ -30,6 +30,21 @@ Enforce high-performance, edge-rendered Angular 21 SSR (Server-Side Rendering) p
 }
 ```
 
+### 4. `.gitignore` Configuration
+The agent MUST ensure the following Cloudflare and build temporary directories are added to the project's `.gitignore`:
+```text
+# Cloudflare Pages / Wrangler
+.wrangler/
+.dev.vars
+dist/
+.angular/cache/
+```
+
+### 5. Environment Variables & Build Configuration
+The agent MUST document the following in the README:
+- **Local Dev**: Use a `.dev.vars` file for local Wrangler secrets (this is auto-ignored).
+- **Cloudflare Dashboard**: The user MUST set the `NODE_VERSION` environment variable (e.g., `20`) in the Cloudflare Pages settings so the Angular CLI runs in the correct environment during CI builds.
+
 ## Performance & SEO Standards for Portfolio Showcase
 
 ### 1. Hydration & Transfer State
@@ -40,5 +55,6 @@ Enforce high-performance, edge-rendered Angular 21 SSR (Server-Side Rendering) p
 - Ensure static images (avatars, showcase screenshots) in `public/` are served with aggressive Cache-Control headers via Cloudflare edge.
 
 ## Constraints & Anti-Patterns
+- **Deployment Execution (Anti-Automation)**: The AI Agent **MUST NOT** automatically execute Cloudflare deployment commands (e.g., `pnpm run deploy` or `wrangler deploy`) on behalf of the user. Automatically pushing to Cloudflare consumes deployment quota limits and generates unnecessary project URLs. Instead, the agent MUST strictly provide the command and instruct the user to run the deployment manually in their own terminal.
 - Do NOT use Node.js-native binary modules (e.g. `fs`, `child_process`, `net`) inside server routes destined for Cloudflare Workers environment.
 - Do NOT invoke non-serializable browser APIs inside component constructors or `ngOnInit` during SSR execution.
