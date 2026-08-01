@@ -83,6 +83,9 @@ The agent MUST document the following in the README:
 - **Local Dev**: Use a `.dev.vars` file for local Wrangler secrets (this is auto-ignored).
 - **Cloudflare Dashboard**: The user MUST set the `NODE_VERSION` environment variable (e.g., `20`) in the Cloudflare Pages settings so the Angular CLI runs in the correct environment during CI builds.
 
+### 6. Deployment Execution Constraint (Anti-Automation)
+The AI Agent **MUST NOT** automatically execute Cloudflare deployment commands (e.g., `pnpm run deploy` or `wrangler pages deploy`) on behalf of the user. Automatically pushing to Cloudflare consumes deployment quota limits and generates unnecessary project URLs. Instead, the agent MUST strictly provide the command and instruct the user to run the deployment manually in their own terminal.
+
 ---
 
 ## Performance & Cache Optimization
