@@ -26,6 +26,16 @@ Since Angular SPAs use client-side router (`RouterModule` / `provideRouter`), an
 ```
 *Note: Placing `_redirects` in `public/_redirects` (or `src/assets/_redirects`) ensures Angular CLI copies it directly to the root of the build output.*
 
+### 3. Custom Headers (`_headers`)
+To prevent aggressive caching of `index.html` (ensuring users always get the latest version of the app) and apply security headers, the agent MUST generate a `public/_headers` (or `src/assets/_headers`) file:
+```text
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+```
+
 ---
 
 ## Wrangler & Deployment Configuration
@@ -53,6 +63,26 @@ Since Angular SPAs use client-side router (`RouterModule` / `provideRouter`), an
 }
 ```
 
+### 3. `.gitignore` Configuration
+The agent MUST ensure the following Cloudflare and build temporary directories are added to the project's `.gitignore`:
+```text
+# Cloudflare Pages / Wrangler
+.wrangler/
+.dev.vars
+dist/
+.angular/cache/
+```
+
+### 4. `package.json` Scripts Configuration
+The agent MUST explicitly inject the following Cloudflare CLI commands into the target project's `package.json` under `"scripts"` (adjusting `<project-name>` accordingly):
+- `"preview": "pnpm run build && wrangler pages dev dist/<project-name>/browser"`
+- `"deploy": "pnpm run build && wrangler pages deploy dist/<project-name>/browser --project-name=<project-name>"`
+
+### 5. Environment Variables & Build Configuration
+The agent MUST document the following in the README:
+- **Local Dev**: Use a `.dev.vars` file for local Wrangler secrets (this is auto-ignored).
+- **Cloudflare Dashboard**: The user MUST set the `NODE_VERSION` environment variable (e.g., `20`) in the Cloudflare Pages settings so the Angular CLI runs in the correct environment during CI builds.
+
 ---
 
 ## Performance & Cache Optimization
@@ -64,6 +94,14 @@ Since Angular SPAs use client-side router (`RouterModule` / `provideRouter`), an
    - Embed `<link rel="preconnect" href="https://fonts.gstatic.com">` in `src/index.html` for zero render-blocking Google Fonts loading.
 3. **PWA & Web Worker Integration**:
    - Angular SPAs on Cloudflare Pages seamlessly integrate with `@angular/service-worker` for offline asset caching.
+
+---
+
+## README Execution Documentation Standard
+
+The agent MUST generate or update a dedicated section in the `README.md` explaining how to execute and deploy the application. It MUST include:
+1. **Local Preview**: Instructions on how to build and test the app locally using Wrangler (`pnpm run preview`).
+2. **Cloudflare Deployment**: Instructions on how to manually deploy the SPA bundle directly to Cloudflare Pages (`pnpm run deploy`).
 
 ---
 
