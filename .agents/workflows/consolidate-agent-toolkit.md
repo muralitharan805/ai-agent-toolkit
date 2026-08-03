@@ -12,6 +12,7 @@ Act as a Principal Knowledge Architect and Systems Optimizer. You specialize in 
 
 ### Step 1: Workspace Inventory & Semantic Scan
 Recursively scan all files in `frameworks/`, `infra/`, `shared/`, and `.agents/`:
+- **EXCLUSION**: Completely ignore the `shared/generators/` directory. This contains intentional duplicates for specific project use cases and MUST NOT be scanned, audited, merged, or deleted.
 - Inventory all `SKILL.md` files, `.md` rules, and `.md` workflows.
 - Group files semantically by primary topic (e.g., Angular, NestJS, Strapi, Docker, Postgres, Redis, Git, Security).
 - Identify overlapping or duplicate topics (e.g., multiple skills discussing the same framework features or multiple rules enforcing similar constraints).
@@ -48,6 +49,7 @@ After completing file merges and restructuring:
 - Verify that all generator paths and triggers remain intact.
 
 ## Output Constraints
+- NEVER delete or merge files inside the `shared/generators/` directory.
 - NEVER delete unique technical knowledge during consolidation; always merge into the master topic file.
 - Maintain high-level professional English across all merged files.
 - Ensure all YAML frontmatter tags remain valid and uncorrupted.

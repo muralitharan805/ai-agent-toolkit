@@ -1,5 +1,5 @@
 ---
-description: "Sequential workflow to build Angular 21 SSR application, run Vitest test suite, execute local Wrangler preview, and deploy to Cloudflare Pages/Workers."
+description: "Sequential workflow to build Angular 21 SSR application, run Vitest test suite, execute local Wrangler preview, and deploy to Cloudflare Pages/Workers. Triggered by 'deploy-ssr:', 'cloudflare-ssr:', or '/deploy-angular-ssr-cloudflare'."
 trigger: manual
 ---
 # Deploy Angular SSR to Cloudflare Workflow

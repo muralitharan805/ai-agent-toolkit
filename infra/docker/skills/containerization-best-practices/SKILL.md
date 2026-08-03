@@ -160,6 +160,7 @@ To ensure production-grade security and minimal image sizes, the agent MUST impl
    - `.git/`, `.github/` (Reduces build context size)
    - `node_modules/`, `venv/`, `target/` (Prevents copying host-specific binaries)
 2. **Non-Root Execution**: Containers MUST NOT run as root in the final runner stage. The agent MUST explicitly create a non-root user (e.g., `USER node`, `USER appuser`) and assign proper ownership before the `USER` directive.
+3. **Stateful Application Data**: If the application is a CMS (like Strapi, WordPress) or requires persistent file storage (e.g., `public/uploads`), the agent MUST configure **Named Volumes** in the production Docker Compose file (e.g., `- strapi_uploads:/opt/app/public/uploads`). The agent MUST NOT rely on local container storage for persistent user uploads.
 
 ---
 
