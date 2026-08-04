@@ -76,7 +76,14 @@ Scaffold initial dashboard feature:
 - `src/app/features/dashboard/feature-shell/dashboard-page.component.ts`
 - `src/app/features/dashboard/dashboard.routes.ts`
 
-### Step 9: Build Verification (Points 13, 14)
+### Step 9: Environment & Proxy Setup
+Execute the environment configuration rule:
+- Create `src/environments/environment.ts` and `src/environments/environment.prod.ts`.
+- Create `proxy.dev.json` and `proxy.staging.json` at the root.
+- Wire `angular.json` file replacements and proxy configurations.
+- Add npm scripts for `start:dev`, `start:staging`, `build:dev`, `build:live`.
+
+### Step 10: Build Verification (Points 13, 14)
 Run compilation check via mandatory `pnpm`:
 ```bash
 pnpm build
