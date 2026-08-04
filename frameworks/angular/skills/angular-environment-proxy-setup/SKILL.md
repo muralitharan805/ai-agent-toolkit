@@ -97,3 +97,37 @@ Add standard scripts for consistent execution across team members and CI/CD pipe
   "build:live": "ng build --configuration=production"
 }
 ```
+
+## 5. API Service Template
+
+Here is a standard `UserApiService` that leverages the modern `inject()` pattern and the configured `environment.apiUrl`.
+
+```typescript
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserApiService {
+  private readonly http = inject(HttpClient);
+  // Dynamically uses '/api' (Dev Proxy) or 'https://api.yourdomain.com/api/v1' (Prod)
+  private readonly baseUrl = `${environment.apiUrl}/users`;
+
+  getUsers(): Observable<User[]> {
+    return this.http.get<User[]>(this.baseUrl);
+  }
+
+  getUserById(id: string): Observable<User> {
+    return this.http.get<User>(`${this.baseUrl}/${id}`);
+  }
+}
+```
