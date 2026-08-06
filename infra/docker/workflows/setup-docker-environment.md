@@ -37,11 +37,14 @@ Generate split Compose files based on requested components:
 3. `docker-compose.prod.yml`: Production overrides (`restart: unless-stopped`, resource CPU/memory limits, json-file logging).
 4. `docker-compose.shared.yml`: Standalone infrastructure services (Postgres + pgvector, MySQL, MongoDB, Redis + RedisInsight, RabbitMQ, Kafka, MinIO, healthchecks).
 5. `docker-compose.existing-infra.yml`: Shared cost-saver overrides connecting application container to existing running infrastructure containers via external Docker network (`shared-infra-network`).
+6. `docker-compose.repo.yml`: Pre-built image execution overrides referencing the Docker Hub container image path instead of a local build context.
 
 ### Step 4: Update Project README.md Documentation
 Append a dedicated `## 🐳 Docker Containerization & Execution Guide` section to the project's `README.md` detailing:
+- Commands to **build and push** the image to Docker Hub (e.g., `docker build -t <username>/<repo>:<tag> .` and `docker push <username>/<repo>:<tag>`).
 - Commands for Mode A: Standalone dev environment (`docker compose -f docker-compose.shared.yml -f docker-compose.yml up -d`).
 - Commands for Mode B: Shared cost-saver environment (`docker compose -f docker-compose.yml -f docker-compose.existing-infra.yml up -d`).
+- Commands for Mode C: Pre-built Docker Hub environment using the remote image (`docker compose -f docker-compose.yml -f docker-compose.repo.yml up -d`).
 - Commands for Production deployment (`docker compose -f docker-compose.shared.yml -f docker-compose.yml -f docker-compose.prod.yml up -d --build`).
 
 ### Step 5: Verification & Container Testing
