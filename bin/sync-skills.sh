@@ -141,7 +141,7 @@ if [[ -n "$FRAMEWORK" ]]; then
 fi
 
 # 2. Sync Common Shared Context (Git, Security, Code Quality, Package Management, Generators, Logging)
-COMMON_SHARED_TOPICS=("code-quality" "git" "logging" "package-management" "security" "generators")
+COMMON_SHARED_TOPICS=("code-quality" "git" "logging" "package-management" "security" "generators" "google-suite")
 
 if [[ "$SYNC_SHARED" == true && -d "${TOOLKIT_ROOT}/shared" ]]; then
   echo "🌐 Syncing Common Shared Context..."
