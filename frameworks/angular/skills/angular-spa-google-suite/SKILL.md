@@ -65,9 +65,11 @@ export class SeoService {
   /**
    * Injects or updates the canonical link tag (<link rel="canonical" href="...">)
    * in the document head to prevent duplicate content penalties in Search Console.
+   * Automatically strips query parameters to maintain clean canonical URLs.
    */
   setCanonicalUrl(url?: string): void {
-    const targetUrl = url || `${this.document.location.origin}${this.document.location.pathname}`;
+    const rawUrl = url || `${this.document.location.origin}${this.document.location.pathname}`;
+    const cleanUrl = rawUrl.split('?')[0];
     let link: HTMLLinkElement | null = this.document.querySelector("link[rel='canonical']");
 
     if (!link) {
@@ -76,7 +78,7 @@ export class SeoService {
       this.document.head.appendChild(link);
     }
 
-    link.setAttribute('href', targetUrl);
+    link.setAttribute('href', cleanUrl);
   }
 }
 ```

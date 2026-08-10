@@ -87,9 +87,11 @@ export class SeoService {
   /**
    * Injects or updates the canonical link tag (<link rel="canonical" href="...">)
    * in the document head during SSR pre-rendering and CSR navigation.
+   * Automatically strips query parameters to maintain clean canonical URLs.
    */
   setCanonicalUrl(url?: string): void {
-    const targetUrl = url || `https://seyalicraft.com${this.document.location?.pathname || ''}`;
+    const rawUrl = url || `https://seyalicraft.com${this.document.location?.pathname || ''}`;
+    const cleanUrl = rawUrl.split('?')[0];
     let link: HTMLLinkElement | null = this.document.querySelector("link[rel='canonical']");
 
     if (!link) {
@@ -98,7 +100,7 @@ export class SeoService {
       this.document.head.appendChild(link);
     }
 
-    link.setAttribute('href', targetUrl);
+    link.setAttribute('href', cleanUrl);
   }
 }
 ```
