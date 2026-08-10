@@ -12,7 +12,11 @@ trigger: manual
 ## Step 2: Configure `wrangler.jsonc` Output Directory
 Ensure `wrangler.jsonc` specifies `"pages_build_output_dir": "dist/<app-name>/browser"`.
 
-## Step 3: Inject GA4 & AdSense in `src/index.html`
-1. Add GA4 script tag `G-XXXXXXXXXX`.
-2. Add AdSense publisher tag `ca-pub-XXXXXXXXXXXXXXXX`.
-3. Add JSON-LD WebApplication schema.
+## Step 3: Inject Canonical, GA4 & AdSense in `src/index.html`
+1. Add default `<link rel="canonical" href="https://yourdomain.com/" />` tag in `index.html`.
+2. Add GA4 script tag `G-XXXXXXXXXX`.
+3. Add AdSense publisher tag `ca-pub-XXXXXXXXXXXXXXXX`.
+4. Add JSON-LD WebApplication schema.
+
+## Step 4: Setup `SeoService` for Dynamic Canonical Tags
+Implement `setCanonicalUrl()` in `SeoService` to update `<link rel="canonical">` on SPA route navigation.

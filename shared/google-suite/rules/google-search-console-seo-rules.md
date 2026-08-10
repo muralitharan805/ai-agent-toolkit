@@ -25,3 +25,6 @@ Enforces mandatory universal standards for search engine indexing, sitemap gener
 
 ### 3. Canonical Link Tags
 - Every page MUST render a canonical link tag (`<link rel="canonical" href="https://yourdomain.com/page">`) to eliminate duplicate content penalties across subdomains or parameter variations.
+
+### 4. Domain 301 Redirection & SSL Enforcement
+- Applications MUST enforce HTTPS and 301 Permanent Redirects for all non-canonical hostnames (e.g. `http://` to `https://`, `www` to non-`www` apex domain or vice-versa) to prevent duplicate content indexing penalties in Google Search Console.
