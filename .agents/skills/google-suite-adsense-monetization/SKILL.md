@@ -24,3 +24,8 @@ Provides universal guidelines for integrating AdSense ad units, publisher script
   margin: 1rem 0;
 }
 ```
+
+### 3. Root `ads.txt` File Template (`public/ads.txt`)
+```text
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+```

@@ -46,3 +46,15 @@ Inject JSON-LD schemas into document head for search result enhancement:
 }
 </script>
 ```
+
+### 3. Canonical Link Tags (`<link rel="canonical">`)
+Inject explicit canonical URL links in the document `<head>` to prevent duplicate indexing penalties:
+```html
+<!-- Base index.html fallback -->
+<link rel="canonical" href="https://yourdomain.com/" />
+```
+
+#### Guidelines for Canonical URLs:
+- **Apex vs WWW**: Enforce single canonical domain format (`https://yourdomain.com/` vs `https://www.yourdomain.com/`).
+- **Subdomain Self-Referencing**: Subdomains (e.g., `https://tool.yourdomain.com/`) MUST reference their own subdomain URL, NOT the apex domain URL.
+- **Parameter Stripping**: Strip tracking parameters (`?utm_source=...`, `?ref=...`) from canonical link tags.

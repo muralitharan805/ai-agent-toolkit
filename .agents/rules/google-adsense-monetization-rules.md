@@ -18,3 +18,10 @@ Enforces mandatory standards for Google AdSense integration, Publisher ID (`ca-p
 
 ### 3. CMP GDPR & Privacy Consent Compliance
 - Monetized web applications serving users in the EEA, UK, or Switzerland MUST adopt Google's certified Consent Management Platform (CMP) or equivalent IAB TCF v2.2 framework.
+
+### 4. Mandatory `ads.txt` File Presence
+- Applications displaying AdSense advertisements MUST deploy a valid `/ads.txt` file at root domain containing:
+  ```text
+  google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+  ```
+- Unverified publisher sites missing `ads.txt` are strictly prohibited to prevent AdSense earnings risk warnings.
