@@ -9,7 +9,7 @@ trigger: manual
 Implement raw XML Response handler for `/sitemap.xml` inside `createRequestHandler`.
 
 ## Step 2: Configure `public/_routes.json`
-Exclude `/sitemap.xml`, `/robots.txt`, and `/assets/*` from Cloudflare Worker execution.
+Exclude `/sitemap.xml`, `/robots.txt`, `/ads.txt`, and `/assets/*` from Cloudflare Worker execution.
 
 ## Step 3: Inject Canonical, GA4 & AdSense Tags
 1. Add default fallback `<link rel="canonical" href="https://yourdomain.com/" />` tag in `src/index.html`.
@@ -17,3 +17,9 @@ Exclude `/sitemap.xml`, `/robots.txt`, and `/assets/*` from Cloudflare Worker ex
 
 ## Step 4: Setup Dynamic Canonical `SeoService`
 Implement SSR-safe `setCanonicalUrl()` in `SeoService` to update `<link rel="canonical">` during Edge SSR pre-rendering and CSR hydration.
+
+## Step 5: Deploy `public/ads.txt`
+Create `public/ads.txt` declaring publisher ownership:
+```text
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+```

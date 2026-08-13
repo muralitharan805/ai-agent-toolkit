@@ -9,7 +9,24 @@ description: Architecture, directory layout (frameworks, infra, shared, .agents)
 
 **`ai-agent-toolkit`** ([`muralitharan805/ai-agent-toolkit`](https://github.com/muralitharan805/ai-agent-toolkit)) is Seyalicraft's central management repository for AI Agent capabilities, engineering rules, automated workflows, and domain context skills.
 
-It provides a modular, deduplicated structure designed to sync context seamlessly into all Seyalicraft repositories (`seyalicraft-frontend`, `civicpath`, `nidhiflow`, `docker-dev-infra`) via the `bin/sync-skills.sh` automation script.
+It provides a modular, deduplicated structure designed to sync context seamlessly into all Seyalicraft repositories (`seyalicraft-frontend`, `civicpath`, `nidhiflow`, `docker-dev-infra`) or globally into the user's system (`~/.gemini/`) via the `bin/sync-skills.sh` automation script.
+
+---
+
+## Two-Stage Context Generation & Deployment Paradigm
+
+```
+[User Request / Scenario]
+         │
+         ▼
+[1. Generate inside Toolkit] ──► /generate-agent-suite creates/updates files under
+                                  frameworks/, infra/, or shared/
+         │
+         ▼
+[2. Sync & Deploy via Script] ──► bin/sync-skills.sh
+                                  ├── --global  ► ~/.gemini/antigravity/skills/, ~/.gemini/config/
+                                  └── --target  ► <workspace-root>/.agents/
+```
 
 ---
 
@@ -35,13 +52,13 @@ ai-agent-toolkit/
 │   ├── docker-dev-infra/      # Docker dev infra compose template skills
 │   ├── ai-agent-toolkit/      # Toolkit authoring & architectural skills
 │   ├── code-quality/          # Clean code & maintainability standards
-│   ├── generators/            # Skill/Rule/Workflow generator workflows
+│   ├── generators/            # Skill/Rule/Workflow generator workflows (/generate-agent-suite)
 │   ├── git/                   # Git conventional commits & PR automation
 │   ├── logging/               # Structured logging & observability standards
 │   └── security/              # Web security & auth guidelines
 │
 ├── bin/                       # Automation CLI scripts
-│   └── sync-skills.sh         # Syncs toolkit context into consumer projects (.agents/)
+│   └── sync-skills.sh         # Syncs context to Workspace (.agents/) or Global (~/.gemini/)
 │
 └── .agents/                   # Local workspace rules & active workflows
 ```
@@ -81,17 +98,20 @@ trigger: always_on
 
 ## Skill Synchronization Engine (`bin/sync-skills.sh`)
 
-The toolkit provides a shell script to copy relevant skills, rules, and workflows into any targeted project directory:
+The toolkit provides a shell script to sync skills, rules, and workflows into workspace repositories or globally:
 
 ```bash
-# Basic usage: sync shared context into target project
-./bin/sync-skills.sh --target /path/to/project
+# 1. Sync ALL contexts globally to personal machine (~/.gemini/)
+./bin/sync-skills.sh --global --all
 
-# Sync Angular framework + Docker infra + shared context into project
+# 2. Sync specific framework & infra globally
+./bin/sync-skills.sh --global --framework nestjs --infra postgres,redis
+
+# 3. Sync Angular framework + Docker infra + shared context into target workspace
 ./bin/sync-skills.sh --framework angular --infra docker --target /path/to/seyalicraft-frontend
 
-# Sync NestJS framework + Postgres + Redis infra into backend project
-./bin/sync-skills.sh --framework nestjs --infra postgres,redis --target /path/to/nidhiflow-backend
+# 4. Sync specific domain module into workspace
+./bin/sync-skills.sh --domain nidhiflow --target /path/to/nidhiflow-backend
 ```
 
 ---

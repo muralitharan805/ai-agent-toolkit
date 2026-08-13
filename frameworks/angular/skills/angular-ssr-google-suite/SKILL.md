@@ -104,3 +104,23 @@ export class SeoService {
   }
 }
 ```
+
+### 4. Root `ads.txt` Publisher Verification (`public/ads.txt`)
+```text
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+```
+
+### 5. Edge Route Bypass Manifest (`public/_routes.json`)
+```json
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/sitemap.xml",
+    "/robots.txt",
+    "/ads.txt",
+    "/favicon.ico",
+    "/assets/*"
+  ]
+}
+```
