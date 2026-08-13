@@ -2,8 +2,9 @@
 
 # ==============================================================================
 # Script: sync-skills.sh
-# Purpose: Copies framework, infra, and shared skills/rules/workflows from
-#          ai-agent-toolkit into a consumer project's .agents/ directory.
+# Purpose: Syncs framework, infra, and shared skills/rules/workflows from
+#          ai-agent-toolkit into a consumer project's .agents/ directory (Workspace)
+#          or into ~/.gemini global customization paths (Global).
 # ==============================================================================
 
 set -e
@@ -13,6 +14,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOOLKIT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 TARGET_DIR="./"
+IS_GLOBAL=false
+SYNC_ALL=false
 FRAMEWORK=""
 INFRA_MODULES=""
 DOMAINS=""
@@ -23,17 +26,24 @@ usage() {
 Usage: $(basename "$0") [options]
 
 Options:
+  -g, --global             Sync context to Global Level (~/.gemini/antigravity/skills, ~/.gemini/config/)
+  -t, --target <path>      Target project root directory for Workspace Level (default: current directory "./")
+  -a, --all                Sync ALL frameworks, infra modules, and shared domain contexts
   -f, --framework <name>   Framework name (e.g., angular, nestjs, strapi-v5)
   -i, --infra <tools>      Comma-separated infra tools (e.g., docker, postgres, redis, cloudflare)
-  -d, --domain <names>     Comma-separated domain modules (e.g., nidhiflow, civicpath, seyalicraft, docker-dev-infra)
+  -d, --domain <names>     Comma-separated domain modules (e.g., nidhiflow, civicpath, seyalicraft, docker-dev-infra, ai-agent-toolkit)
   -s, --shared             Include common shared context (enabled by default)
-  -t, --target <path>      Target project root directory (default: current directory "./")
   -h, --help               Display this help message
 
 Examples:
+  # Workspace level sync into current project:
   $(basename "$0") --framework angular --domain nidhiflow --target /path/to/app
-  $(basename "$0") --domain civicpath --target /path/to/app
-  $(basename "$0") --framework angular --infra docker,postgres --target /path/to/app
+
+  # Global level sync for personal machine:
+  $(basename "$0") --global --all
+
+  # Global level sync for specific framework and infra:
+  $(basename "$0") --global --framework nestjs --infra postgres,redis
 EOF
   exit 0
 }
@@ -41,6 +51,14 @@ EOF
 # Parse Command Line Arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -g|--global)
+      IS_GLOBAL=true
+      shift 1
+      ;;
+    -a|--all)
+      SYNC_ALL=true
+      shift 1
+      ;;
     -f|--framework)
       FRAMEWORK="$2"
       shift 2
@@ -71,25 +89,86 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-TARGET_AGENTS_DIR="$(cd "$TARGET_DIR" 2>/dev/null && pwd)/.agents"
+if [[ "$SYNC_ALL" == true ]]; then
+  # Auto-discover all frameworks, infra tools, and shared domains
+  FRAMEWORK=""
+  for fw_dir in "${TOOLKIT_ROOT}/frameworks"/*; do
+    if [[ -d "$fw_dir" ]]; then
+      fw_name="$(basename "$fw_dir")"
+      if [[ -z "$FRAMEWORK" ]]; then
+        FRAMEWORK="$fw_name"
+      else
+        FRAMEWORK="${FRAMEWORK},${fw_name}"
+      fi
+    fi
+  done
+
+  INFRA_MODULES=""
+  for inf_dir in "${TOOLKIT_ROOT}/infra"/*; do
+    if [[ -d "$inf_dir" ]]; then
+      inf_name="$(basename "$inf_dir")"
+      if [[ -z "$INFRA_MODULES" ]]; then
+        INFRA_MODULES="$inf_name"
+      else
+        INFRA_MODULES="${INFRA_MODULES},${inf_name}"
+      fi
+    fi
+  done
+fi
+
+# Define destination directory paths based on Scope
+if [[ "$IS_GLOBAL" == true ]]; then
+  TARGET_SKILLS_DIR="${HOME}/.gemini/antigravity/skills"
+  TARGET_RULES_DIR="${HOME}/.gemini/config/rules"
+  TARGET_WORKFLOWS_DIR="${HOME}/.gemini/config/global_workflows"
+  GLOBAL_AGENTS_MD="${HOME}/.gemini/config/AGENTS.md"
+  GLOBAL_GEMINI_MD="${HOME}/.gemini/GEMINI.md"
+  SCOPE_LABEL="Global Level (~/.gemini)"
+else
+  TARGET_AGENTS_DIR="$(cd "$TARGET_DIR" 2>/dev/null && pwd)/.agents"
+  TARGET_SKILLS_DIR="${TARGET_AGENTS_DIR}/skills"
+  TARGET_RULES_DIR="${TARGET_AGENTS_DIR}/rules"
+  TARGET_WORKFLOWS_DIR="${TARGET_AGENTS_DIR}/workflows"
+  SCOPE_LABEL="Workspace Level (${TARGET_DIR}/.agents)"
+fi
 
 echo "=================================================================="
 echo "🚀 AI Agent Toolkit Sync Utility"
 echo "=================================================================="
 echo "Toolkit Source : ${TOOLKIT_ROOT}"
-echo "Target Project : ${TARGET_DIR}"
-[[ -n "$FRAMEWORK" ]] && echo "Framework      : ${FRAMEWORK}"
+echo "Sync Target    : ${SCOPE_LABEL}"
+[[ -n "$FRAMEWORK" ]] && echo "Frameworks     : ${FRAMEWORK}"
 [[ -n "$INFRA_MODULES" ]] && echo "Infra Tools    : ${INFRA_MODULES}"
 [[ -n "$DOMAINS" ]] && echo "Domain Modules : ${DOMAINS}"
 echo "Shared Context : Enabled"
 echo "------------------------------------------------------------------"
 
 # Ensure destination directories exist
-mkdir -p "${TARGET_AGENTS_DIR}/skills"
-mkdir -p "${TARGET_AGENTS_DIR}/rules"
-mkdir -p "${TARGET_AGENTS_DIR}/workflows"
+mkdir -p "${TARGET_SKILLS_DIR}"
+mkdir -p "${TARGET_RULES_DIR}"
+mkdir -p "${TARGET_WORKFLOWS_DIR}"
 
-# Function to safely copy files into target .agents
+# Helper function to append rules safely to AGENTS.md / GEMINI.md for global sync
+append_rule_file() {
+  local rule_file="$1"
+  local target_md="$2"
+
+  if [[ -f "$rule_file" && -f "$target_md" ]]; then
+    local rule_header=$(grep -E '^\s*<RULE\[' "$rule_file" | head -n 1 || true)
+    if [[ -n "$rule_header" ]]; then
+      local rule_id=$(echo "$rule_header" | sed -E 's/.*<RULE\[([^]]+)\].*/\1/')
+      if grep -q "<RULE\[${rule_id}\]" "$target_md"; then
+        echo "  [Rule] Rule '${rule_id}' already present in $(basename "$target_md"). Skipping append."
+        return
+      fi
+    fi
+    echo "" >> "$target_md"
+    cat "$rule_file" >> "$target_md"
+    echo "  [Rule] Appended $(basename "$rule_file") into $(basename "$target_md")"
+  fi
+}
+
+# Function to safely copy files into target locations
 copy_category() {
   local src_dir="$1"
   local category="$2" # skills, rules, or workflows
@@ -100,24 +179,37 @@ copy_category() {
       for skill_dir in "${src_dir}/${category}"/*; do
         if [[ -d "$skill_dir" ]]; then
           local skill_name="$(basename "$skill_dir")"
-          local dest_skill_dir="${TARGET_AGENTS_DIR}/skills/${skill_name}"
+          local dest_skill_dir="${TARGET_SKILLS_DIR}/${skill_name}"
           echo "  [Skill] Syncing ${skill_name}..."
           
-          # Remove existing symlink or directory before copy
           rm -rf "$dest_skill_dir"
           mkdir -p "$dest_skill_dir"
           cp -r "${skill_dir}/." "${dest_skill_dir}/"
         fi
       done
-    else
-      # Rules and Workflows are .md files
+    elif [[ "$category" == "rules" ]]; then
       for md_file in "${src_dir}/${category}"/*.md; do
         if [[ -f "$md_file" ]]; then
           local file_name="$(basename "$md_file")"
-          local dest_file="${TARGET_AGENTS_DIR}/${category}/${file_name}"
-          echo "  [${category^}] Syncing ${file_name}..."
+          local dest_file="${TARGET_RULES_DIR}/${file_name}"
+          echo "  [Rule] Syncing ${file_name}..."
           
-          # Remove existing symlink or file before copy
+          rm -f "$dest_file"
+          cp "${md_file}" "$dest_file"
+
+          if [[ "$IS_GLOBAL" == true ]]; then
+            [[ -f "$GLOBAL_AGENTS_MD" ]] && append_rule_file "$md_file" "$GLOBAL_AGENTS_MD"
+            [[ -f "$GLOBAL_GEMINI_MD" ]] && append_rule_file "$md_file" "$GLOBAL_GEMINI_MD"
+          fi
+        fi
+      done
+    elif [[ "$category" == "workflows" ]]; then
+      for md_file in "${src_dir}/${category}"/*.md; do
+        if [[ -f "$md_file" ]]; then
+          local file_name="$(basename "$md_file")"
+          local dest_file="${TARGET_WORKFLOWS_DIR}/${file_name}"
+          echo "  [Workflow] Syncing ${file_name}..."
+          
           rm -f "$dest_file"
           cp "${md_file}" "$dest_file"
         fi
@@ -126,21 +218,24 @@ copy_category() {
   fi
 }
 
-# 1. Sync Framework Context (if specified)
+# 1. Sync Framework Contexts
 if [[ -n "$FRAMEWORK" ]]; then
-  FRAMEWORK_PATH="${TOOLKIT_ROOT}/frameworks/${FRAMEWORK}"
-  if [[ ! -d "$FRAMEWORK_PATH" ]]; then
-    echo "Error: Framework '${FRAMEWORK}' not found under ${TOOLKIT_ROOT}/frameworks/"
-    exit 1
-  fi
-
-  echo "📦 Syncing Framework Context: ${FRAMEWORK}"
-  copy_category "$FRAMEWORK_PATH" "skills"
-  copy_category "$FRAMEWORK_PATH" "rules"
-  copy_category "$FRAMEWORK_PATH" "workflows"
+  IFS=',' read -ra FW_ARRAY <<< "$FRAMEWORK"
+  for fw_name in "${FW_ARRAY[@]}"; do
+    fw_trimmed="$(echo "$fw_name" | xargs)"
+    FRAMEWORK_PATH="${TOOLKIT_ROOT}/frameworks/${fw_trimmed}"
+    if [[ -d "$FRAMEWORK_PATH" ]]; then
+      echo "📦 Syncing Framework Context: ${fw_trimmed}"
+      copy_category "$FRAMEWORK_PATH" "skills"
+      copy_category "$FRAMEWORK_PATH" "rules"
+      copy_category "$FRAMEWORK_PATH" "workflows"
+    else
+      echo "Warning: Framework '${fw_trimmed}' not found under frameworks/. Skipping."
+    fi
+  done
 fi
 
-# 2. Sync Common Shared Context (Git, Security, Code Quality, Package Management, Generators, Logging)
+# 2. Sync Common Shared Context
 COMMON_SHARED_TOPICS=("code-quality" "git" "logging" "package-management" "security" "generators" "google-suite")
 
 if [[ "$SYNC_SHARED" == true && -d "${TOOLKIT_ROOT}/shared" ]]; then
@@ -155,7 +250,7 @@ if [[ "$SYNC_SHARED" == true && -d "${TOOLKIT_ROOT}/shared" ]]; then
   done
 fi
 
-# 3. Sync Specific Product Domain Modules (e.g., nidhiflow, civicpath, seyalicraft, docker-dev-infra, ai-agent-toolkit)
+# 3. Sync Specific Product Domain Modules
 if [[ -n "$DOMAINS" ]]; then
   IFS=',' read -ra DOMAIN_ARRAY <<< "$DOMAINS"
   for domain_name in "${DOMAIN_ARRAY[@]}"; do
@@ -190,5 +285,5 @@ if [[ -n "$INFRA_MODULES" ]]; then
 fi
 
 echo "------------------------------------------------------------------"
-echo "✅ Successfully synced agent context into ${TARGET_AGENTS_DIR}/"
+echo "✅ Successfully synced agent context into ${SCOPE_LABEL}"
 echo "=================================================================="

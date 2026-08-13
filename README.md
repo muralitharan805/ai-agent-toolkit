@@ -1,6 +1,6 @@
 # agent-toolkit
 
-Central repository of reusable **skills**, **rules**, and **workflows** for AI coding agents (e.g. Google Antigravity IDE). Instead of writing agent context from scratch in every project, this toolkit lets you scaffold or sync a consistent `.agents/` directory into any repo — Angular, Node, NestJS, Strapi, Docker, or otherwise.
+Central repository of reusable **skills**, **rules**, and **workflows** for AI coding agents (e.g. Google Antigravity IDE). Instead of writing agent context from scratch in every project, this toolkit lets you scaffold, generate, or sync consistent context into any project workspace (`.agents/`) or globally into your system (`~/.gemini/`) — Angular, Node, NestJS, Strapi, Docker, PostgreSQL, Redis, or otherwise.
 
 ## Why this exists
 
@@ -8,16 +8,36 @@ Every project's `.agents/` folder tends to be written once and then drift — di
 
 - New projects get a battle-tested `.agents/` setup on day one.
 - Existing projects can pull in updates without hand-copying files.
+- Personal global environments (`~/.gemini/`) can be synced with common rules, skills, and workflows.
 - Framework-specific knowledge (Angular, NestJS, Strapi, Docker, Postgres, Redis...) lives in one place instead of being duplicated per repo.
 
 ## Google Antigravity IDE Compatibility ⚡
 
 This repository is 100% natively compatible with **Google Antigravity IDE**:
 
-- **Native `.agents/` Discovery**: Target directories map directly to `.agents/skills/`, `.agents/rules/`, and `.agents/workflows/` for automatic IDE indexing.
+- **Native `.agents/` & `~/.gemini/` Discovery**: Target directories map directly to `.agents/skills/`, `.agents/rules/`, `.agents/workflows/` (Workspace) and `~/.gemini/antigravity/skills/`, `~/.gemini/config/` (Global) for automatic IDE indexing.
 - **Strict GUI-Compatible Frontmatter**: Follows exact YAML frontmatter schemas (`name`, `description`, `trigger: always_on`, `trigger: glob`, `trigger: manual`) to render cleanly in Antigravity's UI.
-- **Slash Commands & Shorthand Triggers**: Designed to respond instantly to native slash commands (`/generate-agent-suite`, `/consolidate-agent-toolkit`) and prompt prefixes (`suite:`, `consolidate:`).
-- **Direct Copy Sync**: Uses `bin/sync-skills.sh` to copy physical files directly into `.agents/` without symbolic links.
+- **Slash Commands & Shorthand Triggers**: Designed to respond instantly to native slash commands (`/generate-agent-suite`, `/consolidate-agent-toolkit`) and prompt prefixes (`suite:`, `context:`).
+- **Direct Physical Sync Utility**: Uses `bin/sync-skills.sh` to copy physical files directly into `.agents/` or `~/.gemini/` without symbolic link breaks.
+
+---
+
+## Two-Stage Generation & Sync Paradigm
+
+```text
+[User Requirement / Scenario]
+         │
+         ▼
+[1. Generate inside Toolkit] ──► /generate-agent-suite (or /generate-skill, /generate-rule)
+                                  Creates or updates modular context under frameworks/, infra/, or shared/
+         │
+         ▼
+[2. Sync to Target Scope]   ──► bin/sync-skills.sh
+                                  ├── --global  ► ~/.gemini/antigravity/skills/, ~/.gemini/config/
+                                  └── --target  ► <workspace-root>/.agents/
+```
+
+---
 
 ## Structure
 
@@ -25,63 +45,29 @@ This repository is 100% natively compatible with **Google Antigravity IDE**:
 agent-toolkit/
 ├── frameworks/           # Framework/language-specific agent context
 │   ├── angular/
-│   │   ├── skills/
-│   │   ├── rules/
-│   │   └── workflows/
 │   ├── nestjs/
 │   └── strapi-v5/
 │
 ├── infra/                 # Infrastructure & DevOps layer context
 │   ├── docker/
-│   │   ├── skills/
-│   │   ├── rules/
-│   │   └── workflows/
 │   ├── postgres/
-│   │   ├── skills/
-│   │   └── rules/
 │   ├── redis/
-│   │   ├── skills/
-│   │   ├── rules/
-│   │   └── workflows/
 │   └── cloudflare/
-│       └── skills/
 │
 ├── shared/                # Cross-cutting, topic-based agent context
-│   ├── finance/           # Double-entry personal accounting, EMI, pgvector
-│   │   ├── skills/
-│   │   ├── rules/
-│   │   └── workflows/
-│   ├── generators/       # AI Skill, Rule, & Workflow authoring context
-│   │   ├── skills/
-│   │   ├── rules/
-│   │   └── workflows/
-│   ├── git/              # Git conventions, commit standards, Issue & PR automation
-│   │   ├── skills/
-│   │   ├── rules/
-│   │   └── workflows/
-│   ├── security/         # Secret masking & OWASP rules
-│   │   └── rules/
+│   ├── ai-agent-toolkit/ # Toolkit architecture & frontmatter standards
+│   ├── civicpath/         # CivicPath GIS domain skills & state machines
+│   ├── code-quality/      # Clean code, TSDoc & type safety standards
+│   ├── docker-dev-infra/  # Dev Infra Compose microservices
+│   ├── generators/        # AI Skill, Rule, & Workflow authoring context (/generate-agent-suite)
+│   ├── git/               # Git conventions, commit standards, Issue & PR automation
+│   ├── google-suite/      # GA4 analytics, Search Console & AdSense monetization rules
 │   ├── logging/           # Correlation ID tracing, JSON logs, secret masking
-│   │   ├── skills/
-│   │   └── rules/
-│   ├── seyalicraft/       # Seyalicraft Ecosystem, product suites (seyalicraft.com, NidhiFlow, CivicPath) & repo map
-│   │   ├── skills/
-│   │   ├── rules/
-│   │   └── workflows/
-│   ├── civicpath/         # CivicPath product domain: GIS GeoJSON, civic issue state machine, PII protection
-│   │   ├── skills/
-│   │   ├── rules/
-│   │   └── workflows/
-│   ├── docker-dev-infra/  # Dev Infra project domain: Postgres pgvector, Redis, modular Compose microservices
-│   │   ├── skills/
-│   │   ├── rules/
-│   │   └── workflows/
-│   └── code-quality/     # Clean code, JSDoc, & strict type safety standards
-│       ├── skills/
-│       └── rules/
+│   ├── nidhiflow/         # Double-entry finance, loan amortization & forecasting
+│   ├── security/          # Secret masking & OWASP rules
+│   └── seyalicraft/       # Main Portal ecosystem rules
 │
-└── bin/                    # Scripts to scaffold/sync skills into real projects
-    ├── scaffold-angular.sh
+└── bin/                    # Scripts to sync context into Workspace or Global targets
     └── sync-skills.sh
 ```
 
@@ -91,68 +77,56 @@ agent-toolkit/
 |---|---|---|
 | `skills/` | "How to do X well" — reference patterns, best practices | `signal-state-management/SKILL.md` |
 | `rules/` | Hard constraints the agent must always follow | "Never use `any` type", commit message format |
-| `workflows/` | Step-by-step sequences for common multi-step tasks | "Add new feature module" → scaffold → route → test → barrel export |
+| `workflows/` | Step-by-step sequences for common multi-step tasks | "Add new feature module" → scaffold → route → test |
+
+---
 
 ## Usage
 
-### Sync skills into an existing project (Direct Physical Copy Sync)
+### 1. Syncing Context to Workspace Level (`.agents/`)
 
-Run `bin/sync-skills.sh` from the toolkit repo to automatically copy framework, shared, and infra skills/rules/workflows directly as physical files into a target project's `.agents/` directory:
+Run `bin/sync-skills.sh` from the toolkit repo to automatically copy framework, shared, and infra skills/rules/workflows directly into a target project's `.agents/` directory:
 
 ```bash
 # Sync Angular framework + Shared rules/skills + Docker/Postgres infra tools into target project
 ./bin/sync-skills.sh --framework angular --infra docker,postgres --target /path/to/my-angular-app
 
-# Sync Shared rules/skills only into any repository (framework optional)
+# Sync Shared rules/skills only into any repository
 ./bin/sync-skills.sh --shared --target /path/to/my-project
 ```
 
-### 3. Sync updates into a project that already has copied
+### 2. Syncing Context to Global Level (`~/.gemini/`)
 
-this repo is continuosly updated with new skills, rules, workflows. Pull the latest framework + shared skills from the toolkit and overwrites the local copies.
+Sync all or selected framework/infra skills into your personal system-wide environment:
 
-### 4. Generating & Consolidating Agent Context with AI
+```bash
+# Sync ALL toolkit frameworks, infra, and shared contexts globally
+./bin/sync-skills.sh --global --all
+
+# Sync specific framework + infra globally
+./bin/sync-skills.sh --global --framework nestjs --infra postgres,redis
+```
+
+### 3. Generating & Updating Agent Context with AI
 
 This repository includes built-in AI generator & consolidation workflows (supporting prompts in English, Tamil, or Thanglish):
-- **Consolidate & Group Toolkit**: `shared/generators/workflows/consolidate-agent-toolkit.md` → Audits workspace, groups related skills/rules/workflows by topic, merges duplicates without data loss, and auto-syncs README.
-- **Generate Agent Suite (Smart Evaluation)**: `shared/generators/workflows/generate-agent-suite.md` → Evaluates a scenario, inspects workspace for existing files (upsert), and generates/updates the suite.
+- **Generate Agent Suite (Smart Evaluation)**: `shared/generators/workflows/generate-agent-suite.md` → Evaluates a scenario, inspects toolkit for existing files (upsert), and generates/updates the suite under `frameworks/`, `infra/`, or `shared/`.
+- **Consolidate & Group Toolkit**: `shared/generators/workflows/consolidate-agent-toolkit.md` → Audits workspace, groups related skills/rules/workflows by topic, merges duplicates without data loss.
 - **Generate Skill**: `shared/generators/workflows/generate-skill.md` → Creates or updates `[framework|infra|shared]/[topic]/skills/[skill-name]/SKILL.md`
 - **Generate Rule**: `shared/generators/workflows/generate-rule.md` → Creates or updates `[framework|infra|shared]/[topic]/rules/[rule-name].md`
 - **Generate Workflow**: `shared/generators/workflows/generate-workflow.md` → Creates or updates `[framework|infra|shared]/[topic]/workflows/[workflow-name].md`
 
-#### ⚡ Shorthand Triggers (Fast Prompting)
+#### ⚡ Shorthand Triggers & Commands
 
-Instead of typing out full requests, you can use these shorthand prefixes directly in your chat:
-- `consolidate:` or `grouping:` → Triggers full workspace audit, semantic grouping, merging & cleanup.
-- `suite: <topic>` (e.g., `suite: Angular Signals Form`) → Triggers smart evaluation & suite generation.
-- `context: <topic>` (e.g., `context: NestJS JWT Auth`) → Triggers smart evaluation & suite generation.
+- `/generate-agent-suite` or `suite: <topic>` → Smart evaluation & suite generation inside `ai-agent-toolkit`.
+- `/generate-skill` or `skill: <topic>` → Single Skill generation.
+- `/generate-rule` or `rule: <topic>` → Single Rule generation.
+- `/generate-workflow` or `workflow: <topic>` → Single Workflow generation.
 
-- `/deploy-angular-cloudflare` — Deploy Angular SSR to Cloudflare Pages/Workers
-- `/deploy-angular-spa-cloudflare` — Deploy Angular SPA (CSR) with _redirects fallback to Cloudflare Pages
-- `/setup-angular-responsive-layout` — Scaffold Angular Material responsive BreakpointObserver layout & ScreenService
-
-
-- `/generate-agent-suite` — Smart evaluation & suite generation
-- `/generate-skill` — Single Skill generation
-- `/generate-rule` — Single Rule generation
-- `/generate-workflow` — Single Workflow generation
-
-
-## Adding a new framework
-
-1. Create `frameworks/<framework-name>/{skills,rules,workflows}/`.
-2. Add a `SKILL.md` per topic (frontmatter + content).
-3. Add a corresponding `scaffold-<framework>.sh` in `bin/` if the framework needs its own project-init command.
+---
 
 ## Conventions
 
-- Directory is always `.agents/` (singular) inside consumer projects — not `.agentss/` — to match what agent IDEs (e.g. Antigravity) auto-discover.
-- Each `SKILL.md` should be self-contained: one skill, one file, clear frontmatter (name, description, trigger conditions).
+- Directory is always `.agents/` inside consumer projects — not `.agent/` — to match what agent IDEs (e.g. Antigravity) auto-discover.
+- Each `SKILL.md` should be self-contained: one skill, one file, clear YAML frontmatter (`name`, `description`).
 - Cross-cutting knowledge (git conventions, code review checklists, documentation standards) goes in `shared/`, not duplicated per framework.
-
-## Roadmap / ideas
-
-- [ ] Add `frameworks/nextjs/`
-- [ ] Add `frameworks/java-spring-boot/`
-- [ ] `bin/scaffold-nestjs.sh`
-- [ ] CI check that validates every `SKILL.md` has required frontmatter
