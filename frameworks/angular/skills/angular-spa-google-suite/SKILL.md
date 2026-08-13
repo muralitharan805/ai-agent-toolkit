@@ -169,3 +169,13 @@ export class AdsenseComponent implements OnInit {
   }
 }
 ```
+
+### 5. Root `ads.txt` Publisher Verification (`public/ads.txt`)
+```text
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+```
+
+### 6. Cloudflare Pages SPA Routing Fallback (`public/_redirects`)
+```text
+/*    /index.html   200
+```

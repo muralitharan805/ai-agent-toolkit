@@ -20,3 +20,13 @@ Ensure `wrangler.jsonc` specifies `"pages_build_output_dir": "dist/<app-name>/br
 
 ## Step 4: Setup `SeoService` for Dynamic Canonical Tags
 Implement `setCanonicalUrl()` in `SeoService` to update `<link rel="canonical">` on SPA route navigation.
+
+## Step 5: Deploy `public/ads.txt` & SPA Routing `public/_redirects`
+1. Create `public/ads.txt` declaring publisher authorization:
+   ```text
+   google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+   ```
+2. Create `public/_redirects` for Cloudflare Pages SPA client routing fallback:
+   ```text
+   /*    /index.html   200
+   ```
