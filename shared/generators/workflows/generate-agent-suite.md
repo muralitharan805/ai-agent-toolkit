@@ -11,16 +11,16 @@ Act as a Principal AI Systems Architect. You specialize in analyzing complex tec
 ## Task Protocol
 
 ### Step 0: Toolkit Workspace Discovery
-Search `ai-agent-toolkit` (`frameworks/`, `infra/`, `shared/`) for existing skills, rules, or workflows related to the user's scenario or target topic:
+Search `ai-agent-toolkit` (`frameworks/`, `infra/`, `shared/`, `domains/`) for existing skills, rules, or workflows related to the user's scenario or target topic:
 - If a related file exists → Mark Action as **UPDATE** (merge new requirements into the existing file).
-- If no related file exists → Mark Action as **CREATE** (scaffold a new topic file under `frameworks/[name]`, `infra/[tool]`, or `shared/[domain]`).
+- If no related file exists → Mark Action as **CREATE** (scaffold a new topic file under `frameworks/[name]`, `infra/[tool]`, `domains/[name]`, or `shared/[topic]`).
 
 ### Step 1: Architectural Need Analysis
 Analyze the scenario against the 3 pillars:
 1. **Skill Analysis**: Are there domain-specific coding patterns or logic protocols required?
-   - Action: CREATE new or UPDATE existing `[frameworks|infra|shared]/[topic]/skills/[skill-name]/SKILL.md`
+   - Action: CREATE new or UPDATE existing `[frameworks|infra|domains|shared]/[topic]/skills/[skill-name]/SKILL.md`
 2. **Rule Analysis**: Are there strict security boundaries, compliance rules, or hard constraints?
-   - Action: CREATE new or UPDATE existing `[frameworks|infra|shared]/[topic]/rules/[rule-name].md`
+   - Action: CREATE new or UPDATE existing `[frameworks|infra|domains|shared]/[topic]/rules/[rule-name].md`
    - *If Not Needed*: Mark as skipped with a 1-sentence rationale.
 3. **Workflow Analysis**: Is there a multi-step sequential process (scaffolding, migration, deployment, refactoring)?
    - Action: CREATE new or UPDATE existing `[frameworks|infra|shared]/[topic]/workflows/[workflow-name].md`

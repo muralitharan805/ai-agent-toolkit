@@ -1,0 +1,9 @@
+# Ignore OS & Editor Files
+.DS_Store
+*.log
+node_modules/
+.agents/
+
+# Ignore Private Project Business Domains (Open-Source Protection)
+domains/*
+!domains/README.md

@@ -28,22 +28,23 @@ Usage: $(basename "$0") [options]
 Options:
   -g, --global             Sync context to Global Level (~/.gemini/antigravity/skills, ~/.gemini/config/)
   -t, --target <path>      Target project root directory for Workspace Level (default: current directory "./")
-  -a, --all                Sync ALL frameworks, infra modules, and shared domain contexts
+  -a, --all                Sync ALL frameworks, infra modules, and domain contexts
+  -p, --preset <name>      Quick preset (e.g. nidhiflow-fe, nidhiflow-be, seyalicraft-fe, seyalicraft-be, civicpath-fe, civicpath-be, docker-dev)
   -f, --framework <name>   Framework name (e.g., angular, nestjs, strapi-v5)
   -i, --infra <tools>      Comma-separated infra tools (e.g., docker, postgres, redis, cloudflare)
-  -d, --domain <names>     Comma-separated domain modules (e.g., nidhiflow, civicpath, seyalicraft, docker-dev-infra, ai-agent-toolkit)
+  -d, --domain <names>     Comma-separated domain modules (e.g., nidhiflow, civicpath, seyalicraft, docker-dev-infra, finance)
   -s, --shared             Include common shared context (enabled by default)
   -h, --help               Display this help message
 
 Examples:
-  # Workspace level sync into current project:
+  # Using preset shortcut:
+  $(basename "$0") --preset nidhiflow-fe --target /path/to/app
+
+  # Workspace level sync with explicit domain & framework:
   $(basename "$0") --framework angular --domain nidhiflow --target /path/to/app
 
   # Global level sync for personal machine:
-  $(basename "$0") --global --all
-
-  # Global level sync for specific framework and infra:
-  $(basename "$0") --global --framework nestjs --infra postgres,redis
+  $(basename "$0") --global --shared
 EOF
   exit 0
 }
@@ -58,6 +59,46 @@ while [[ $# -gt 0 ]]; do
     -a|--all)
       SYNC_ALL=true
       shift 1
+      ;;
+    -p|--preset)
+      case "$2" in
+        nidhiflow-fe)
+          FRAMEWORK="angular"
+          DOMAINS="nidhiflow"
+          ;;
+        nidhiflow-be)
+          FRAMEWORK="nestjs"
+          INFRA_MODULES="postgres,redis"
+          DOMAINS="nidhiflow"
+          ;;
+        seyalicraft-fe)
+          FRAMEWORK="angular"
+          INFRA_MODULES="cloudflare"
+          DOMAINS="seyalicraft"
+          ;;
+        seyalicraft-be)
+          FRAMEWORK="strapi-v5"
+          INFRA_MODULES="postgres"
+          DOMAINS="seyalicraft"
+          ;;
+        civicpath-fe)
+          FRAMEWORK="angular"
+          DOMAINS="civicpath"
+          ;;
+        civicpath-be)
+          FRAMEWORK="nestjs"
+          INFRA_MODULES="postgres"
+          DOMAINS="civicpath"
+          ;;
+        docker-dev)
+          INFRA_MODULES="docker,postgres,redis"
+          ;;
+        *)
+          echo "Error: Unknown preset '$2'"
+          exit 1
+          ;;
+      esac
+      shift 2
       ;;
     -f|--framework)
       FRAMEWORK="$2"
@@ -295,14 +336,20 @@ if [[ -n "$DOMAINS" ]]; then
   IFS=',' read -ra DOMAIN_ARRAY <<< "$DOMAINS"
   for domain_name in "${DOMAIN_ARRAY[@]}"; do
     domain_trimmed="$(echo "$domain_name" | xargs)"
-    DOMAIN_PATH="${TOOLKIT_ROOT}/shared/${domain_trimmed}"
+    DOMAIN_PATH="${TOOLKIT_ROOT}/domains/${domain_trimmed}"
+    
+    # Fallback to shared/ if not present under domains/
+    if [[ ! -d "$DOMAIN_PATH" && -d "${TOOLKIT_ROOT}/shared/${domain_trimmed}" ]]; then
+      DOMAIN_PATH="${TOOLKIT_ROOT}/shared/${domain_trimmed}"
+    fi
+
     if [[ -d "$DOMAIN_PATH" ]]; then
       echo "🎯 Syncing Domain Module Context: ${domain_trimmed}"
       copy_category "$DOMAIN_PATH" "skills"
       copy_category "$DOMAIN_PATH" "rules"
       copy_category "$DOMAIN_PATH" "workflows"
     else
-      echo "Warning: Domain module '${domain_trimmed}' not found under shared/. Skipping."
+      echo "Warning: Domain module '${domain_trimmed}' not found under domains/ or shared/. Skipping."
     fi
   done
 fi

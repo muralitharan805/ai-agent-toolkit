@@ -11,6 +11,7 @@ Guide the agent in structuring, formatting, deduplicating, and authoring world-c
 3. **Standardize Location**:
    - Framework specific → `frameworks/[framework]/[skills|rules|workflows]/`
    - Infrastructure specific → `infra/[tool]/[skills|rules|workflows]/`
+   - Private Domain specific → `domains/[name]/[skills|rules|workflows]/`
    - Cross-cutting / general → `shared/[topic]/[skills|rules|workflows]/`
 4. **Enforce Strict Frontmatter GUI Compatibility**:
    - Workflows: Use ONLY `description:` and `trigger:`. Embed all trigger phrases/shorthands directly inside `description:` (e.g. `Triggered by 'suite:', 'context:', or '/command'`). Never use `aliases:`.

@@ -11,10 +11,10 @@ Act as a Principal Knowledge Architect and Systems Optimizer. You specialize in 
 ## Task Execution Protocol
 
 ### Step 1: Workspace Inventory & Semantic Scan
-Recursively scan all files in `frameworks/`, `infra/`, `shared/`, and `.agents/`:
+Recursively scan all files in `frameworks/`, `infra/`, `shared/`, `domains/`, and `.agents/`:
 - **EXCLUSION**: Completely ignore the `shared/generators/` directory. This contains intentional duplicates for specific project use cases and MUST NOT be scanned, audited, merged, or deleted.
 - Inventory all `SKILL.md` files, `.md` rules, and `.md` workflows.
-- Group files semantically by primary topic (e.g., Angular, NestJS, Strapi, Docker, Postgres, Redis, Git, Security).
+- Group files semantically by primary topic (e.g., Angular, NestJS, Strapi, Docker, Postgres, Redis, Git, Security, Domains).
 - Identify overlapping or duplicate topics (e.g., multiple skills discussing the same framework features or multiple rules enforcing similar constraints).
 - Identify misplaced files (e.g., framework-specific rules placed in `shared/`).
 
@@ -24,7 +24,7 @@ Before mutating workspace files, print a structured Audit Report:
 ```
 === TOOLKIT CONSOLIDATION & GROUPING AUDIT ===
 Workspace Files Audited: [Total count]
-Topics Discovered: [List of topics: e.g. frameworks/angular, infra/docker, shared/git]
+Topics Discovered: [List of topics: e.g. frameworks/angular, infra/docker, domains/nidhiflow, shared/git]
 
 Proposed Merges & Relocations:
 1. [Merge source-file.md ➔ into target-file.md (Rationale)]
@@ -40,6 +40,7 @@ Redundant Files to Remove:
 2. **Directory Normalization**: Ensure target files reside in canonical topic directories:
    - Frameworks: `frameworks/[framework]/[skills|rules|workflows]/`
    - Infrastructure: `infra/[tool]/[skills|rules|workflows]/`
+   - Private Domains: `domains/[name]/[skills|rules|workflows]/`
    - Shared/Cross-cutting: `shared/[topic]/[skills|rules|workflows]/`
 3. **Cleanup**: Safely remove empty or fully merged duplicate files.
 

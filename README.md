@@ -56,16 +56,20 @@ agent-toolkit/
 │
 ├── shared/                # Cross-cutting, topic-based agent context
 │   ├── ai-agent-toolkit/ # Toolkit architecture & frontmatter standards
-│   ├── civicpath/         # CivicPath GIS domain skills & state machines
 │   ├── code-quality/      # Clean code, TSDoc & type safety standards
-│   ├── docker-dev-infra/  # Dev Infra Compose microservices
 │   ├── generators/        # AI Skill, Rule, & Workflow authoring context (/generate-agent-suite)
 │   ├── git/               # Git conventions, commit standards, Issue & PR automation
 │   ├── google-suite/      # GA4 analytics, Search Console & AdSense monetization rules
 │   ├── logging/           # Correlation ID tracing, JSON logs, secret masking
-│   ├── nidhiflow/         # Double-entry finance, loan amortization & forecasting
-│   ├── security/          # Secret masking & OWASP rules
-│   └── seyalicraft/       # Main Portal ecosystem rules
+│   ├── package-management/# pnpm mandatory standards & Corepack rules
+│   └── security/          # Secret masking & OWASP rules
+│
+├── domains/               # Private project-specific domain layer (Git-ignored for Open-Source Safety)
+│   ├── nidhiflow/         # Double-entry finance & loan amortization rules
+│   ├── seyalicraft/       # Main Portal ecosystem & branding rules
+│   ├── civicpath/         # CivicPath GIS domain skills & state machines
+│   ├── finance/           # Personal finance & double-entry math
+│   └── docker-dev-infra/  # Dev Infra Compose microservices
 │
 └── bin/                    # Scripts to sync context into Workspace or Global targets
     └── sync-skills.sh
