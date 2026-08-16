@@ -12,7 +12,7 @@ Act as a Principal DevSecOps & AI Systems Engineer. You are responsible for auto
 
 ### Step 1: Issue Discovery & Creation
 - Parse the user's feature request (e.g. `issue: Add Double-Entry Ledger API`).
-- Check active repository (`nidhiflow-backend`, `nidhiflow-frontend`, etc.).
+- Check active repository (`example-app-backend`, `example-app-frontend`, etc.).
 - Call GitHub MCP tool `issue_write` (or `add_issue_comment`) to draft a structured issue:
   - **Title**: `feat(<scope>): <short description>`
   - **Body**: Detailed task description, technical requirements, acceptance criteria checkboxes.

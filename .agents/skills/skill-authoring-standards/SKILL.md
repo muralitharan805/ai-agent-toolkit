@@ -11,16 +11,21 @@ Guide the agent in structuring, formatting, deduplicating, and authoring world-c
 3. **Standardize Location**:
    - Framework specific → `frameworks/[framework]/[skills|rules|workflows]/`
    - Infrastructure specific → `infra/[tool]/[skills|rules|workflows]/`
+   - Private Domain specific → `domains/[name]/[skills|rules|workflows]/`
    - Cross-cutting / general → `shared/[topic]/[skills|rules|workflows]/`
-4. **Enforce Strict Frontmatter GUI Compatibility**:
+4. **Enforce Size & Character Limits**:
+   - Rules Files: MUST NOT exceed 12,000 characters per file (hard IDE limit). Keep constraints concise and non-conversational.
+   - Workflow Files: MUST NOT exceed 12,000 characters per file (hard IDE limit).
+   - Skill Files: MUST NOT exceed 500 lines per `SKILL.md`. For extensive reference code, use subdirectories (`examples/`, `scripts/`, `resources/`, `references/`).
+5. **Enforce Strict Frontmatter GUI Compatibility**:
    - Workflows: Use ONLY `description:` and `trigger:`. Embed all trigger phrases/shorthands directly inside `description:` (e.g. `Triggered by 'suite:', 'context:', or '/command'`). Never use `aliases:`.
    - Skills: Include `name:` (kebab-case) and `description:` (third-person routing statement).
    - Rules: Include `trigger: always_on` or `trigger: glob`, plus `description:`.
-5. **Draft High-Impact Content**:
+6. **Draft High-Impact Content**:
    - Write clear, step-by-step logic protocols in `skills/`.
    - Write strict, unambiguous MUST / MUST NOT boundaries in `rules/`.
    - Write sequential, action-verb execution steps in `workflows/`.
-6. **Include Non-Trivial Examples**: Provide real-world, production-ready code blocks for both correct and incorrect implementation patterns.
+7. **Include Non-Trivial Examples**: Provide real-world, production-ready code blocks for both correct and incorrect implementation patterns.
 
 # Examples
 Input: Update NestJS authentication skill with refresh token rotation.
