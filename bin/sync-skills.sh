@@ -29,19 +29,22 @@ Options:
   -g, --global             Sync context to Global Level (~/.gemini/antigravity/skills, ~/.gemini/config/)
   -t, --target <path>      Target project root directory for Workspace Level (default: current directory "./")
   -a, --all                Sync ALL frameworks, infra modules, and domain contexts
-  -p, --preset <name>      Quick preset (e.g. nidhiflow-fe, nidhiflow-be, seyalicraft-fe, seyalicraft-be, civicpath-fe, civicpath-be, docker-dev)
+  -p, --preset <name>      Generic tech preset (e.g. angular-spa, nestjs-api, docker-dev, fullstack-app)
   -f, --framework <name>   Framework name (e.g., angular, nestjs, strapi-v5)
   -i, --infra <tools>      Comma-separated infra tools (e.g., docker, postgres, redis, cloudflare)
-  -d, --domain <names>     Comma-separated domain modules (e.g., nidhiflow, civicpath, seyalicraft, docker-dev-infra, finance)
+  -d, --domain <names>     Comma-separated domain modules (e.g. any custom directory under domains/ or shared/)
   -s, --shared             Include common shared context (enabled by default)
   -h, --help               Display this help message
 
 Examples:
-  # Using preset shortcut:
-  $(basename "$0") --preset nidhiflow-fe --target /path/to/app
+  # Workspace level sync with framework & infra:
+  $(basename "$0") --framework angular --infra cloudflare --target /path/to/my-app
 
-  # Workspace level sync with explicit domain & framework:
-  $(basename "$0") --framework angular --domain nidhiflow --target /path/to/app
+  # Workspace level sync with custom domain module:
+  $(basename "$0") --framework nestjs --domain my-domain --target /path/to/my-backend
+
+  # Using generic tech stack preset:
+  $(basename "$0") --preset nestjs-api --target /path/to/my-api
 
   # Global level sync for personal machine:
   $(basename "$0") --global --shared
@@ -62,35 +65,23 @@ while [[ $# -gt 0 ]]; do
       ;;
     -p|--preset)
       case "$2" in
-        nidhiflow-fe)
-          FRAMEWORK="angular"
-          DOMAINS="nidhiflow"
-          ;;
-        nidhiflow-be)
-          FRAMEWORK="nestjs"
-          INFRA_MODULES="postgres,redis"
-          DOMAINS="nidhiflow"
-          ;;
-        seyalicraft-fe)
+        angular-spa)
           FRAMEWORK="angular"
           INFRA_MODULES="cloudflare"
-          DOMAINS="seyalicraft"
           ;;
-        seyalicraft-be)
+        nestjs-api)
+          FRAMEWORK="nestjs"
+          INFRA_MODULES="postgres,redis"
+          ;;
+        strapi-cms)
           FRAMEWORK="strapi-v5"
           INFRA_MODULES="postgres"
-          DOMAINS="seyalicraft"
-          ;;
-        civicpath-fe)
-          FRAMEWORK="angular"
-          DOMAINS="civicpath"
-          ;;
-        civicpath-be)
-          FRAMEWORK="nestjs"
-          INFRA_MODULES="postgres"
-          DOMAINS="civicpath"
           ;;
         docker-dev)
+          INFRA_MODULES="docker,postgres,redis"
+          ;;
+        fullstack-app)
+          FRAMEWORK="angular,nestjs"
           INFRA_MODULES="docker,postgres,redis"
           ;;
         *)
