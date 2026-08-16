@@ -121,6 +121,7 @@ if [[ "$IS_GLOBAL" == true ]]; then
   TARGET_SKILLS_DIR="${HOME}/.gemini/antigravity/skills"
   TARGET_RULES_DIR="${HOME}/.gemini/config/rules"
   TARGET_WORKFLOWS_DIR="${HOME}/.gemini/config/global_workflows"
+  TARGET_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
   GLOBAL_AGENTS_MD="${HOME}/.gemini/config/AGENTS.md"
   GLOBAL_GEMINI_MD="${HOME}/.gemini/GEMINI.md"
   SCOPE_LABEL="Global Level (~/.gemini)"
@@ -129,6 +130,7 @@ else
   TARGET_SKILLS_DIR="${TARGET_AGENTS_DIR}/skills"
   TARGET_RULES_DIR="${TARGET_AGENTS_DIR}/rules"
   TARGET_WORKFLOWS_DIR="${TARGET_AGENTS_DIR}/workflows"
+  TARGET_PLUGINS_DIR="${TARGET_AGENTS_DIR}/plugins"
   SCOPE_LABEL="Workspace Level (${TARGET_DIR}/.agents)"
 fi
 
@@ -148,8 +150,8 @@ mkdir -p "${TARGET_SKILLS_DIR}"
 mkdir -p "${TARGET_RULES_DIR}"
 mkdir -p "${TARGET_WORKFLOWS_DIR}"
 
-# Helper function to append rules safely to AGENTS.md / GEMINI.md for global sync
-append_rule_file() {
+# Helper function to upsert rules safely in AGENTS.md / GEMINI.md for global sync
+upsert_rule_file() {
   local rule_file="$1"
   local target_md="$2"
 
@@ -158,7 +160,23 @@ append_rule_file() {
     if [[ -n "$rule_header" ]]; then
       local rule_id=$(echo "$rule_header" | sed -E 's/.*<RULE\[([^]]+)\].*/\1/')
       if grep -q "<RULE\[${rule_id}\]" "$target_md"; then
-        echo "  [Rule] Rule '${rule_id}' already present in $(basename "$target_md"). Skipping append."
+        # Replace existing rule block in target_md using python3 for clean multiline replace
+        python3 - "$target_md" "$rule_file" "$rule_id" << 'EOF'
+import sys, re
+
+target_path, rule_path, rule_id = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(target_path, 'r', encoding='utf-8') as f:
+    target_content = f.read()
+with open(rule_path, 'r', encoding='utf-8') as f:
+    new_rule_content = f.read().strip()
+
+pattern = re.compile(rf'<RULE\[{re.escape(rule_id)}\]>.*?</RULE\[{re.escape(rule_id)}\]>', re.DOTALL)
+if pattern.search(target_content):
+    updated = pattern.sub(new_rule_content, target_content)
+    with open(target_path, 'w', encoding='utf-8') as f:
+        f.write(updated)
+EOF
+        echo "  [Rule] Updated rule '${rule_id}' in $(basename "$target_md")"
         return
       fi
     fi
@@ -171,7 +189,7 @@ append_rule_file() {
 # Function to safely copy files into target locations
 copy_category() {
   local src_dir="$1"
-  local category="$2" # skills, rules, or workflows
+  local category="$2" # skills, rules, workflows, plugins
 
   if [[ -d "${src_dir}/${category}" ]]; then
     if [[ "$category" == "skills" ]]; then
@@ -182,6 +200,7 @@ copy_category() {
           local dest_skill_dir="${TARGET_SKILLS_DIR}/${skill_name}"
           echo "  [Skill] Syncing ${skill_name}..."
           
+          # Rule 2.1: Entirely replace target item if same name exists
           rm -rf "$dest_skill_dir"
           mkdir -p "$dest_skill_dir"
           cp -r "${skill_dir}/." "${dest_skill_dir}/"
@@ -194,12 +213,13 @@ copy_category() {
           local dest_file="${TARGET_RULES_DIR}/${file_name}"
           echo "  [Rule] Syncing ${file_name}..."
           
+          # Rule 2.1: Entirely replace target file if same name exists
           rm -f "$dest_file"
           cp "${md_file}" "$dest_file"
 
           if [[ "$IS_GLOBAL" == true ]]; then
-            [[ -f "$GLOBAL_AGENTS_MD" ]] && append_rule_file "$md_file" "$GLOBAL_AGENTS_MD"
-            [[ -f "$GLOBAL_GEMINI_MD" ]] && append_rule_file "$md_file" "$GLOBAL_GEMINI_MD"
+            [[ -f "$GLOBAL_AGENTS_MD" ]] && upsert_rule_file "$md_file" "$GLOBAL_AGENTS_MD"
+            [[ -f "$GLOBAL_GEMINI_MD" ]] && upsert_rule_file "$md_file" "$GLOBAL_GEMINI_MD"
           fi
         fi
       done
@@ -210,8 +230,28 @@ copy_category() {
           local dest_file="${TARGET_WORKFLOWS_DIR}/${file_name}"
           echo "  [Workflow] Syncing ${file_name}..."
           
+          # Rule 2.1: Entirely replace target workflow if same name exists
           rm -f "$dest_file"
           cp "${md_file}" "$dest_file"
+
+          # Support both ~/.gemini/config/global_workflows/ and ~/.gemini/config/workflows/ for global
+          if [[ "$IS_GLOBAL" == true ]]; then
+            local alt_workflows_dir="${HOME}/.gemini/config/workflows"
+            mkdir -p "$alt_workflows_dir"
+            cp "${md_file}" "${alt_workflows_dir}/${file_name}"
+          fi
+        fi
+      done
+    elif [[ "$category" == "plugins" ]]; then
+      for plugin_dir in "${src_dir}/${category}"/*; do
+        if [[ -d "$plugin_dir" ]]; then
+          local plugin_name="$(basename "$plugin_dir")"
+          local dest_plugin_dir="${TARGET_PLUGINS_DIR}/${plugin_name}"
+          echo "  [Plugin] Syncing ${plugin_name}..."
+          
+          rm -rf "$dest_plugin_dir"
+          mkdir -p "$dest_plugin_dir"
+          cp -r "${plugin_dir}/." "${dest_plugin_dir}/"
         fi
       done
     fi
