@@ -1,7 +1,7 @@
 # GitHub Issue & PR Development Workflow Rule
 
 ## Description
-Enforces mandatory GitHub Issue creation, normalized feature branch naming, Conventional Commits, and Pull Request issue-linking across all core projects (`nidhiflow`, `seyalicraft`, `civicpath`, `ai-agent-toolkit`).
+Enforces mandatory GitHub Issue creation, normalized feature branch naming, Conventional Commits, and Pull Request issue-linking across all core projects (`example-app`, `my-company`, `gis-app`, `ai-agent-toolkit`).
 
 ## Constraints
 

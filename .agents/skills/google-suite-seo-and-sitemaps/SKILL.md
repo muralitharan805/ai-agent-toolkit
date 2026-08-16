@@ -36,8 +36,8 @@ Inject JSON-LD schemas into document head for search result enhancement:
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  "name": "SeyaliCraft Tools",
-  "url": "https://seyalicraft.com",
+  "name": "my-company Tools",
+  "url": "https://my-company.com",
   "description": "High-performance developer utility tools.",
   "author": {
     "@type": "Person",
