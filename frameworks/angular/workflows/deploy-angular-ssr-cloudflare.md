@@ -5,7 +5,7 @@ trigger: manual
 # Deploy Angular SSR to Cloudflare Workflow
 
 ## Objective
-Provide a robust, end-to-end process for validating, testing, building, and deploying an Angular 21 SSR application (e.g. Seyalicraft Portfolio) to Cloudflare.
+Provide a robust, end-to-end process for validating, testing, building, and deploying an Angular 21 SSR application (e.g. my-company Portfolio) to Cloudflare.
 
 ## Prerequisites
 - Angular 21 project with `@angular/ssr` and `wrangler` CLI configured.
@@ -41,6 +41,6 @@ pnpm run deploy
 ````
 
 ### Step 5: Post-Deployment Verification
-- Open deployed URL (e.g., `https://seyalicraft.com`).
+- Open deployed URL (e.g., `https://my-company.com`).
 - Check Network tab for HTTP 200 responses on server-rendered routes.
 - Verify meta tags and OpenGraph headers for social showcase sharing.

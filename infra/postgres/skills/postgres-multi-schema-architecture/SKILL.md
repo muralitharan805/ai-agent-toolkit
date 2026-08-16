@@ -83,7 +83,7 @@ PostgreSQL uses `search_path` to resolve table names in SQL queries.
 
 ### Setting `search_path` in PostgreSQL Connection String:
 ```text
-postgresql://user:password@localhost:5432/nidhiflow_db?schema=finance&search_path=finance,auth,public
+postgresql://user:password@localhost:5432/example-app_db?schema=finance&search_path=finance,auth,public
 ```
 
 ### Dynamic `search_path` SQL Commands:
@@ -205,7 +205,7 @@ Restrict service account access strictly to authorized schemas:
 
 ```sql
 -- 1. Revoke public access
-REVOKE ALL ON DATABASE nidhiflow_db FROM PUBLIC;
+REVOKE ALL ON DATABASE example-app_db FROM PUBLIC;
 
 -- 2. Create service roles
 CREATE ROLE auth_service_role LOGIN PASSWORD 'SecureAuthPass123';

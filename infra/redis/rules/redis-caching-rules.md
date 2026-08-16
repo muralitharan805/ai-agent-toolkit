@@ -33,4 +33,4 @@ Enforces mandatory standards for Redis caching, global cache configuration, blac
 - The caching layer MUST log a warning and transparently execute the underlying primary database query.
 
 ### 6. Cache Invalidation on Data Mutation
-- Data mutation endpoints (`POST`, `PATCH`, `DELETE`) MUST invalidate relevant cached keys (e.g. `nidhiflow:cache:users:*`) to prevent serving stale data to clients.
+- Data mutation endpoints (`POST`, `PATCH`, `DELETE`) MUST invalidate relevant cached keys (e.g. `example-app:cache:users:*`) to prevent serving stale data to clients.

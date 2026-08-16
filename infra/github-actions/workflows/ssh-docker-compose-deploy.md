@@ -55,7 +55,7 @@ After scaffolding the workflow file, the agent **MUST** present the user with a 
 - `SERVER_USERNAME`: The SSH user (e.g., `root`, `ubuntu`).
 - `SERVER_SSH_KEY`: The raw private SSH key string (e.g., contents of `id_rsa` or `id_ed25519`) for authentication. Ensure the corresponding public key is in `~/.ssh/authorized_keys` on the server.
 - `SERVER_PORT`: The SSH port to connect to (e.g., `22`, `2001`).
-- `PROJECT_PATH`: The absolute directory path on the VPS where the project is already cloned (e.g., `/home/ubuntu/nidhiflow-backend`).
+- `PROJECT_PATH`: The absolute directory path on the VPS where the project is already cloned (e.g., `/home/ubuntu/example-app-backend`).
 
 ### Step 4: Update README.md
 The agent **MUST** update the target project's `README.md` to include a section documenting the GitHub Actions deployment setup. It should explain how to add the repository secrets and include a table of all the required variables (SERVER_HOST, SERVER_USERNAME, SERVER_PORT, SERVER_SSH_KEY, PROJECT_PATH) with descriptions and examples, so that future maintainers can easily configure the environment.

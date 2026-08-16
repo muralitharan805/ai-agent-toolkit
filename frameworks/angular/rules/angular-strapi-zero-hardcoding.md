@@ -28,7 +28,7 @@ This rule strictly enforces a zero-hardcoding policy across all Angular frontend
 ```html
 <!-- NEVER hardcode text or static paths when building a CMS-driven site -->
 <section class="hero">
-  <h1>Seyalicraft Portfolio</h1>
+  <h1>my-company Portfolio</h1>
   <p>Welcome to my software engineering portfolio.</p>
   <img src="assets/logo.png" alt="Logo" />
 </section>

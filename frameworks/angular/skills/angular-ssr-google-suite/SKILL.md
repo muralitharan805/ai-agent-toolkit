@@ -16,7 +16,7 @@ const angularApp = new AngularAppEngine();
 const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://seyalicraft.com/</loc>
+    <loc>https://my-company.com/</loc>
     <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
@@ -48,7 +48,7 @@ export default {
 ### 2. Static HTML Head Fallback (`src/index.html`)
 Declare the fallback canonical tag in document `<head>`:
 ```html
-<link rel="canonical" href="https://seyalicraft.com/" />
+<link rel="canonical" href="https://my-company.com/" />
 ```
 
 ### 3. SSR-Safe Dynamic Dynamic Canonical & Meta Service (`src/app/core/services/seo.service.ts`)
@@ -90,7 +90,7 @@ export class SeoService {
    * Automatically strips query parameters to maintain clean canonical URLs.
    */
   setCanonicalUrl(url?: string): void {
-    const rawUrl = url || `https://seyalicraft.com${this.document.location?.pathname || ''}`;
+    const rawUrl = url || `https://my-company.com${this.document.location?.pathname || ''}`;
     const cleanUrl = rawUrl.split('?')[0];
     let link: HTMLLinkElement | null = this.document.querySelector("link[rel='canonical']");
 

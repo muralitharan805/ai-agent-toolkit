@@ -7,9 +7,9 @@ description: Architecture, directory layout (frameworks, infra, shared, .agents)
 
 ## Overview
 
-**`ai-agent-toolkit`** ([`muralitharan805/ai-agent-toolkit`](https://github.com/muralitharan805/ai-agent-toolkit)) is Seyalicraft's central management repository for AI Agent capabilities, engineering rules, automated workflows, and domain context skills.
+**`ai-agent-toolkit`** ([`muralitharan805/ai-agent-toolkit`](https://github.com/muralitharan805/ai-agent-toolkit)) is my-company's central management repository for AI Agent capabilities, engineering rules, automated workflows, and domain context skills.
 
-It provides a modular, deduplicated structure designed to sync context seamlessly into all Seyalicraft repositories (`seyalicraft-frontend`, `civicpath`, `nidhiflow`, `docker-dev-infra`) or globally into the user's system (`~/.gemini/`) via the `bin/sync-skills.sh` automation script.
+It provides a modular, deduplicated structure designed to sync context seamlessly into all my-company repositories (`my-company-frontend`, `gis-app`, `example-app`, `docker-dev-infra`) or globally into the user's system (`~/.gemini/`) via the `bin/sync-skills.sh` automation script.
 
 ---
 
@@ -46,9 +46,9 @@ ai-agent-toolkit/
 │   └── redis/                 # Redis caching strategies & TTL rules
 │
 ├── shared/                    # Domain-level & cross-cutting shared context modules
-│   ├── seyalicraft/           # Main Portal context & organizational rules
-│   ├── civicpath/             # CivicPath 3-layer GIS & candidate domain skills
-│   ├── nidhiflow/             # NidhiFlow double-entry accounting & finance skills
+│   ├── my-company/           # Main Portal context & organizational rules
+│   ├── gis-app/             # gis-app 3-layer GIS & candidate domain skills
+│   ├── example-app/             # example-app double-entry accounting & finance skills
 │   ├── docker-dev-infra/      # Docker dev infra compose template skills
 │   ├── ai-agent-toolkit/      # Toolkit authoring & architectural skills
 │   ├── code-quality/          # Clean code & maintainability standards
@@ -108,10 +108,10 @@ The toolkit provides a shell script to sync skills, rules, and workflows into wo
 ./bin/sync-skills.sh --global --framework nestjs --infra postgres,redis
 
 # 3. Sync Angular framework + Docker infra + shared context into target workspace
-./bin/sync-skills.sh --framework angular --infra docker --target /path/to/seyalicraft-frontend
+./bin/sync-skills.sh --framework angular --infra docker --target /path/to/my-company-frontend
 
 # 4. Sync specific domain module into workspace
-./bin/sync-skills.sh --domain nidhiflow --target /path/to/nidhiflow-backend
+./bin/sync-skills.sh --domain example-app --target /path/to/example-app-backend
 ```
 
 ---

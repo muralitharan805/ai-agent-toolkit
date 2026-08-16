@@ -20,9 +20,9 @@ export class AppTitleStrategy extends TitleStrategy {
   override updateTitle(routerState: RouterStateSnapshot): void {
     const title = this.buildTitle(routerState);
     if (title) {
-      this.title.setTitle(`${title} | SeyaliCraft Labs`);
+      this.title.setTitle(`${title} | my-company Labs`);
     } else {
-      this.title.setTitle('SeyaliCraft Labs — Personal Engineering Sandbox');
+      this.title.setTitle('my-company Labs — Personal Engineering Sandbox');
     }
   }
 }

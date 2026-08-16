@@ -44,7 +44,7 @@ import { Injectable, signal, effect, inject, DOCUMENT } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly document = inject(DOCUMENT);
-  private readonly STORAGE_KEY = 'nidhiflow-theme-mode';
+  private readonly STORAGE_KEY = 'example-app-theme-mode';
 
   // Default state is Dark Mode (true), checking saved preference & OS mode
   readonly isDarkMode = signal<boolean>(this.getSavedPreference());

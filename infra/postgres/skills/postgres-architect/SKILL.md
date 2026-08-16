@@ -20,7 +20,7 @@ RUN git clone --depth 1 --branch v0.8.2 https://github.com/pgvector/pgvector.git
 ### 2. Dynamic Multi-Database Provisioning Pattern
 Enable developers to spin up multiple isolated databases pre-seeded with extensions (e.g. `vector`, `postgis`, `postgis_topology`) dynamically via environment variables without requiring manual SQL commands.
 * **Dynamic Script Mount:** Mount a bash script to the `/docker-entrypoint-initdb.d/` directory inside the container (e.g., `01-init-multiple-databases.sh`).
-* **Environment Variable:** Define `POSTGRES_MULTIPLE_DATABASES` as a comma-separated list of database names in the `.env` file (e.g., `POSTGRES_MULTIPLE_DATABASES=civicpath,analytics_db`).
+* **Environment Variable:** Define `POSTGRES_MULTIPLE_DATABASES` as a comma-separated list of database names in the `.env` file (e.g., `POSTGRES_MULTIPLE_DATABASES=gis-app,analytics_db`).
 * **The Provisioning Loop:**
 ```bash
 #!/bin/bash

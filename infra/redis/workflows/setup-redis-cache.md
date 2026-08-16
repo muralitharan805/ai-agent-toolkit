@@ -31,7 +31,7 @@ pnpm add -D @types/ioredis
 ### Step 4: Implement Automatic Mutation Cache Invalidation (`cache-invalidation.interceptor.ts`)
 1. Create `src/core/cache/cache-invalidation.interceptor.ts`.
 2. Intercept data modification requests (`POST`, `PATCH`, `PUT`, `DELETE`).
-3. On successful mutation execution, automatically purge related Redis cache patterns (e.g. `nidhiflow:cache:users:*`).
+3. On successful mutation execution, automatically purge related Redis cache patterns (e.g. `example-app:cache:users:*`).
 
 ### Step 5: Register Cache Module & Global Interceptors
 1. Create `src/core/cache/cache.module.ts` as a `@Global()` module providing `RedisCacheService`, `HttpCacheInterceptor`, and `CacheInvalidationInterceptor`.

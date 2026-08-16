@@ -17,7 +17,7 @@ Guide developers and AI coding agents in implementing production-grade Redis cac
    - **Decorator Exclusion (`@NoCache()`)**: Explicitly bypasses caching for specific controller endpoints.
    - **Config Blacklist (`CACHE_DISABLED_ROUTES=/api/v1/users/me,/api/v1/health`)**: Comma-separated list of route prefixes excluded from caching.
 3. **Custom TTL Decorator (`@UseCache(ttlSeconds)`)**: Allows setting custom cache duration (e.g. `@UseCache(600)` for 10 minutes) or forcing cache enablement when global mode is OFF.
-4. **Cache Key Namespacing**: Use colon-delimited key namespacing: `<app>:cache:<domain>:<endpoint>:<query_md5>` (e.g. `nidhiflow:cache:users:list:a8f9b2`).
+4. **Cache Key Namespacing**: Use colon-delimited key namespacing: `<app>:cache:<domain>:<endpoint>:<query_md5>` (e.g. `example-app:cache:users:list:a8f9b2`).
 5. **Fault-Tolerant Fallback**: If Redis connection is down, log a warning and transparently execute the database query without throwing HTTP 500 errors.
 6. **Visual Console Logging**: Every request intercepted by the caching layer MUST produce a clear console log entry explicitly displaying `(cached)` vs `(database query)`.
 
@@ -143,7 +143,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
     const startTime = Date.now();
     const urlHash = crypto.createHash('md5').update(request.originalUrl).digest('hex').substring(0, 8);
-    const cacheKey = `nidhiflow:cache:${request.path.replace(/\//g, ':')}:${urlHash}`;
+    const cacheKey = `example-app:cache:${request.path.replace(/\//g, ':')}:${urlHash}`;
 
     // Read from Redis Cache
     const cachedData = await this.redisCacheService.get(cacheKey);
