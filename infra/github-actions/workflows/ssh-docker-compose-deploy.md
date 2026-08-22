@@ -41,10 +41,10 @@ jobs:
             cd ${{ secrets.PROJECT_PATH }}
             git pull origin main
             
-            # Agent MUST adapt this command based on the detected compose file
-            docker compose -f <DETECTED_COMPOSE_FILE> up -d --build
+            # Execute zero-compilation SSH deployment pulling pre-built Docker Hub registry image
+            docker compose -f docker-compose.existing-infra.yml -f docker-compose.repo.yml up -d --pull always
             
-            # Clean up dangling images to save server disk space
+            # Clean up dangling image layers to save server disk space
             docker image prune -f
 ```
 

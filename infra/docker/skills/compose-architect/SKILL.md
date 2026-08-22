@@ -35,6 +35,17 @@ services:
 * **Explicit Custom Bridges:** Avoid using the default implicit docker network. Create named, isolated private bridge networks for service groupings to limit attack surface and avoid subnet collisions.
 * **DNS Resolution:** Use container names or service names for internal communication (e.g. `postgresql://admin:pwd@pgvector-db:5432/db`).
 
+### 5. Mandatory 6-File Modular Compose Architecture
+* Every project MUST support the 6-file compose file topology:
+  1. `docker-compose.yml`: Primary app service definition & bridge networks.
+  2. `docker-compose.override.yml`: Development bind mounts & hot reload.
+  3. `docker-compose.prod.yml`: Production standalone resource limits & restart policies.
+  4. `docker-compose.shared.yml`: Dedicated standalone backing services (Postgres, Redis).
+  5. `docker-compose.existing-infra.yml`: Cost-saver external network mappings (`db_network`, `redis_network`).
+  6. `docker-compose.repo.yml`: Pre-built image override (`image: <username>/<repository>:<tag>`).
+* **Remote Deployment Rule:** Production VPS deployments MUST combine `-f docker-compose.existing-infra.yml -f docker-compose.repo.yml` to pull pre-built registry images without running server-side builds.
+
+
 ## Reference Compose Template
 ```yaml
 services:

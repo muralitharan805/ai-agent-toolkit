@@ -30,23 +30,47 @@ Follow this step-by-step workflow to scaffold enterprise-grade Docker containeri
    - Include automated DB migration entrypoint wrapper script (`docker-entrypoint.sh`).
 2. Create `.dockerignore` excluding dependencies, local caches, git history, and secrets.
 
-### Step 3: Scaffold Modular Multi-Environment Docker Compose Files
-Generate split Compose files based on requested components:
-1. `docker-compose.yml`: Shared base service definitions, bridge networks, and volume definitions.
+### Step 3: Scaffold Mandatory 6-File Modular Docker Compose Topology
+Generate all 6 split Compose files to support all execution modes:
+1. `docker-compose.yml`: Primary application service definition, networks, and named volume declarations.
 2. `docker-compose.override.yml`: Local Development overrides (bind volume mounts, hot-reloading command).
-3. `docker-compose.prod.yml`: Production overrides (`restart: unless-stopped`, resource CPU/memory limits, json-file logging).
-4. `docker-compose.shared.yml`: Standalone infrastructure services (Postgres + pgvector, MySQL, MongoDB, Redis + RedisInsight, RabbitMQ, Kafka, MinIO, healthchecks).
-5. `docker-compose.existing-infra.yml`: Shared cost-saver overrides connecting application container to existing running infrastructure containers via external Docker network (`shared-infra-network`).
-6. `docker-compose.repo.yml`: Pre-built image execution overrides referencing the Docker Hub container image path instead of a local build context.
+3. `docker-compose.prod.yml`: Standalone production overrides (`restart: unless-stopped`, resource CPU/memory limits, json-file logging).
+4. `docker-compose.shared.yml`: Dedicated standalone backing infrastructure services (Postgres + pgvector, MySQL, MongoDB, Redis + RedisInsight, healthchecks).
+5. `docker-compose.existing-infra.yml`: Cost-saver infrastructure overrides connecting the application container to an existing, external container network (`db_network`, `redis_network`).
+6. `docker-compose.repo.yml`: Pre-built remote image overrides referencing the container registry image tag (`image: <username>/<repository>:<tag>`).
 
 ### Step 4: Update Project README.md Documentation
 Append a dedicated `## 🐳 Docker Containerization & Execution Guide` section to the project's `README.md` detailing:
-- Commands to **build and push** the image to Docker Hub (e.g., `docker build -t <username>/<repo>:<tag> .` and `docker push <username>/<repo>:<tag>`).
-- Commands for Mode A: Standalone dev environment (`docker compose -f docker-compose.shared.yml -f docker-compose.yml up -d`).
-- Commands for Mode B: Shared cost-saver environment (`docker compose -f docker-compose.yml -f docker-compose.existing-infra.yml up -d`).
-- Commands for Mode C: Pre-built Docker Hub environment using the remote image (`docker compose -f docker-compose.yml -f docker-compose.repo.yml up -d`).
-- Commands for Production deployment (`docker compose -f docker-compose.shared.yml -f docker-compose.yml -f docker-compose.prod.yml up -d --build`).
+
+#### 1. Local Machine Build & Registry Push
+```bash
+# Build lightweight production runner stage locally
+docker build --target runner -t <username>/<repository>:latest .
+
+# Authenticate and push image to Container Registry (Docker Hub / GHCR)
+docker login -u <username>
+docker push <username>/<repository>:latest
+```
+
+#### 2. Remote VPS Server Deployment Modes
+- **Mode A: Standalone Infrastructure Mode** (Dedicated Postgres + Redis containers):
+  ```bash
+  docker compose -f docker-compose.shared.yml -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+  ```
+- **Mode B: Shared Infrastructure Cost-Saver Mode** (Connecting to existing database network with server-side build):
+  ```bash
+  docker compose -f docker-compose.existing-infra.yml up -d --build
+  ```
+- **Mode C: Recommended Remote Registry Mode** (Zero VPS CPU build load using pre-built image):
+  ```bash
+  # First time deployment or ongoing code updates
+  docker compose -f docker-compose.existing-infra.yml -f docker-compose.repo.yml up -d --pull always
+  
+  # Clean up dangling image layers to save disk space
+  docker image prune -f
+  ```
 
 ### Step 5: Verification & Container Testing
-1. Run syntax verification on generated `Dockerfile` and `docker-compose*.yml` files.
-2. Verify non-root user execution and healthchecks are correctly configured.
+1. Run syntax verification on generated `Dockerfile` and all 6 `docker-compose*.yml` files.
+2. Verify non-root user execution, healthchecks, and registry image tags are correctly configured.
+

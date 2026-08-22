@@ -188,35 +188,39 @@ upsert_rule_file() {
   local target_md="$2"
 
   if [[ -f "$rule_file" && -f "$target_md" ]]; then
-    local rule_header=$(grep -E '^\s*<RULE\[' "$rule_file" | head -n 1 || true)
-    if [[ -n "$rule_header" ]]; then
-      local rule_id=$(echo "$rule_header" | sed -E 's/.*<RULE\[([^]]+)\].*/\1/')
-      if grep -q "<RULE\[${rule_id}\]" "$target_md"; then
-        # Replace existing rule block in target_md using python3 for clean multiline replace
-        python3 - "$target_md" "$rule_file" "$rule_id" << 'EOF'
-import sys, re
+    local rule_id="$(basename "$rule_file")"
+    python3 - "$rule_file" "$target_md" "$rule_id" << 'EOF'
+import sys, os, re
 
-target_path, rule_path, rule_id = sys.argv[1], sys.argv[2], sys.argv[3]
-with open(target_path, 'r', encoding='utf-8') as f:
+rule_file, target_md, rule_id = sys.argv[1], sys.argv[2], sys.argv[3]
+
+with open(rule_file, 'r', encoding='utf-8') as f:
+    rule_content = f.read().strip()
+
+# Derive rule ID from tag if present, else use filename
+match = re.search(r'<RULE\[([^]]+)\]>', rule_content)
+if match:
+    rule_id = match.group(1)
+else:
+    rule_content = f"<RULE[{rule_id}]\n\n{rule_content}\n\n</RULE[{rule_id}]>"
+
+with open(target_md, 'r', encoding='utf-8') as f:
     target_content = f.read()
-with open(rule_path, 'r', encoding='utf-8') as f:
-    new_rule_content = f.read().strip()
 
 pattern = re.compile(rf'<RULE\[{re.escape(rule_id)}\]>.*?</RULE\[{re.escape(rule_id)}\]>', re.DOTALL)
 if pattern.search(target_content):
-    updated = pattern.sub(new_rule_content, target_content)
-    with open(target_path, 'w', encoding='utf-8') as f:
-        f.write(updated)
+    updated = pattern.sub(rule_content, target_content)
+    print(f"  [Rule] Updated rule '{rule_id}' in {os.path.basename(target_md)}")
+else:
+    updated = target_content.rstrip() + "\n\n" + rule_content + "\n"
+    print(f"  [Rule] Appended rule '{rule_id}' into {os.path.basename(target_md)}")
+
+with open(target_md, 'w', encoding='utf-8') as f:
+    f.write(updated)
 EOF
-        echo "  [Rule] Updated rule '${rule_id}' in $(basename "$target_md")"
-        return
-      fi
-    fi
-    echo "" >> "$target_md"
-    cat "$rule_file" >> "$target_md"
-    echo "  [Rule] Appended $(basename "$rule_file") into $(basename "$target_md")"
   fi
 }
+
 
 # Function to safely copy files into target locations
 copy_category() {
