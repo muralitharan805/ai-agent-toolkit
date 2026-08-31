@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: "Enforces mandatory quality standards, YAML frontmatter GUI compatibility, strict deduplication/upserting policies, and structured directory organization across all skills, rules, and workflows in the ai-agent-toolkit repository."
+---
+
 # AI Agent Toolkit Authoring & Quality Control Rules
 
 ## Description

@@ -262,12 +262,9 @@ if [[ -n "$FRAMEWORK" ]]; then
 fi
 
 # 2. Sync Common Shared Context
-COMMON_SHARED_TOPICS=("code-quality" "git" "logging" "package-management" "security" "generators" "google-suite")
-
 if [[ "$SYNC_SHARED" == true && -d "${TOOLKIT_ROOT}/shared" ]]; then
   echo "🌐 Syncing Common Shared Context..."
-  for topic in "${COMMON_SHARED_TOPICS[@]}"; do
-    topic_dir="${TOOLKIT_ROOT}/shared/${topic}"
+  for topic_dir in "${TOOLKIT_ROOT}/shared"/*; do
     if [[ -d "$topic_dir" ]]; then
       copy_category "$topic_dir" "skills"
       copy_category "$topic_dir" "rules"

@@ -49,27 +49,31 @@ agent-toolkit/
 │   └── strapi-v5/
 │
 ├── infra/                 # Infrastructure & DevOps layer context
+│   ├── cloudflare/
 │   ├── docker/
+│   ├── github-actions/    # Automated VPS deployment & CI/CD workflows
 │   ├── postgres/
-│   ├── redis/
-│   └── cloudflare/
+│   └── redis/
 │
 ├── shared/                # Cross-cutting, topic-based agent context
 │   ├── ai-agent-toolkit/ # Toolkit architecture & frontmatter standards
 │   ├── code-quality/      # Clean code, TSDoc & type safety standards
+│   ├── communication/     # Thanglish dual-language matching & mentorship rules
 │   ├── generators/        # AI Skill, Rule, & Workflow authoring context (/generate-agent-suite)
 │   ├── git/               # Git conventions, commit standards, Issue & PR automation
 │   ├── google-suite/      # GA4 analytics, Search Console & AdSense monetization rules
 │   ├── logging/           # Correlation ID tracing, JSON logs, secret masking
 │   ├── package-management/# pnpm mandatory standards & Corepack rules
-│   └── security/          # Secret masking & OWASP rules
+│   ├── problem-discovery/ # FOCUS 14-node discovery & evidence scoring rules
+│   ├── security/          # Secret masking & OWASP rules
+│   └── testing/           # Automated QA, unit/E2E test coverage standards
 │
 ├── domains/               # Private project-specific domain layer (Git-ignored for Open-Source Safety)
-│   ├── nidhiflow/         # Double-entry finance & loan amortization rules
-│   ├── seyalicraft/       # Main Portal ecosystem & branding rules
 │   ├── civicpath/         # CivicPath GIS domain skills & state machines
+│   ├── docker-dev-infra/  # Dev Infra Compose microservices
 │   ├── finance/           # Personal finance & double-entry math
-│   └── docker-dev-infra/  # Dev Infra Compose microservices
+│   ├── nidhiflow/         # Double-entry finance & loan amortization rules
+│   └── seyalicraft/       # Main Portal ecosystem & branding rules
 │
 └── bin/                    # Scripts to sync context into Workspace or Global targets
     └── sync-skills.sh
