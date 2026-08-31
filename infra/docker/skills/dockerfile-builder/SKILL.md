@@ -1,3 +1,8 @@
+---
+name: dockerfile-builder
+description: "Expert skill for generating, refactoring, and optimizing standalone Dockerfile configurations following enterprise standards."
+---
+
 # Dockerfile Builder Skill
 
 ## Metadata

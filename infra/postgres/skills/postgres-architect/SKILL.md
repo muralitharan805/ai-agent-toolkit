@@ -1,3 +1,8 @@
+---
+name: postgres-architect
+description: "Expert skill for configuring, deploying, tuning, and maintaining high-performance enterprise PostgreSQL instances, vector databases, and multi-database orchestrations."
+---
+
 # PostgreSQL & pgvector Architect Skill
 
 ## Metadata

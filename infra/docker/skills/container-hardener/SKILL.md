@@ -1,3 +1,8 @@
+---
+name: container-hardener
+description: "Expert skill for conducting security threat audits, non-root system paradigm enforcement, runtime privilege reduction, and secret protection."
+---
+
 # Container Hardener Skill
 
 ## Metadata

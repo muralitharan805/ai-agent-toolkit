@@ -1,3 +1,8 @@
+---
+name: buildkit-optimizer
+description: "Expert skill for diagnosing slow container build times, reducing bloating image sizes, troubleshooting build caches, and optimizing host resource usage."
+---
+
 # BuildKit Optimizer Skill
 
 ## Metadata

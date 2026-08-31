@@ -1,3 +1,8 @@
+---
+name: compose-architect
+description: "Expert skill for designing multi-container systems, orchestrating networks, defining persistent volumes, and handling container dependency topologies."
+---
+
 # Docker Compose Architect Skill
 
 ## Metadata

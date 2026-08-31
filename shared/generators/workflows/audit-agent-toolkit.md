@@ -15,7 +15,8 @@ Recursively inspect all files in `frameworks/`, `infra/`, `shared/`, `domains/`,
 1. **Rule Size Limit**: Ensure no `.md` rule file exceeds **12,000 characters** (Hard IDE limit).
 2. **Workflow Size Limit**: Ensure no `.md` workflow file exceeds **12,000 characters** (Hard IDE limit).
 3. **Skill Size Limit**: Ensure no `SKILL.md` file exceeds **500 lines**.
-4. **Global System Prompt Size Limit**: Ensure `~/.gemini/GEMINI.md` and `~/.gemini/config/AGENTS.md` remain under **50 KB**.
+4. **Global AGENTS.md Size Limit**: Ensure `~/.gemini/config/AGENTS.md` remains under **25 KB** (legacy `GEMINI.md` must NOT exist).
+5. **Global Customizations Token Budget Limit**: Ensure the combined size of all global rules in `~/.gemini/config/rules/` does NOT exceed **35 KB** (~4,000 tokens), and verify zero framework-specific rules (`angular-*`, `nestjs-*`, `docker-*`, `postgres-*`) leak into global scope.
 
 ### Step 2: Global Parity & Sync Audit (`~/.gemini/` vs Toolkit)
 1. Verify that all global skills in `~/.gemini/antigravity/skills/` originate from `ai-agent-toolkit`.

@@ -1,3 +1,8 @@
+---
+description: "Enforces mandatory GitHub Issue creation, normalized feature branch naming, Conventional Commits, and Pull Request issue-linking."
+trigger: always_on
+---
+
 # GitHub Issue & PR Development Workflow Rule
 
 ## Description

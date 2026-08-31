@@ -101,15 +101,14 @@ Run `bin/sync-skills.sh` from the toolkit repo to automatically copy framework, 
 
 ### 2. Syncing Context to Global Level (`~/.gemini/`)
 
-Sync all or selected framework/infra skills into your personal system-wide environment:
+Sync universal shared rules, skills, and workflows globally to keep your system prompt lightweight (~12% token budget):
 
 ```bash
-# Sync ALL toolkit frameworks, infra, and shared contexts globally
-./bin/sync-skills.sh --global --all
-
-# Sync specific framework + infra globally
-./bin/sync-skills.sh --global --framework nestjs --infra postgres,redis
+# Recommended: Sync Universal Shared rules/skills globally
+./bin/sync-skills.sh --global --shared
 ```
+
+> **Note on Framework Rules**: Keep framework-specific rules (Angular, NestJS, Docker) inside project-level `.agents/` via `--target` to preserve global customization token budget.
 
 ### 3. Generating & Updating Agent Context with AI
 
