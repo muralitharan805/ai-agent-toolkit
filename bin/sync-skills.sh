@@ -154,6 +154,7 @@ if [[ "$IS_GLOBAL" == true ]]; then
   TARGET_RULES_DIR="${HOME}/.gemini/config/rules"
   TARGET_WORKFLOWS_DIR="${HOME}/.gemini/config/workflows"
   TARGET_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
+  GLOBAL_GEMINI_MD="${HOME}/.gemini/GEMINI.md"
   SCOPE_LABEL="Global Level (~/.gemini)"
 else
   if [[ ! -d "$TARGET_DIR" ]]; then
@@ -182,7 +183,45 @@ echo "------------------------------------------------------------------"
 mkdir -p "${TARGET_SKILLS_DIR}"
 mkdir -p "${TARGET_RULES_DIR}"
 mkdir -p "${TARGET_WORKFLOWS_DIR}"
+mkdir -p "${TARGET_PLUGINS_DIR}"
 
+# Helper function to upsert rules ONLY into ~/.gemini/GEMINI.md for global sync
+upsert_gemini_rule() {
+  local rule_file="$1"
+  local target_md="${GLOBAL_GEMINI_MD}"
+
+  if [[ -f "$rule_file" ]]; then
+    python3 - "$rule_file" "$target_md" << 'EOF'
+import sys, os, re
+
+rule_file = sys.argv[1]
+target_md = sys.argv[2]
+rule_id = os.path.basename(rule_file)
+
+with open(rule_file, 'r', encoding='utf-8') as f:
+    content = f.read().strip()
+
+if not re.search(r'<RULE\[', content):
+    content = f"<RULE[{rule_id}]>\n\n{content}\n\n</RULE[{rule_id}]>"
+
+target_content = ""
+if os.path.exists(target_md):
+    with open(target_md, 'r', encoding='utf-8') as f:
+        target_content = f.read()
+
+pattern = re.compile(rf'<RULE\[{re.escape(rule_id)}\]>.*?</RULE\[{re.escape(rule_id)}\]>', re.DOTALL)
+
+if pattern.search(target_content):
+    updated = pattern.sub(lambda m: content, target_content)
+else:
+    updated = target_content.rstrip() + "\n\n" + content + "\n"
+
+os.makedirs(os.path.dirname(os.path.abspath(target_md)), exist_ok=True)
+with open(target_md, 'w', encoding='utf-8') as f:
+    f.write(updated)
+EOF
+  fi
+}
 
 # Function to safely copy files into target locations
 copy_category() {
@@ -208,12 +247,18 @@ copy_category() {
       for md_file in "${src_dir}/${category}"/*.md; do
         if [[ -f "$md_file" ]]; then
           local file_name="$(basename "$md_file")"
-          local dest_file="${TARGET_RULES_DIR}/${file_name}"
-          echo "  [Rule] Syncing ${file_name}..."
-          
-          # Rule 2.1: Entirely replace target file if same name exists
-          rm -f "$dest_file"
-          cp "${md_file}" "$dest_file"
+
+          if [[ "$IS_GLOBAL" == true ]]; then
+            # Global Rules -> ~/.gemini/GEMINI.md ONLY (Official Antigravity Spec)
+            echo "  [Rule] Syncing ${file_name} into GEMINI.md..."
+            upsert_gemini_rule "$md_file"
+          else
+            # Workspace Rules -> <target>/.agents/rules/*.md (Official Antigravity Spec)
+            local dest_file="${TARGET_RULES_DIR}/${file_name}"
+            echo "  [Rule] Syncing ${file_name}..."
+            rm -f "$dest_file"
+            cp "${md_file}" "$dest_file"
+          fi
         fi
       done
     elif [[ "$category" == "workflows" ]]; then
