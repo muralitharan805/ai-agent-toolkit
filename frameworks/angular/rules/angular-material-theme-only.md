@@ -31,8 +31,46 @@ This rule mandates Angular Material (`@angular/material`) as the primary UI comp
 
 ### 4. Centralized SCSS Theme & Google Fonts Typography Architecture
 - **Google Fonts Loading**: High-legibility Google Fonts (`Inter`, `Roboto`, `Outfit`, `Plus Jakarta Sans`) MUST be loaded globally in `index.html`.
-- **Global Theme Tokens**: All colors, surface elevations, rounded corners, and font scales MUST originate from `src/styles/_theme.scss` and `src/styles/_typography.scss`.
-- **Material 3 Token Consumption**: Components MUST use M3 tokens (e.g., `var(--mat-sys-primary)`, `var(--mat-sys-surface-container)`) instead of hardcoded hex values (`#1976d2`).
+- **Global Theme Tokens**: All colors, surface elevations, rounded corners, and font scales MUST originate from global CSS variables (`var(--bg-primary)`, `var(--bg-secondary)`, `var(--bg-card)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--text-muted)`, `var(--border-color)`, `var(--color-primary)`).
+- **Zero Hardcoding Rule**: Hardcoded hex colors (`#ffffff`, `#0f172a`) or static gradient stops inside component SCSS files are strictly prohibited. Header text gradients MUST fallback to `color: var(--text-primary)` to ensure high contrast in Light Mode.
+
+### 5. High-Specificity MDC Shadow DOM Overrides
+- Component cards, form fields, and dropdowns MUST include explicit MDC class overrides in global `src/styles.scss` to prevent Angular Material 3 default inline styles from breaking theme variables:
+  ```scss
+  mat-card,
+  .mat-mdc-card {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+
+    .mat-mdc-card-header,
+    .mat-mdc-card-title,
+    .mat-mdc-card-subtitle,
+    .mat-mdc-card-content {
+      color: var(--text-primary) !important;
+    }
+  }
+  ```
+
+### 6. Zero-FOUC (Flash of Unstyled Content) Synchronous Head Script
+- `index.html` MUST include a 0ms synchronous inline script inside `<head>` to read `localStorage.getItem('theme')` at Frame 0 before initial paint, preventing dark/light flash on page reload:
+  ```html
+  <script>
+    (function() {
+      try {
+        var theme = localStorage.getItem('app-theme-preference');
+        var dark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) {
+          document.documentElement.classList.add('dark-theme');
+          document.documentElement.classList.remove('light-theme');
+        } else {
+          document.documentElement.classList.add('light-theme');
+          document.documentElement.classList.remove('dark-theme');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  ```
 
 ## Examples
 
