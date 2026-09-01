@@ -146,6 +146,18 @@ if [[ "$SYNC_ALL" == true ]]; then
       fi
     fi
   done
+
+  DOMAINS=""
+  for dom_dir in "${TOOLKIT_ROOT}/domains"/*; do
+    if [[ -d "$dom_dir" ]]; then
+      dom_name="$(basename "$dom_dir")"
+      if [[ -z "$DOMAINS" ]]; then
+        DOMAINS="$dom_name"
+      else
+        DOMAINS="${DOMAINS},${dom_name}"
+      fi
+    fi
+  done
 fi
 
 ## Define destination directory paths based on Scope
@@ -153,6 +165,7 @@ if [[ "$IS_GLOBAL" == true ]]; then
   TARGET_SKILLS_DIR="${HOME}/.gemini/antigravity/skills"
   TARGET_RULES_DIR="${HOME}/.gemini/config/rules"
   TARGET_WORKFLOWS_DIR="${HOME}/.gemini/config/workflows"
+  TARGET_GLOBAL_WORKFLOWS_DIR="${HOME}/.gemini/config/global_workflows"
   TARGET_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
   GLOBAL_GEMINI_MD="${HOME}/.gemini/GEMINI.md"
   SCOPE_LABEL="Global Level (~/.gemini)"
@@ -184,6 +197,9 @@ mkdir -p "${TARGET_SKILLS_DIR}"
 mkdir -p "${TARGET_RULES_DIR}"
 mkdir -p "${TARGET_WORKFLOWS_DIR}"
 mkdir -p "${TARGET_PLUGINS_DIR}"
+if [[ "$IS_GLOBAL" == true ]]; then
+  mkdir -p "${TARGET_GLOBAL_WORKFLOWS_DIR}"
+fi
 
 # Helper function to upsert rules ONLY into ~/.gemini/GEMINI.md for global sync
 upsert_gemini_rule() {
@@ -271,6 +287,12 @@ copy_category() {
           # Rule 2.1: Entirely replace target workflow if same name exists
           rm -f "$dest_file"
           cp "${md_file}" "$dest_file"
+
+          if [[ "$IS_GLOBAL" == true ]]; then
+            local dest_global_file="${TARGET_GLOBAL_WORKFLOWS_DIR}/${file_name}"
+            rm -f "$dest_global_file"
+            cp "${md_file}" "$dest_global_file"
+          fi
         fi
       done
     elif [[ "$category" == "plugins" ]]; then
