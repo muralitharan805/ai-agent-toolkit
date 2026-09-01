@@ -129,7 +129,7 @@ Identify **Human Glue-Work**: `System A -> Human -> Excel -> Email/WhatsApp -> S
 4. **If Score < 15**: Output `"Could not find a valid, evidence-backed problem in the supplied input."`
 5. **If Score $\ge 23$**: Log to Obsidian in `/home/murali/Documents/obsidian-notes/01_Inbox/discovery_logs/PROB-[DATE]-[SCORE]PTS-[ID].md`.
 6. **Scaffold 3 Production Tech Stack Build Tiers**:
-   - **Tier 1 (Free Utility Tool for `seyalicraft.com`)**: Client-side Standalone Angular / TypeScript component (SEO-ready, zero-backend cost, AdSense ready).
+   - **Tier 1 (Free Utility Tool for `yourdomain.com`)**: Client-side Standalone Angular / TypeScript component (SEO-ready, zero-backend cost, AdSense ready).
    - **Tier 2 (Micro-Utility / Automation)**: Chrome Extension (Manifest v3) or Node.js / Python CLI automation script (\$5–\$29 one-time purchase).
    - **Tier 3 (B2B Micro-SaaS Product)**: NestJS backend + PostgreSQL/pgvector Prisma schema + Angular frontend + Stripe/Paddle billing model (\$29–\$199/month recurring subscription).
 

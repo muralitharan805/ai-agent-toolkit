@@ -90,7 +90,7 @@ Agents MUST immediately park or reject a candidate problem if ANY of the followi
 
 ### 9. Production Tech Stack 3-Tier Build Output Scoping
 Validated opportunities ($\ge 23$ Points) MUST be scoped strictly across our 3 production build tiers:
-- **Tier 1 (Free Utility Tool for `seyalicraft.com`)**: Client-side Standalone Angular / TypeScript component (SEO-ready, zero-backend cost, Google AdSense container ready).
+- **Tier 1 (Free Utility Tool for `yourdomain.com`)**: Client-side Standalone Angular / TypeScript component (SEO-ready, zero-backend cost, Google AdSense container ready).
 - **Tier 2 (Micro-Utility / Automation)**: Chrome Extension (Manifest v3) or Node.js / Python CLI automation script (\$5–\$29 one-time purchase).
 - **Tier 3 (B2B Micro-SaaS Product)**: NestJS backend + PostgreSQL/pgvector Prisma schema + Angular frontend + Stripe/Paddle billing model (\$29–\$199/month recurring subscription).
 

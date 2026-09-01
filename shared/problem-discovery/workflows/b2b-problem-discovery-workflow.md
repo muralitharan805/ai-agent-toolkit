@@ -81,7 +81,7 @@ Format and write a structured Markdown log note `PROB-[DATE]-[SCORE]PTS-[ID].md`
 
 ### Step 6: 3-Tier Production Tech Stack Prototyping
 Scaffold production-grade code for:
-- **Tier 1**: Free Client-Side Utility Tool (Standalone Angular / TypeScript component for `seyalicraft.com`, SEO-ready, zero-backend cost, Google AdSense container ready).
+- **Tier 1**: Free Client-Side Utility Tool (Standalone Angular / TypeScript component for `yourdomain.com`, SEO-ready, zero-backend cost, Google AdSense container ready).
 - **Tier 2**: Micro-Utility / Automation (Chrome Extension Manifest v3 or Node.js / Python CLI automation script, \$5–\$29 one-time purchase).
 - **Tier 3**: B2B Micro-SaaS Product (NestJS backend + PostgreSQL/pgvector Prisma schema + Angular frontend + Stripe/Paddle billing model, \$29–\$199/month recurring subscription).
 
