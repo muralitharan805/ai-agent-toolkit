@@ -163,6 +163,7 @@ fi
 ## Define destination directory paths based on Scope
 if [[ "$IS_GLOBAL" == true ]]; then
   TARGET_SKILLS_DIR="${HOME}/.gemini/antigravity/skills"
+  TARGET_CONFIG_SKILLS_DIR="${HOME}/.gemini/config/skills"
   TARGET_RULES_DIR="${HOME}/.gemini/config/rules"
   TARGET_WORKFLOWS_DIR="${HOME}/.gemini/config/workflows"
   TARGET_GLOBAL_WORKFLOWS_DIR="${HOME}/.gemini/config/global_workflows"
@@ -198,6 +199,7 @@ mkdir -p "${TARGET_RULES_DIR}"
 mkdir -p "${TARGET_WORKFLOWS_DIR}"
 mkdir -p "${TARGET_PLUGINS_DIR}"
 if [[ "$IS_GLOBAL" == true ]]; then
+  mkdir -p "${TARGET_CONFIG_SKILLS_DIR}"
   mkdir -p "${TARGET_GLOBAL_WORKFLOWS_DIR}"
 fi
 
@@ -239,6 +241,31 @@ EOF
   fi
 }
 
+# Pre-flight validation helper
+validate_item() {
+  local item_path="$1"
+  local category="$2"
+
+  if [[ "$category" == "skills" ]]; then
+    local skill_md="${item_path}/SKILL.md"
+    if [[ -f "$skill_md" ]]; then
+      if ! grep -q "^description:" "$skill_md"; then
+        echo "  ⚠️ [Validation Warning] $(basename "$item_path")/SKILL.md is missing 'description:' frontmatter!"
+      fi
+    else
+      echo "  ⚠️ [Validation Warning] Skill '$(basename "$item_path")' is missing SKILL.md!"
+    fi
+  elif [[ "$category" == "rules" || "$category" == "workflows" ]]; then
+    if [[ -f "$item_path" ]]; then
+      local char_count
+      char_count="$(wc -m < "$item_path" | xargs)"
+      if [[ "$char_count" -gt 12000 ]]; then
+        echo "  ⚠️ [Validation Warning] $(basename "$item_path") exceeds 12,000 chars limit (${char_count} chars)!"
+      fi
+    fi
+  fi
+}
+
 # Function to safely copy files into target locations
 copy_category() {
   local src_dir="$1"
@@ -251,18 +278,27 @@ copy_category() {
         if [[ -d "$skill_dir" ]]; then
           local skill_name="$(basename "$skill_dir")"
           local dest_skill_dir="${TARGET_SKILLS_DIR}/${skill_name}"
+          validate_item "$skill_dir" "skills"
           echo "  [Skill] Syncing ${skill_name}..."
           
           # Rule 2.1: Entirely replace target item if same name exists
           rm -rf "$dest_skill_dir"
           mkdir -p "$dest_skill_dir"
           cp -r "${skill_dir}/." "${dest_skill_dir}/"
+
+          if [[ "$IS_GLOBAL" == true ]]; then
+            local dest_config_skill_dir="${TARGET_CONFIG_SKILLS_DIR}/${skill_name}"
+            rm -rf "$dest_config_skill_dir"
+            mkdir -p "$dest_config_skill_dir"
+            cp -r "${skill_dir}/." "${dest_config_skill_dir}/"
+          fi
         fi
       done
     elif [[ "$category" == "rules" ]]; then
       for md_file in "${src_dir}/${category}"/*.md; do
         if [[ -f "$md_file" ]]; then
           local file_name="$(basename "$md_file")"
+          validate_item "$md_file" "rules"
 
           if [[ "$IS_GLOBAL" == true ]]; then
             # Global Rules -> ~/.gemini/GEMINI.md ONLY (Official Antigravity Spec)
@@ -282,6 +318,7 @@ copy_category() {
         if [[ -f "$md_file" ]]; then
           local file_name="$(basename "$md_file")"
           local dest_file="${TARGET_WORKFLOWS_DIR}/${file_name}"
+          validate_item "$md_file" "workflows"
           echo "  [Workflow] Syncing ${file_name}..."
           
           # Rule 2.1: Entirely replace target workflow if same name exists

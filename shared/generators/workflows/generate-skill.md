@@ -29,7 +29,7 @@ Act as a Principal Software Architect and expert Google Antigravity Skill Genera
 Your output must strictly match this structure (with no extra text outside of it):
 
 **Target File Location:** `[determined-toolkit-path]/SKILL.md`
-```markdown
+````markdown
 ---
 name: [lowercase-hyphenated-identifier]
 description: "[Clear, descriptive third-person statement detailing exactly when and why the agent should activate this skill. Include precise semantic keywords.]"

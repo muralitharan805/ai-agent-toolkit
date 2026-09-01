@@ -18,7 +18,7 @@ Recursively inspect all files in `frameworks/`, `infra/`, `shared/`, `domains/`,
 5. **Global Customizations Token Budget Limit**: Ensure total rules in `~/.gemini/GEMINI.md` remain under budget, and verify zero framework-specific rules (`angular-*`, `nestjs-*`, `docker-*`) leak into global scope.
 
 ### Step 2: Global Parity & Sync Audit (`~/.gemini/` vs Toolkit)
-1. Verify that all global skills in `~/.gemini/antigravity/skills/` originate from `ai-agent-toolkit`.
+1. Verify that all global skills in `~/.gemini/antigravity/skills/` and `~/.gemini/config/skills/` originate from `ai-agent-toolkit`.
 2. Flag any stale or orphan global skills/rules in `~/.gemini/` that no longer exist in `ai-agent-toolkit`.
 
 ### Step 3: Frontmatter & GUI Syntax Audit
