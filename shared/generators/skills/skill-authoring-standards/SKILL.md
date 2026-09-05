@@ -18,7 +18,7 @@ Guide the agent in structuring, formatting, deduplicating, and authoring world-c
    - Workflow Files: MUST NOT exceed 12,000 characters per file (hard IDE limit).
    - Skill Files: MUST NOT exceed 500 lines per `SKILL.md`. For extensive reference code, use subdirectories (`examples/`, `scripts/`, `resources/`, `references/`).
 5. **Enforce Strict Frontmatter GUI Compatibility**:
-   - Workflows: Use ONLY `description:` and `trigger:`. Embed all trigger phrases/shorthands directly inside `description:` (e.g. `Triggered by 'suite:', 'context:', or '/command'`). Never use `aliases:`.
+   - Workflows: Use ONLY `description:` (strictly `<= 250 characters` with embedded triggers for IDE menu rendering) and `trigger: manual`. Embed all trigger phrases/shorthands directly inside `description:` (e.g. `Triggered by 'suite:', 'context:', or '/command'`). Never use `aliases:`.
    - Skills: Include `name:` (kebab-case) and `description:` (third-person routing statement).
    - Rules: Include an appropriate trigger (`model_decision` for specialized rules, `glob` with `globs: [...]` for file patterns, `always_on` for universal workspace constraints, or `manual`), plus a clear `description:`.
 6. **Draft High-Impact Content**:

@@ -1,5 +1,5 @@
 ---
-description: "Audits the entire agent-toolkit and ~/.gemini global environment for size limits (12k chars for rules/workflows, 500 lines for skills), global parity, GUI frontmatter syntax, and open-source domain security. Triggered by 'audit:', 'audit-toolkit:', or '/audit-agent-toolkit'."
+description: "Audits agent-toolkit and ~/.gemini for size limits (12k chars, 500 lines), 250-char workflow descriptions, global parity, and security. Triggered by 'audit:', 'audit-toolkit:', or '/audit-agent-toolkit'."
 trigger: manual
 ---
 
@@ -25,7 +25,7 @@ Recursively inspect all files in `frameworks/`, `infra/`, `shared/`, `domains/`,
 ### Step 3: Frontmatter & GUI Syntax Audit
 1. **Skills**: Must include valid `name:` (kebab-case) and `description:` (third-person routing statement).
 2. **Rules**: Must include a valid official trigger (`always_on`, `model_decision`, `glob` with `globs: [...]`, or `manual`), plus a clear `description:`.
-3. **Workflows**: Must include `description:` with embedded shorthand triggers and `trigger: manual`. Ensure **ZERO forbidden keys** (like `aliases:`) are present in frontmatter.
+3. **Workflows**: Must include `description:` with embedded shorthand triggers (strictly `<= 250 characters` for clean IDE slash command menu rendering) and `trigger: manual`. Ensure **ZERO forbidden keys** (like `aliases:`) are present in frontmatter.
 
 ### Step 4: Open-Source Security & Isolation Audit
 1. **Gitignore Protection**: Verify that `.gitignore` contains `domains/*` (and `!domains/README.md`).

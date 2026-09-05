@@ -1,5 +1,5 @@
 ---
-description: "Workflow to analyze user scenarios (English, Tamil, or Thanglish) and create or update production-ready SKILL.md files under topic directories in ai-agent-toolkit with senior principal engineer expertise. Triggered by 'skill:', 'generate-skill:', or '/generate-skill'."
+description: "Analyzes user scenarios and creates or updates production-ready SKILL.md files under topic directories in ai-agent-toolkit. Triggered by 'skill:', 'generate-skill:', or '/generate-skill'."
 trigger: manual
 ---
 

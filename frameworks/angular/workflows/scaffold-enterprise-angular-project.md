@@ -1,5 +1,5 @@
 ---
-description: "Automated workflow to scaffold all 14 core enterprise infrastructure layers in a new or existing Angular 19+ project (Zoneless app.config.ts, ApiService, Auth Signals, functional interceptors, guards, title strategy, layout shells, SCSS theme tokens). Triggered by 'scaffold-angular:', 'scaffold:', or '/scaffold-enterprise-angular-project'."
+description: "Scaffolds 14 enterprise infrastructure layers in an Angular project (Zoneless, ApiService, Auth Signals, interceptors, layout shells). Triggered by 'scaffold-angular:', 'scaffold:', or '/scaffold-enterprise-angular-project'."
 trigger: manual
 ---
 # Scaffold Enterprise Angular Project Workflow

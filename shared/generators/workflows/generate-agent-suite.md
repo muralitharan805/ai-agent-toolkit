@@ -1,5 +1,5 @@
 ---
-description: "Smart orchestrator workflow that analyzes a scenario, inspects ai-agent-toolkit for existing skills/rules/workflows, determines required components, and creates or updates them inside the toolkit. Triggered by 'suite:', 'context:', or '/generate-agent-suite'."
+description: "Orchestrator workflow analyzing scenarios, evaluating gaps, and generating or updating skills, rules, and workflows in ai-agent-toolkit. Triggered by 'suite:', 'context:', or '/generate-agent-suite'."
 trigger: manual
 ---
 
@@ -23,7 +23,7 @@ Analyze the scenario against the 3 pillars:
    - Action: CREATE new or UPDATE existing `[frameworks|infra|domains|shared]/[topic]/rules/[rule-name].md` with appropriate trigger (`model_decision` for specialized features, `glob` for file-patterns, or `always_on` for universal constraints).
    - *If Not Needed*: Mark as skipped with a 1-sentence rationale.
 3. **Workflow Analysis**: Is there a multi-step sequential process (scaffolding, migration, deployment, refactoring)?
-   - Action: CREATE new or UPDATE existing `[frameworks|infra|shared]/[topic]/workflows/[workflow-name].md`
+   - Action: CREATE new or UPDATE existing `[frameworks|infra|shared]/[topic]/workflows/[workflow-name].md` (Ensuring frontmatter `description:` is strictly `<= 250 characters`).
    - *If Not Needed*: Mark as skipped with a 1-sentence rationale.
 
 ### Step 2: Output Analysis Summary

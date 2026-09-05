@@ -1,5 +1,5 @@
 ---
-description: "Step-by-step workflow to configure Angular Material UI with Dark Theme as default, OS preference detection, Signal ThemeService, theme toggle component, M3 SCSS palettes, and Google Fonts typography. Triggered by 'material-theme:', 'setup-material:', or '/setup-angular-material-theme'."
+description: "Configures Angular Material UI with Dark Theme default, OS detection, Signal ThemeService, theme toggle, and M3 SCSS palettes. Triggered by 'material-theme:', 'setup-material:', or '/setup-angular-material-theme'."
 trigger: manual
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: "Workflow to execute end-to-end FOCUS problem discovery, high-intent mining dorks, commercial pre-scoring audit guard, WTP economic metrics, 14-node mapping, 35-point evidence scoring, Obsidian logging, and 3-tier production tech stack prototype code generation."
+description: "Executes FOCUS problem discovery, intent mining dorks, WTP metrics, 14-node workflow mapping, 35-point evidence scoring, and tech stack prototype scoping. Triggered by 'discovery:', or '/discover-b2b'."
 trigger: manual
 ---
 

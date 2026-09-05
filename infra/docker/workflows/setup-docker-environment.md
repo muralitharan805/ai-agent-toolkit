@@ -1,5 +1,5 @@
 ---
-description: "Workflow to scaffold enterprise multi-stage Dockerfiles and split multi-environment Docker Compose setups for ANY tech stack (Node/TypeScript, Python, Go, Java, PHP, Rust) and ANY database/middleware (PostgreSQL, MySQL, MongoDB, Redis, Kafka, RabbitMQ, MinIO). Triggered by 'docker:', 'compose:', or '/setup-docker-environment'."
+description: "Scaffolds enterprise multi-stage Dockerfiles and multi-environment Docker Compose setups for any tech stack and database. Triggered by 'docker:', 'compose:', or '/setup-docker-environment'."
 trigger: manual
 ---
 

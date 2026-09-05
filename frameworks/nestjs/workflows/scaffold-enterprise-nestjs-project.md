@@ -1,5 +1,5 @@
 ---
-description: "Automated workflow to scaffold all 20 core enterprise architecture points in a NestJS backend project via 12 execution steps (Zod env validation, global exception filters, response envelope, pagination DTO, Users reference CRUD, DB seeder, Swagger, Health checks, Docker, CI/CD). Triggered by 'scaffold-nestjs:', 'scaffold-backend:', or '/scaffold-enterprise-nestjs-project'."
+description: "Scaffolds enterprise NestJS architecture (Zod env, filters, response envelope, pagination, Swagger, Docker). Triggered by 'scaffold-nestjs:', 'scaffold-backend:', or '/scaffold-enterprise-nestjs-project'."
 trigger: manual
 ---
 # Scaffold Enterprise NestJS Project Workflow

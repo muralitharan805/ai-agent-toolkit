@@ -1,5 +1,5 @@
 ---
-description: "Sequential workflow to configure Angular CDK BreakpointObserver, scaffold Signal-driven ScreenService, set up responsive Angular Material mat-sidenav shell, and implement responsive data views. Triggered by 'responsive:', 'setup-responsive:', or '/setup-angular-responsive-layout'."
+description: "Configures Angular CDK BreakpointObserver, Signal-driven ScreenService, and responsive Material mat-sidenav shell. Triggered by 'responsive:', 'setup-responsive:', or '/setup-angular-responsive-layout'."
 trigger: manual
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: "Automated workflow to create junior-friendly GitHub issues, checkout feature branches, enforce conventional commits, submit pull requests, auto-close issues, merge PRs, and clean up local/remote branches. Triggered by 'issue:', 'feature:', or '/github-feature-workflow'."
+description: "Automates GitHub issue creation, feature branching, conventional commits, PR submission, issue auto-closing, and branch cleanup. Triggered by 'issue:', 'feature:', or '/github-feature-workflow'."
 trigger: manual
 ---
 

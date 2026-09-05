@@ -11,7 +11,7 @@ This rule mandates that whenever the AI agent creates or modifies skills, rules,
 - The agent MUST write all generated skills, rules, and workflows in high-level professional English with zero generic filler text.
 - **DEDUPLICATION & UPSERT RULE**: Before creating a new file, the agent MUST inspect the workspace (`frameworks/`, `infra/`, `shared/`, `.agents/`) for existing skills, rules, or workflows covering the target topic. If a related file exists, the agent MUST update and merge new requirements into the existing file instead of creating a duplicate.
 - **YAML FRONTMATTER GUI COMPATIBILITY RULE**:
-  - Workflows MUST use ONLY standard, parser-compatible YAML keys: `description` and `trigger`.
+  - Workflows MUST use ONLY standard, parser-compatible YAML keys: `description` (strictly `<= 250 characters` with embedded triggers for clean IDE menu rendering) and `trigger: manual`.
   - NEVER use non-standard or unparsed YAML keys like `aliases:` or custom metadata objects.
   - Trigger phrases and shorthand keywords MUST be embedded directly inside the `description` string (e.g., `Triggered by 'suite:', 'context:', or '/generate-agent-suite'`).
   - Skills MUST use `name` (kebab-case) and `description` (third-person routing statement).
