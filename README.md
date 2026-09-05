@@ -33,8 +33,8 @@ This repository is 100% natively compatible with **Google Antigravity IDE**:
          │
          ▼
 [2. Sync to Target Scope]   ──► bin/sync-skills.sh
-                                  ├── --global  ► ~/.gemini/antigravity/skills/, ~/.gemini/config/
-                                  └── --target  ► <workspace-root>/.agents/
+                                  ├── --global  ► Skills/Workflows (~/.gemini/config/), Global Rules (~/.gemini/GEMINI.md)
+                                  └── --target  ► Workspace Context (<workspace-root>/.agents/)
 ```
 
 ---
@@ -105,12 +105,18 @@ Run `bin/sync-skills.sh` from the toolkit repo to automatically copy framework, 
 
 ### 2. Syncing Context to Global Level (`~/.gemini/`)
 
-Sync universal shared rules, skills, and workflows globally to keep your system prompt lightweight (~12% token budget):
+Sync universal shared rules, skills, and workflows globally to keep your system prompt lightweight (~12% - 25% token budget):
 
 ```bash
 # Recommended: Sync Universal Shared rules/skills globally
 ./bin/sync-skills.sh --global --shared
 ```
+
+#### Global Sync Architecture:
+- **Skills**: Synced to `~/.gemini/antigravity/skills/` and `~/.gemini/config/skills/`.
+- **Workflows**: Synced to `~/.gemini/config/workflows/` and `~/.gemini/config/global_workflows/`.
+- **Global Rules (`~/.gemini/GEMINI.md`)**: Antigravity IDE natively discovers global rules exclusively from `~/.gemini/GEMINI.md` (tagged as `user_global`). Rules in directories declared in `GEMINI_RULE_DIRS` (in `bin/sync-skills.sh`) are automatically stripped of YAML frontmatter and cleanly appended into `~/.gemini/GEMINI.md`.
+- **Token Budget Guard**: `bin/sync-skills.sh` validates the total character count of `GEMINI.md` to prevent approaching Antigravity's 40% (8,000 tokens) global rule truncation limit.
 
 > **Note on Framework Rules**: Keep framework-specific rules (Angular, NestJS, Docker) inside project-level `.agents/` via `--target` to preserve global customization token budget.
 

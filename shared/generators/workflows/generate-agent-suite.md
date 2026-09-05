@@ -20,7 +20,7 @@ Analyze the scenario against the 3 pillars:
 1. **Skill Analysis**: Are there domain-specific coding patterns or logic protocols required?
    - Action: CREATE new or UPDATE existing `[frameworks|infra|domains|shared]/[topic]/skills/[skill-name]/SKILL.md`
 2. **Rule Analysis**: Are there strict security boundaries, compliance rules, or hard constraints?
-   - Action: CREATE new or UPDATE existing `[frameworks|infra|domains|shared]/[topic]/rules/[rule-name].md` with appropriate trigger (`model_decision` for specialized features, `glob` for file-patterns, or `always_on` for universal constraints).
+   - Action: CREATE new or UPDATE existing `[frameworks|infra|domains|shared]/[topic]/rules/[rule-name].md` with appropriate trigger (`model_decision` for specialized features, `glob` for file-patterns, or `always_on` for universal constraints). Target 6,000–8,000 chars (split at 10,000; hard limit 12,000).
    - *If Not Needed*: Mark as skipped with a 1-sentence rationale.
 3. **Workflow Analysis**: Is there a multi-step sequential process (scaffolding, migration, deployment, refactoring)?
    - Action: CREATE new or UPDATE existing `[frameworks|infra|shared]/[topic]/workflows/[workflow-name].md` (Ensuring frontmatter `description:` is strictly `<= 250 characters`).

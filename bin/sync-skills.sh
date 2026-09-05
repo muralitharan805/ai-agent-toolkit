@@ -21,6 +21,16 @@ INFRA_MODULES=""
 DOMAINS=""
 SYNC_SHARED=true
 
+# Directories in ai-agent-toolkit whose rules will be appended into ~/.gemini/GEMINI.md (Global Rules)
+GEMINI_RULE_DIRS=(
+  "shared/code-quality"
+  "shared/communication"
+  "shared/logging"
+  "shared/package-management"
+  "shared/security"
+  "shared/git"
+)
+
 usage() {
   cat << EOF
 Usage: $(basename "$0") [options]
@@ -170,6 +180,15 @@ if [[ "$IS_GLOBAL" == true ]]; then
   TARGET_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
   GLOBAL_GEMINI_MD="${HOME}/.gemini/GEMINI.md"
   SCOPE_LABEL="Global Level (~/.gemini)"
+
+  # Re-initialize ~/.gemini/GEMINI.md for clean sync of global rules
+  mkdir -p "$(dirname "$GLOBAL_GEMINI_MD")"
+  rm -f "$GLOBAL_GEMINI_MD"
+
+  # Clean up ~/.gemini/config/rules/ so global rules are exclusively in GEMINI.md
+  if [[ -d "$TARGET_RULES_DIR" ]]; then
+    rm -rf "${TARGET_RULES_DIR:?}"/*
+  fi
 else
   if [[ ! -d "$TARGET_DIR" ]]; then
     mkdir -p "$TARGET_DIR"
@@ -203,42 +222,240 @@ if [[ "$IS_GLOBAL" == true ]]; then
   mkdir -p "${TARGET_GLOBAL_WORKFLOWS_DIR}"
 fi
 
-# Helper function to upsert rules ONLY into ~/.gemini/GEMINI.md for global sync
-upsert_gemini_rule() {
-  local rule_file="$1"
-  local target_md="${GLOBAL_GEMINI_MD}"
+# ------------------------------------------------------------------------------
+# [COMMENTED OUT OLD CODE] Legacy monolithic rule upsert into ~/.gemini/GEMINI.md
+# ------------------------------------------------------------------------------
+# upsert_gemini_rule() {
+#   local rule_file="$1"
+#   local target_md="${GLOBAL_GEMINI_MD}"
+# 
+#   if [[ -f "$rule_file" ]]; then
+#     python3 - "$rule_file" "$target_md" << 'EOF'
+# import sys, os, re
+# 
+# rule_file = sys.argv[1]
+# target_md = sys.argv[2]
+# rule_id = os.path.basename(rule_file)
+# 
+# with open(rule_file, 'r', encoding='utf-8') as f:
+#     content = f.read().strip()
+# 
+# if not re.search(r'<RULE\[', content):
+#     content = f"<RULE[{rule_id}]>\n\n{content}\n\n</RULE[{rule_id}]>"
+# 
+# target_content = ""
+# if os.path.exists(target_md):
+#     with open(target_md, 'r', encoding='utf-8') as f:
+#         target_content = f.read()
+# 
+# pattern = re.compile(rf'<RULE\[{re.escape(rule_id)}\]>.*?</RULE\[{re.escape(rule_id)}\]>', re.DOTALL)
+# 
+# if pattern.search(target_content):
+#     updated = pattern.sub(lambda m: content, target_content)
+# else:
+#     updated = target_content.rstrip() + "\n\n" + content + "\n"
+# 
+# os.makedirs(os.path.dirname(os.path.abspath(target_md)), exist_ok=True)
+# with open(target_md, 'w', encoding='utf-8') as f:
+#     f.write(updated)
+# EOF
+#   fi
+# }
 
-  if [[ -f "$rule_file" ]]; then
-    python3 - "$rule_file" "$target_md" << 'EOF'
-import sys, os, re
+# ------------------------------------------------------------------------------
+# [COMMENTED OUT OLD CODE] Previous single-tier @mention upsert into GEMINI.md
+# ------------------------------------------------------------------------------
+# upsert_gemini_rule_mention() {
+#   local rule_dest_file="$1"
+#   local target_md="${GLOBAL_GEMINI_MD}"
+# 
+#   python3 - "$rule_dest_file" "$target_md" << 'EOF'
+# import sys, os, re
+# 
+# rule_dest_file = sys.argv[1]
+# target_md = sys.argv[2]
+# rule_id = os.path.basename(rule_dest_file)
+# mention_line = f"@{rule_dest_file}"
+# 
+# target_content = ""
+# if os.path.exists(target_md):
+#     with open(target_md, 'r', encoding='utf-8') as f:
+#         target_content = f.read()
+# 
+# # Replace any legacy <RULE[rule_id]>...</RULE[rule_id]> block if present to clean bloat
+# pattern = re.compile(rf'<RULE\[{re.escape(rule_id)}\]>.*?</RULE\[{re.escape(rule_id)}\]>', re.DOTALL)
+# if pattern.search(target_content):
+#     updated = pattern.sub(mention_line, target_content)
+# elif mention_line not in target_content:
+#     if not target_content.strip():
+#         updated = f"# Global Rules\n\n{mention_line}\n"
+#     else:
+#         updated = target_content.rstrip() + "\n" + mention_line + "\n"
+# else:
+#     updated = target_content
+# 
+# os.makedirs(os.path.dirname(os.path.abspath(target_md)), exist_ok=True)
+# with open(target_md, 'w', encoding='utf-8') as f:
+#     f.write(updated)
+# EOF
+# }
 
-rule_file = sys.argv[1]
-target_md = sys.argv[2]
-rule_id = os.path.basename(rule_file)
+# ------------------------------------------------------------------------------
+# [COMMENTED OUT OLD CODE] Two-tier @mention / catalog upsert
+# ------------------------------------------------------------------------------
+# upsert_gemini_rule_entry() {
+#   local src_file="$1"
+#   local dest_file="$2"
+#   local target_md="${GLOBAL_GEMINI_MD}"
+#   local selected_rules_str="${SELECTED_GEMINI_RULES[*]}"
+# 
+#   python3 - "$src_file" "$dest_file" "$target_md" "$selected_rules_str" << 'EOF'
+# import sys, os, re
+# 
+# src_file = sys.argv[1]
+# dest_file = sys.argv[2]
+# target_md = sys.argv[3]
+# selected_rules = set(sys.argv[4].split())
+# 
+# file_name = os.path.basename(dest_file)
+# is_selected = file_name in selected_rules
+# 
+# # 1. Extract description from src_file
+# desc = ""
+# if os.path.exists(src_file):
+#     with open(src_file, 'r', encoding='utf-8') as f:
+#         content = f.read()
+#     if content.startswith("---"):
+#         parts = content.split("---", 2)
+#         if len(parts) >= 3:
+#             fm = parts[1]
+#             match = re.search(r'^description:\s*(["\']?)(.*?)\1$', fm, re.MULTILINE | re.DOTALL)
+#             if match:
+#                 desc = " ".join(match.group(2).strip().split())
+#     if not desc:
+#         match = re.search(r'^##\s+Description\s*\n+(.*?)(?=\n+##|\Z)', content, re.MULTILINE | re.DOTALL)
+#         if match:
+#             desc = " ".join(match.group(1).strip().split()[:30])
+# if not desc:
+#     desc = f"Rule specification for {file_name}."
+# 
+# # 2. Read existing target_md
+# target_content = ""
+# if os.path.exists(target_md):
+#     with open(target_md, 'r', encoding='utf-8') as f:
+#         target_content = f.read()
+# 
+# # Remove any legacy <RULE[file_name]>...</RULE[file_name]> block if present
+# target_content = re.sub(rf'<RULE\[{re.escape(file_name)}\]>.*?</RULE\[{re.escape(file_name)}\]>\n*', '', target_content, flags=re.DOTALL)
+# 
+# # Parse existing core mentions and catalog entries
+# core_mentions = {}
+# catalog_entries = {}
+# other_lines = []
+# 
+# for line in target_content.splitlines():
+#     stripped = line.strip()
+#     if stripped.startswith("@") and stripped.endswith(".md"):
+#         m_path = stripped[1:].strip()
+#         m_fname = os.path.basename(m_path)
+#         core_mentions[m_fname] = f"@{m_path}"
+#         continue
+# 
+#     cat_match = re.match(r'^-\s+\*\*([^*]+)\*\*:\s*(.*)$', stripped)
+#     if cat_match:
+#         c_fname = cat_match.group(1)
+#         c_desc = cat_match.group(2)
+#         catalog_entries[c_fname] = c_desc
+#         continue
+# 
+#     if stripped in [
+#         "# Antigravity Global Rules",
+#         "# Global Rules",
+#         "## Active Core Rules",
+#         "## Available Rules Catalog (Stored in ~/.gemini/config/rules/)",
+#         "The following specialized rules are available in `~/.gemini/config/rules/` and will be consulted on demand:"
+#     ]:
+#         continue
+# 
+#     if stripped:
+#         other_lines.append(line)
+# 
+# # Route to Core Mentions or Description Catalog
+# if is_selected:
+#     core_mentions[file_name] = f"@{dest_file}"
+#     catalog_entries.pop(file_name, None)
+# else:
+#     catalog_entries[file_name] = desc
+#     core_mentions.pop(file_name, None)
+# 
+# # 3. Construct clean target document
+# out = []
+# if other_lines:
+#     out.extend(other_lines)
+#     out.append("")
+# 
+# out.append("# Antigravity Global Rules\n")
+# out.append("## Active Core Rules")
+# for fname in sorted(core_mentions.keys()):
+#     out.append(core_mentions[fname])
+# 
+# out.append("\n## Available Rules Catalog (Stored in ~/.gemini/config/rules/)")
+# out.append("The following specialized rules are available in `~/.gemini/config/rules/` and will be consulted on demand:")
+# for fname in sorted(catalog_entries.keys()):
+#     out.append(f"- **{fname}**: {catalog_entries[fname]}")
+# 
+# out.append("")
+# 
+# os.makedirs(os.path.dirname(os.path.abspath(target_md)), exist_ok=True)
+# with open(target_md, 'w', encoding='utf-8') as f:
+#     f.write("\n".join(out))
+# EOF
+# }
 
-with open(rule_file, 'r', encoding='utf-8') as f:
-    content = f.read().strip()
+# ------------------------------------------------------------------------------
+# [COMMENTED OUT OLD CODE] Legacy GEMINI.md sync helpers
+# ------------------------------------------------------------------------------
+# matches_gemini_rule_dir() { ... }
+# upsert_gemini_rule_content() { ... }
+# remove_gemini_rule_content() { ... }
 
-if not re.search(r'<RULE\[', content):
-    content = f"<RULE[{rule_id}]>\n\n{content}\n\n</RULE[{rule_id}]>"
+# Helper to check if a directory matches GEMINI_RULE_DIRS
+is_in_gemini_dirs() {
+  local dir="$1"
+  local rel_dir="${dir#"${TOOLKIT_ROOT}/"}"
+  local base_dir="$(basename "$dir")"
 
-target_content = ""
-if os.path.exists(target_md):
-    with open(target_md, 'r', encoding='utf-8') as f:
-        target_content = f.read()
+  for target in "${GEMINI_RULE_DIRS[@]}"; do
+    local target_clean="$(echo "$target" | sed -e 's|^/||' -e 's|/$||' -e 's|/rules$||')"
+    if [[ "$rel_dir" == "$target_clean" || "$rel_dir" == "$target_clean/rules" || "$base_dir" == "$target_clean" || "$dir" == "$target" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
 
-pattern = re.compile(rf'<RULE\[{re.escape(rule_id)}\]>.*?</RULE\[{re.escape(rule_id)}\]>', re.DOTALL)
-
-if pattern.search(target_content):
-    updated = pattern.sub(lambda m: content, target_content)
-else:
-    updated = target_content.rstrip() + "\n\n" + content + "\n"
-
-os.makedirs(os.path.dirname(os.path.abspath(target_md)), exist_ok=True)
-with open(target_md, 'w', encoding='utf-8') as f:
-    f.write(updated)
-EOF
-  fi
+# Helper to strip YAML frontmatter (--- ... ---) from rule files for clean GEMINI.md
+strip_yaml_frontmatter() {
+  local file="$1"
+  awk '
+    BEGIN { in_fm = 0; done_fm = 0; seen_first = 0 }
+    !seen_first {
+      if ($0 ~ /^[[:space:]]*$/) next
+      seen_first = 1
+      if ($0 ~ /^---[[:space:]]*$/) {
+        in_fm = 1
+        next
+      }
+    }
+    in_fm {
+      if ($0 ~ /^---[[:space:]]*$/) {
+        in_fm = 0
+        done_fm = 1
+      }
+      next
+    }
+    { print }
+  ' "$file"
 }
 
 # Pre-flight validation helper
@@ -301,9 +518,57 @@ copy_category() {
           validate_item "$md_file" "rules"
 
           if [[ "$IS_GLOBAL" == true ]]; then
-            # Global Rules -> ~/.gemini/GEMINI.md ONLY (Official Antigravity Spec)
-            echo "  [Rule] Syncing ${file_name} into GEMINI.md..."
-            upsert_gemini_rule "$md_file"
+            # ------------------------------------------------------------------
+            # [COMMENTED OUT OLD CODE] Legacy full-content merge into GEMINI.md
+            # echo "  [Rule] Syncing ${file_name} into GEMINI.md..."
+            # upsert_gemini_rule "$md_file"
+            # ------------------------------------------------------------------
+
+            # ------------------------------------------------------------------
+            # [COMMENTED OUT OLD CODE] Single-tier @mention reference in GEMINI.md
+            # local dest_file="${TARGET_RULES_DIR}/${file_name}"
+            # echo "  [Rule] Syncing ${file_name} into ~/.gemini/config/rules/..."
+            # rm -f "$dest_file"
+            # cp "${md_file}" "$dest_file"
+            # echo "  [Rule] Referencing @${dest_file} in GEMINI.md..."
+            # upsert_gemini_rule_mention "$dest_file"
+            # ------------------------------------------------------------------
+
+            # ------------------------------------------------------------------
+            # [COMMENTED OUT OLD CODE] Two-Tier @mention / Catalog Architecture
+            # local dest_file="${TARGET_RULES_DIR}/${file_name}"
+            # local is_selected=false
+            # for sel in "${SELECTED_GEMINI_RULES[@]}"; do
+            #   if [[ "$sel" == "$file_name" ]]; then
+            #     is_selected=true
+            #     break
+            #   fi
+            # done
+            # rm -f "$dest_file"
+            # if [[ "$is_selected" == true ]]; then
+            #   cp "${md_file}" "$dest_file"
+            # else
+            #   sed 's/^trigger: always_on/trigger: model_decision/' "${md_file}" > "$dest_file"
+            # fi
+            # upsert_gemini_rule_entry "${md_file}" "${dest_file}"
+            # ------------------------------------------------------------------
+
+            # ------------------------------------------------------------------
+            # [COMMENTED OUT OLD CODE] Standalone rule file copied into ~/.gemini/config/rules/
+            # local dest_file="${TARGET_RULES_DIR}/${file_name}"
+            # echo "  [Rule] Syncing ${file_name} into ~/.gemini/config/rules/..."
+            # rm -f "$dest_file"
+            # cp "${md_file}" "$dest_file"
+            # ------------------------------------------------------------------
+
+            # Direct append into ~/.gemini/GEMINI.md if directory is in GEMINI_RULE_DIRS
+            if is_in_gemini_dirs "$src_dir"; then
+              echo "  [Rule] Appending ${file_name} into ~/.gemini/GEMINI.md (frontmatter stripped)..."
+              if [[ -s "$GLOBAL_GEMINI_MD" ]]; then
+                echo "" >> "$GLOBAL_GEMINI_MD"
+              fi
+              strip_yaml_frontmatter "$md_file" >> "$GLOBAL_GEMINI_MD"
+            fi
           else
             # Workspace Rules -> <target>/.agents/rules/*.md (Official Antigravity Spec)
             local dest_file="${TARGET_RULES_DIR}/${file_name}"
@@ -415,6 +680,20 @@ if [[ -n "$INFRA_MODULES" ]]; then
       echo "Warning: Infra module '${infra_trimmed}' not found in toolkit. Skipping."
     fi
   done
+fi
+
+# ------------------------------------------------------------------------------
+# Global GEMINI.md Character Limit Check (Max: 12,000 chars)
+# ------------------------------------------------------------------------------
+if [[ "$IS_GLOBAL" == true && -f "$GLOBAL_GEMINI_MD" ]]; then
+  gemini_chars="$(wc -m < "$GLOBAL_GEMINI_MD" | xargs)"
+  echo "------------------------------------------------------------------"
+  if [[ "$gemini_chars" -gt 12000 ]]; then
+    echo "  ⚠️ [Validation Warning] ~/.gemini/GEMINI.md exceeds 12,000 chars limit (${gemini_chars} chars)!"
+    echo "     Antigravity will truncate global rules exceeding 12,000 characters."
+  else
+    echo "  ℹ️ ~/.gemini/GEMINI.md character count: ${gemini_chars}/12,000 chars (within limit)"
+  fi
 fi
 
 echo "------------------------------------------------------------------"

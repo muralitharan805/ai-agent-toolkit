@@ -24,8 +24,8 @@ It provides a modular, deduplicated structure designed to sync context seamlessl
          │
          ▼
 [2. Sync & Deploy via Script] ──► bin/sync-skills.sh
-                                  ├── --global  ► ~/.gemini/antigravity/skills/, ~/.gemini/config/
-                                  └── --target  ► <workspace-root>/.agents/
+                                  ├── --global  ► Skills/Workflows (~/.gemini/config/), Global Rules (~/.gemini/GEMINI.md)
+                                  └── --target  ► Workspace Context (<workspace-root>/.agents/)
 ```
 
 ---
@@ -112,9 +112,17 @@ globs: ["src/**/*.ts"] # Only include when trigger is glob
 
 The toolkit provides a shell script to sync skills, rules, and workflows into workspace repositories or globally:
 
+### Scope Execution Architecture:
+- **Workspace Level (`--target <path>`)**: Copies skills, individual rules (`.agents/rules/*.md`), and workflows directly into `<target>/.agents/`.
+- **Global Level (`--global`)**:
+  - Skills are synced to `~/.gemini/antigravity/skills/` and `~/.gemini/config/skills/`.
+  - Workflows are synced to `~/.gemini/config/workflows/` and `~/.gemini/config/global_workflows/`.
+  - Global Rules are exclusively synced into `~/.gemini/GEMINI.md` (tagged as `user_global` in Antigravity IDE). Matching directories are configured via `GEMINI_RULE_DIRS` in `bin/sync-skills.sh`, and their YAML frontmatter headers are automatically stripped.
+  - Character limit validation ensures `GEMINI.md` stays safely within the recommended token budget (< 40% IDE ceiling).
+
 ```bash
-# 1. Sync ALL contexts globally to personal machine (~/.gemini/)
-./bin/sync-skills.sh --global --all
+# 1. Sync Universal Shared rules/skills globally
+./bin/sync-skills.sh --global --shared
 
 # 2. Sync specific framework & infra globally
 ./bin/sync-skills.sh --global --framework nestjs --infra postgres,redis

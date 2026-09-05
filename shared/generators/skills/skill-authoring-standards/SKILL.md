@@ -14,7 +14,7 @@ Guide the agent in structuring, formatting, deduplicating, and authoring world-c
    - Private Domain specific → `domains/[name]/[skills|rules|workflows]/`
    - Cross-cutting / general → `shared/[topic]/[skills|rules|workflows]/`
 4. **Enforce Size & Character Limits**:
-   - Rules Files: MUST NOT exceed 12,000 characters per file (hard IDE limit). Keep constraints concise and non-conversational.
+   - Rules Files: Target 6,000–8,000 characters (optimal for token budget). Split into modular sub-rules if approaching 10,000 characters. Absolute hard ceiling is 12,000 characters (Antigravity IDE truncation limit).
    - Workflow Files: MUST NOT exceed 12,000 characters per file (hard IDE limit).
    - Skill Files: MUST NOT exceed 500 lines per `SKILL.md`. For extensive reference code, use subdirectories (`examples/`, `scripts/`, `resources/`, `references/`).
 5. **Enforce Strict Frontmatter GUI Compatibility**:

@@ -12,7 +12,7 @@ Act as a Principal AI Systems Auditor and Quality Control Inspector. You special
 
 ### Step 1: Ecosystem Boundary & Size Audit
 Recursively inspect all files in `frameworks/`, `infra/`, `shared/`, `domains/`, `.agents/`, and `~/.gemini/`:
-1. **Rule Size Limit**: Ensure no `.md` rule file exceeds **12,000 characters** (Hard IDE limit).
+1. **Rule Size & Modularity**: Flag warnings for rules exceeding **10,000 characters** (recommending modular split), and FAIL if any `.md` rule exceeds **12,000 characters** (Hard IDE truncation limit).
 2. **Workflow Size Limit**: Ensure no `.md` workflow file exceeds **12,000 characters** (Hard IDE limit).
 3. **Skill Size Limit**: Ensure no `SKILL.md` exceeds **500 lines** (reference material must be in `references/`, `examples/`, or `scripts/`).
 4. **Global GEMINI.md Specification**: Ensure global rules are upserted exclusively into `~/.gemini/GEMINI.md` per official Antigravity specification (legacy `AGENTS.md` must remain clean).

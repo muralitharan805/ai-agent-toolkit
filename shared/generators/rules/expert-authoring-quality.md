@@ -16,6 +16,7 @@ This rule mandates that whenever the AI agent creates or modifies skills, rules,
   - Trigger phrases and shorthand keywords MUST be embedded directly inside the `description` string (e.g., `Triggered by 'suite:', 'context:', or '/generate-agent-suite'`).
   - Skills MUST use `name` (kebab-case) and `description` (third-person routing statement).
   - Rules MUST use an appropriate official trigger (`model_decision` for specialized rules, `glob` with `globs: [...]` for filetype/path patterns, `always_on` for universal workspace constraints, or `manual`) with a clear `description`.
+- **RULE SIZE & MODULARITY**: Rule files MUST target 6,000–8,000 characters (optimal for token economy). If content approaches 10,000 characters, the agent MUST split it into focused modular sub-rules. The absolute hard ceiling is 12,000 characters.
 - The agent MUST ensure recommendations reflect up-to-date, modern technical standards (e.g., modern Angular signals/M3, latest Node/NestJS patterns, current Docker/Cloud practices).
 - The agent MUST provide real-world, production-ready code snippets and non-trivial edge-case handling in examples.
 
