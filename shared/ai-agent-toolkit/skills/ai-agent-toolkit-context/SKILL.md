@@ -1,6 +1,6 @@
 ---
 name: ai-agent-toolkit-context
-description: Architecture, directory layout (frameworks, infra, shared, .agents), skill/rule/workflow authoring standards, synchronization utility (bin/sync-skills.sh), and GUI YAML frontmatter rules for Murali's ai-agent-toolkit repository (muralitharan805/ai-agent-toolkit).
+description: Architecture, directory layout (frameworks, infra, shared, .agents), skill/rule/workflow authoring standards, synchronization utility (bin/sync-context.sh), and GUI YAML frontmatter rules for Murali's ai-agent-toolkit repository (muralitharan805/ai-agent-toolkit).
 ---
 
 # `ai-agent-toolkit` Product Architecture & Framework Specification
@@ -9,7 +9,7 @@ description: Architecture, directory layout (frameworks, infra, shared, .agents)
 
 **`ai-agent-toolkit`** ([`muralitharan805/ai-agent-toolkit`](https://github.com/muralitharan805/ai-agent-toolkit)) is my-company's central management repository for AI Agent capabilities, engineering rules, automated workflows, and domain context skills.
 
-It provides a modular, deduplicated structure designed to sync context seamlessly into all my-company repositories (`my-company-frontend`, `gis-app`, `example-app`, `docker-dev-infra`) or globally into the user's system (`~/.gemini/`) via the `bin/sync-skills.sh` automation script.
+It provides a modular, deduplicated structure designed to sync context seamlessly into all my-company repositories (`my-company-frontend`, `gis-app`, `example-app`, `docker-dev-infra`) or globally into the user's system (`~/.gemini/`) via the `bin/sync-context.sh` automation script.
 
 ---
 
@@ -23,7 +23,7 @@ It provides a modular, deduplicated structure designed to sync context seamlessl
                                   frameworks/, infra/, or shared/
          │
          ▼
-[2. Sync & Deploy via Script] ──► bin/sync-skills.sh
+[2. Sync & Deploy via Script] ──► bin/sync-context.sh
                                   ├── --global  ► Skills/Workflows (~/.gemini/config/), Global Rules (~/.gemini/GEMINI.md)
                                   └── --target  ► Workspace Context (<workspace-root>/.agents/)
 ```
@@ -67,7 +67,7 @@ ai-agent-toolkit/
 │   └── seyalicraft/           # SeyaliCraft Main Portal ecosystem & branding rules
 │
 ├── bin/                       # Automation CLI scripts
-│   └── sync-skills.sh         # Syncs context to Workspace (.agents/) or Global (~/.gemini/)
+│   └── sync-context.sh         # Syncs context to Workspace (.agents/) or Global (~/.gemini/)
 │
 └── .agents/                   # Local workspace rules & active workflows
 ```
@@ -108,7 +108,7 @@ globs: ["src/**/*.ts"] # Only include when trigger is glob
 
 ---
 
-## Skill Synchronization Engine (`bin/sync-skills.sh`)
+## Skill Synchronization Engine (`bin/sync-context.sh`)
 
 The toolkit provides a shell script to sync skills, rules, and workflows into workspace repositories or globally:
 
@@ -117,21 +117,21 @@ The toolkit provides a shell script to sync skills, rules, and workflows into wo
 - **Global Level (`--global`)**:
   - Skills are synced to `~/.gemini/antigravity/skills/` and `~/.gemini/config/skills/`.
   - Workflows are synced to `~/.gemini/config/workflows/` and `~/.gemini/config/global_workflows/`.
-  - Global Rules are exclusively synced into `~/.gemini/GEMINI.md` (tagged as `user_global` in Antigravity IDE). Matching directories are configured via `GEMINI_RULE_DIRS` in `bin/sync-skills.sh`, and their YAML frontmatter headers are automatically stripped.
+  - Global Rules are exclusively synced into `~/.gemini/GEMINI.md` (tagged as `user_global` in Antigravity IDE). Matching directories are configured via `GEMINI_RULE_DIRS` in `bin/sync-context.sh`, and their YAML frontmatter headers are automatically stripped.
   - Character limit validation ensures `GEMINI.md` stays safely within the recommended token budget (< 40% IDE ceiling).
 
 ```bash
 # 1. Sync Universal Shared rules/skills globally
-./bin/sync-skills.sh --global --shared
+./bin/sync-context.sh --global --shared
 
 # 2. Sync specific framework & infra globally
-./bin/sync-skills.sh --global --framework nestjs --infra postgres,redis
+./bin/sync-context.sh --global --framework nestjs --infra postgres,redis
 
 # 3. Sync Angular framework + Docker infra + shared context into target workspace
-./bin/sync-skills.sh --framework angular --infra docker --target /path/to/my-company-frontend
+./bin/sync-context.sh --framework angular --infra docker --target /path/to/my-company-frontend
 
 # 4. Sync specific domain module into workspace
-./bin/sync-skills.sh --domain example-app --target /path/to/example-app-backend
+./bin/sync-context.sh --domain example-app --target /path/to/example-app-backend
 ```
 
 ---

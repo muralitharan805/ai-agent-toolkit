@@ -18,7 +18,7 @@ This repository is 100% natively compatible with **Google Antigravity IDE**:
 - **Native `.agents/` & `~/.gemini/` Discovery**: Target directories map directly to `.agents/skills/`, `.agents/rules/`, `.agents/workflows/` (Workspace) and `~/.gemini/antigravity/skills/`, `~/.gemini/config/` (Global) for automatic IDE indexing.
 - **Strict GUI-Compatible Frontmatter**: Follows exact YAML frontmatter schemas (`name`, `description`, `trigger: always_on`, `trigger: glob`, `trigger: manual`) to render cleanly in Antigravity's UI.
 - **Slash Commands & Shorthand Triggers**: Designed to respond instantly to native slash commands (`/generate-agent-suite`, `/consolidate-agent-toolkit`) and prompt prefixes (`suite:`, `context:`).
-- **Direct Physical Sync Utility**: Uses `bin/sync-skills.sh` to copy physical files directly into `.agents/` or `~/.gemini/` without symbolic link breaks.
+- **Direct Physical Sync Utility**: Uses `bin/sync-context.sh` to copy physical files directly into `.agents/` or `~/.gemini/` without symbolic link breaks.
 
 ---
 
@@ -32,7 +32,7 @@ This repository is 100% natively compatible with **Google Antigravity IDE**:
                                   Creates or updates modular context under frameworks/, infra/, or shared/
          │
          ▼
-[2. Sync to Target Scope]   ──► bin/sync-skills.sh
+[2. Sync to Target Scope]   ──► bin/sync-context.sh
                                   ├── --global  ► Skills/Workflows (~/.gemini/config/), Global Rules (~/.gemini/GEMINI.md)
                                   └── --target  ► Workspace Context (<workspace-root>/.agents/)
 ```
@@ -76,7 +76,7 @@ agent-toolkit/
 │   └── seyalicraft/       # Main Portal ecosystem & branding rules
 │
 └── bin/                    # Scripts to sync context into Workspace or Global targets
-    └── sync-skills.sh
+    └── sync-context.sh
 ```
 
 ### skills/ vs rules/ vs workflows/
@@ -91,34 +91,103 @@ agent-toolkit/
 
 ## Usage
 
-### 1. Syncing Context to Workspace Level (`.agents/`)
-
-Run `bin/sync-skills.sh` from the toolkit repo to automatically copy framework, shared, and infra skills/rules/workflows directly into a target project's `.agents/` directory:
+`bin/sync-context.sh` is a **zero-hardcoding, dynamic universal sync engine**. You can pass any scope identifier (`-w, --workspace` or `-g, --global`) along with any path selector (from full categories down to single files).
 
 ```bash
-# Sync Angular framework + Shared rules/skills + Docker/Postgres infra tools into target project
-./bin/sync-skills.sh --framework angular --infra docker,postgres --target /path/to/my-angular-app
-
-# Sync Shared rules/skills only into any repository
-./bin/sync-skills.sh --shared --target /path/to/my-project
+./bin/sync-context.sh [scope] [options] [path-or-selector...]
 ```
 
-### 2. Syncing Context to Global Level (`~/.gemini/`)
+### Scope Identifiers
+* `-w, --workspace <path>` (or `-t, --target`): Syncs into project workspace (`<path>/.agents/`). Defaults to `./`.
+* `-g, --global`: Syncs into user machine global environment (`~/.gemini/`).
 
-Sync universal shared rules, skills, and workflows globally to keep your system prompt lightweight (~12% - 25% token budget):
+### Non-Destructive In-Place Upsert Guarantee
+* **Custom Context Preserved**: Any custom skills, rules, or workflows created manually in `.agents/` or `~/.gemini/` that are not part of the toolkit are **never touched or deleted**.
+* **Same-Name Clean Replacement**: When an incoming toolkit item matches an existing file/folder name, it is cleanly replaced with the latest version (`🔄 Replacing existing...`).
+* **Global `GEMINI.md` Tagged Envelope**: Global rules are refreshed strictly between `<!-- AGENT_TOOLKIT_START -->` and `<!-- AGENT_TOOLKIT_END -->`. Any personal guidelines outside this block are 100% preserved, with automatic safety backups created at `~/.gemini/GEMINI.md.bak`.
 
+---
+
+### Sync Scenarios & Examples
+
+#### 1. Full Context Sync (`--all`)
+Sync all categories (frameworks, infra, shared, domains) dynamically discovered across the toolkit:
 ```bash
-# Recommended: Sync Universal Shared rules/skills globally
-./bin/sync-skills.sh --global --shared
+# Sync entire toolkit to project workspace (.agents/)
+./bin/sync-context.sh --all -w /path/to/my-project
+
+# Sync entire toolkit globally (~/.gemini/)
+./bin/sync-context.sh --all -g
 ```
 
-#### Global Sync Architecture:
+#### 2. Category-Level Sync
+Sync an entire top-level category folder by passing its name:
+```bash
+# Sync all shared engineering standards
+./bin/sync-context.sh shared -w /path/to/my-project
+
+# Sync all framework modules (Angular, NestJS, Strapi...)
+./bin/sync-context.sh frameworks -w /path/to/my-project
+
+# Sync all infra modules (Docker, Postgres, Redis...)
+./bin/sync-context.sh infra -w /path/to/my-project
+```
+
+#### 3. Module-Level Sync
+Sync a specific module sub-directory:
+```bash
+# Sync Angular framework context only
+./bin/sync-context.sh frameworks/angular -w /path/to/my-app
+
+# Sync Docker infra context only
+./bin/sync-context.sh infra/docker -w /path/to/my-backend
+
+# Sync NidhiFlow domain module only
+./bin/sync-context.sh domains/nidhiflow -w /path/to/my-fintech-app
+```
+
+#### 4. Granular Single-Item Sync
+Sync a single specific rule, skill, or workflow directly:
+```bash
+# Single Rule only:
+./bin/sync-context.sh shared/code-quality/rules/no-any-type.md -w /path/to/my-project
+
+# Single Skill directory only:
+./bin/sync-context.sh frameworks/angular/skills/angular-signal-state-management -w /path/to/my-app
+
+# Single Workflow only:
+./bin/sync-context.sh shared/git/workflows/github-feature-workflow.md -w /path/to/my-project
+```
+
+#### 5. Global Scope Sync with Custom Selection
+Selectively sync specific modules or rules globally into `~/.gemini/` (rules are automatically stripped of YAML frontmatter and appended to `~/.gemini/GEMINI.md`):
+```bash
+# Sync curated core rules and skills globally:
+./bin/sync-context.sh shared/code-quality shared/communication -g
+
+# Sync default universal shared context globally:
+./bin/sync-context.sh -g
+```
+
+#### 6. Presets & Shorthands
+Convenient bundles for common fullstack setups:
+```bash
+# Fullstack app bundle (Angular + NestJS + Docker + Postgres + Redis + Shared)
+./bin/sync-context.sh --preset fullstack-app -w /path/to/fullstack-repo
+
+# NestJS API bundle (NestJS + Postgres + Redis + Shared)
+./bin/sync-context.sh --preset nestjs-api -w /path/to/my-backend
+```
+
+---
+
+### Global Sync Architecture:
 - **Skills**: Synced to `~/.gemini/antigravity/skills/` and `~/.gemini/config/skills/`.
 - **Workflows**: Synced to `~/.gemini/config/workflows/` and `~/.gemini/config/global_workflows/`.
-- **Global Rules (`~/.gemini/GEMINI.md`)**: Antigravity IDE natively discovers global rules exclusively from `~/.gemini/GEMINI.md` (tagged as `user_global`). Rules in directories declared in `GEMINI_RULE_DIRS` (in `bin/sync-skills.sh`) are automatically stripped of YAML frontmatter and cleanly appended into `~/.gemini/GEMINI.md`.
-- **Token Budget Guard**: `bin/sync-skills.sh` validates the total character count of `GEMINI.md` to prevent approaching Antigravity's 40% (8,000 tokens) global rule truncation limit.
+- **Global Rules (`~/.gemini/GEMINI.md`)**: Antigravity IDE natively discovers global rules exclusively from `~/.gemini/GEMINI.md` (tagged as `user_global`). Rules synced globally are automatically stripped of YAML frontmatter and cleanly appended into `~/.gemini/GEMINI.md`.
+- **Token Budget Guard**: `bin/sync-context.sh` validates the total character count of `GEMINI.md` to prevent approaching Antigravity's 40% (8,000 tokens) global rule truncation limit.
 
-> **Note on Framework Rules**: Keep framework-specific rules (Angular, NestJS, Docker) inside project-level `.agents/` via `--target` to preserve global customization token budget.
+> **Zero-Hardcoding Guarantee**: Any new category (e.g. `platforms/`, `tools/`) or sub-module created in the toolkit is dynamically discovered by `bin/sync-context.sh` without requiring script updates.
 
 ### 3. Generating & Updating Agent Context with AI
 

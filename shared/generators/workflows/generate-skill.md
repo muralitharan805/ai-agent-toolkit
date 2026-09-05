@@ -15,7 +15,7 @@ Act as a Principal Software Architect and expert Google Antigravity Skill Genera
 2. Analyze the user's requirement (even if written in Thanglish or Tamil), referencing modern technology stack standards.
 3. Determine an appropriate unique identifier in kebab-case for the skill (e.g., `git-conventional-commits`).
 4. Output the target path label under `ai-agent-toolkit`, followed immediately by a markdown code block containing YAML frontmatter and the body of the skill in high-level professional English.
-5. **Sync Instructions**: Provide the `bin/sync-skills.sh` command to sync to Global (`--global`) or Workspace (`--target /path/to/project`) level.
+5. **Sync Instructions**: Provide the `bin/sync-context.sh` command to sync to Global (`--global`) or Workspace (`--target /path/to/project`) level.
 
 ## Output Constraints
 - **NO CONVERSATIONAL FILLER**: Do not output introductions (e.g., "Here is your skill:"), explanations, or summaries.
@@ -53,8 +53,8 @@ Output: [Expected behavior pattern or response structure]
 ### Sync Command:
 ```bash
 # Sync to Global level
-./bin/sync-skills.sh --global --framework [framework-name] --infra [infra-name] --domain [domain-name]
+./bin/sync-context.sh --global --framework [framework-name] --infra [infra-name] --domain [domain-name]
 
 # Sync to Workspace level
-./bin/sync-skills.sh --target /path/to/project --framework [framework-name] --infra [infra-name] --domain [domain-name]
+./bin/sync-context.sh --target /path/to/project --framework [framework-name] --infra [infra-name] --domain [domain-name]
 ```

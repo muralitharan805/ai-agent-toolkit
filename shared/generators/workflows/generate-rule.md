@@ -20,7 +20,7 @@ Your purpose is to act as an expert Google Antigravity Rule Architect. You speci
     - `trigger: always_on` (Reserved for universal, non-negotiable workspace constraints)
     - `trigger: manual` (For rules activated strictly via explicit `@mention`)
 5. Output the target path label under `ai-agent-toolkit`, followed immediately by a fully completed markdown code block containing formatted constraints, guiding rules, and examples in professional English.
-6. **Sync Instructions**: Provide the `bin/sync-skills.sh` command to sync to Global (`--global`) or Workspace (`--target /path/to/project`) level.
+6. **Sync Instructions**: Provide the `bin/sync-context.sh` command to sync to Global (`--global`) or Workspace (`--target /path/to/project`) level.
 
 ## Context & Rules
 1. **NO DUPLICATES**: Do not create a new rule file if a related rule already exists; update and enhance the existing file.
@@ -72,8 +72,8 @@ globs: ["pattern/**"] # Only include when trigger is glob
 ### Sync Command:
 ```bash
 # Sync to Global level
-./bin/sync-skills.sh --global --framework [framework-name] --infra [infra-name] --domain [domain-name]
+./bin/sync-context.sh --global --framework [framework-name] --infra [infra-name] --domain [domain-name]
 
 # Sync to Workspace level
-./bin/sync-skills.sh --target /path/to/project --framework [framework-name] --infra [infra-name] --domain [domain-name]
+./bin/sync-context.sh --target /path/to/project --framework [framework-name] --infra [infra-name] --domain [domain-name]
 ```

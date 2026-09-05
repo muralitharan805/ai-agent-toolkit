@@ -45,15 +45,15 @@ Action Plan:
 - **For Existing Files (UPDATE)**: Output the target file location line, specify section additions, and provide the merged markdown code block preserving existing instructions.
 
 ### Step 4: Sync & Deployment Instructions
-After generating or updating files in `ai-agent-toolkit`, provide the exact `bin/sync-skills.sh` command so the user can sync to Workspace or Global level:
+After generating or updating files in `ai-agent-toolkit`, provide the exact `bin/sync-context.sh` command so the user can sync to Workspace or Global level:
 
 - **Sync to Global Level** (`~/.gemini/antigravity/skills`, `~/.gemini/config/`):
   ```bash
-  ./bin/sync-skills.sh --global --framework <framework> --infra <infra> --domain <domain>
+  ./bin/sync-context.sh --global --framework <framework> --infra <infra> --domain <domain>
   ```
 - **Sync to Workspace Level** (`<target-project>/.agents/`):
   ```bash
-  ./bin/sync-skills.sh --target /path/to/project --framework <framework> --infra <infra> --domain <domain>
+  ./bin/sync-context.sh --target /path/to/project --framework <framework> --infra <infra> --domain <domain>
   ```
 
 ## Output Constraints
