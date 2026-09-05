@@ -36,13 +36,14 @@ Redundant Files to Remove:
 ```
 
 ### Step 3: Semantic Merge & Relocation Protocol
-1. **Content Preservation**: When merging two files on the same topic, preserve all non-trivial instructions, unique code examples, constraints, and frontmatter metadata. Never delete unique knowledge.
+1. **Content Preservation & Boundary Limits**: When merging two files on the same topic, preserve all non-trivial instructions, unique code examples, constraints, and frontmatter metadata. Never delete unique knowledge. Ensure merged rule/workflow files stay strictly under the 12,000-character limit, and skills stay under 500 lines.
 2. **Directory Normalization**: Ensure target files reside in canonical topic directories:
    - Frameworks: `frameworks/[framework]/[skills|rules|workflows]/`
    - Infrastructure: `infra/[tool]/[skills|rules|workflows]/`
    - Private Domains: `domains/[name]/[skills|rules|workflows]/`
    - Shared/Cross-cutting: `shared/[topic]/[skills|rules|workflows]/`
-3. **Cleanup**: Safely remove empty or fully merged duplicate files.
+3. **Trigger Validation**: Ensure merged rules use appropriate triggers (`model_decision`, `glob`, `always_on`, or `manual`), avoiding blanket `always_on` defaults.
+4. **Cleanup**: Safely remove empty or fully merged duplicate files.
 
 ### Step 4: README & Index Auto-Sync
 After completing file merges and restructuring:
@@ -53,4 +54,4 @@ After completing file merges and restructuring:
 - NEVER delete or merge files inside the `shared/generators/` directory.
 - NEVER delete unique technical knowledge during consolidation; always merge into the master topic file.
 - Maintain high-level professional English across all merged files.
-- Ensure all YAML frontmatter tags remain valid and uncorrupted.
+- Ensure all YAML frontmatter tags remain valid and GUI-compatible (`model_decision`, `glob`, `always_on`, or `manual` for rules; `trigger: manual` with embedded triggers for workflows).
