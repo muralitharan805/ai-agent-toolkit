@@ -20,7 +20,7 @@ Guide the agent in structuring, formatting, deduplicating, and authoring world-c
 5. **Enforce Strict Frontmatter GUI Compatibility**:
    - Workflows: Use ONLY `description:` and `trigger:`. Embed all trigger phrases/shorthands directly inside `description:` (e.g. `Triggered by 'suite:', 'context:', or '/command'`). Never use `aliases:`.
    - Skills: Include `name:` (kebab-case) and `description:` (third-person routing statement).
-   - Rules: Include `trigger: always_on` or `trigger: glob`, plus `description:`.
+   - Rules: Include an appropriate trigger (`model_decision` for specialized rules, `glob` with `globs: [...]` for file patterns, `always_on` for universal workspace constraints, or `manual`), plus a clear `description:`.
 6. **Draft High-Impact Content**:
    - Write clear, step-by-step logic protocols in `skills/`.
    - Write strict, unambiguous MUST / MUST NOT boundaries in `rules/`.

@@ -45,17 +45,26 @@ ai-agent-toolkit/
 │   ├── postgres/              # PostgreSQL schema, migrations & pgvector indexing
 │   └── redis/                 # Redis caching strategies & TTL rules
 │
-├── shared/                    # Domain-level & cross-cutting shared context modules
-│   ├── my-company/           # Main Portal context & organizational rules
-│   ├── gis-app/             # gis-app 3-layer GIS & candidate domain skills
-│   ├── example-app/             # example-app double-entry accounting & finance skills
-│   ├── docker-dev-infra/      # Docker dev infra compose template skills
+├── shared/                    # Cross-cutting topic-based shared context modules
 │   ├── ai-agent-toolkit/      # Toolkit authoring & architectural skills
+│   ├── chrome-devtools/       # Browser automation & DOM auditing
 │   ├── code-quality/          # Clean code & maintainability standards
+│   ├── communication/         # Thanglish dual-language matching & junior mentorship rules
 │   ├── generators/            # Skill/Rule/Workflow generator workflows (/generate-agent-suite)
 │   ├── git/                   # Git conventional commits & PR automation
+│   ├── google-suite/          # GA4 analytics, Search Console & AdSense monetization
 │   ├── logging/               # Structured logging & observability standards
-│   └── security/              # Web security & auth guidelines
+│   ├── package-management/    # pnpm package management standards
+│   ├── problem-discovery/     # B2B FOCUS problem discovery & evidence scoring
+│   ├── security/              # Web security & auth guidelines
+│   └── testing/               # Automated testing & QA standards
+│
+├── domains/                   # Project domain layer (Private domain logic & rules)
+│   ├── civicpath/             # CivicPath GIS domain skills & state machines
+│   ├── docker-dev-infra/      # Dev Infra Compose microservices
+│   ├── finance/               # Personal finance & double-entry math
+│   ├── nidhiflow/             # Double-entry finance & loan amortization rules
+│   └── seyalicraft/           # SeyaliCraft Main Portal ecosystem & branding rules
 │
 ├── bin/                       # Automation CLI scripts
 │   └── sync-skills.sh         # Syncs context to Workspace (.agents/) or Global (~/.gemini/)
@@ -76,6 +85,7 @@ name: [kebab-case-identifier]
 description: [Third-person routing statement describing domain capabilities, triggers, and technologies]
 ---
 ```
+*Note: Keep main `SKILL.md` under 500 lines; place bulky manuals and code under `examples/`, `scripts/`, or `references/`.*
 
 ### 2. Workflow Frontmatter (`.md`)
 ```yaml
@@ -84,15 +94,17 @@ description: "Detailed description of the workflow process. Triggered by 'trigge
 trigger: manual
 ---
 ```
-*Note: Do NOT use non-standard keys like `aliases:` or custom metadata objects. Embed all trigger keywords directly inside the `description` string.*
+*Note: Do NOT use non-standard keys like `aliases:`. Embed all trigger keywords directly inside the `description` string. Files must not exceed 12,000 characters.*
 
 ### 3. Rule Frontmatter (`.md`)
 ```yaml
 ---
 description: "Rule summary detailing constraints and conventions."
-trigger: always_on
+trigger: [model_decision | glob | always_on | manual]
+globs: ["src/**/*.ts"] # Only include when trigger is glob
 ---
 ```
+*Note: Rules are strictly limited to 12,000 characters per file (hard Antigravity IDE limit).*
 
 ---
 

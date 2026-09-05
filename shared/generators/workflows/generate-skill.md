@@ -48,7 +48,7 @@ Output: [Expected behavior pattern or response structure]
 # Constraints
 - [Specific "Do not" rule or boundary rule]
 - [Context boundary rule]
-```
+````
 
 ### Sync Command:
 ```bash
