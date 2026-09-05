@@ -170,7 +170,6 @@ setup_scope_paths() {
   if [[ "$IS_GLOBAL" == true ]]; then
     TARGET_SKILLS_DIR="${HOME}/.gemini/antigravity/skills"
     TARGET_CONFIG_SKILLS_DIR="${HOME}/.gemini/config/skills"
-    TARGET_RULES_DIR="${HOME}/.gemini/config/rules"
     TARGET_WORKFLOWS_DIR="${HOME}/.gemini/config/workflows"
     TARGET_GLOBAL_WORKFLOWS_DIR="${HOME}/.gemini/config/global_workflows"
     TARGET_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
@@ -182,6 +181,8 @@ setup_scope_paths() {
 
     GLOBAL_RULES_BUFFER="$(mktemp)"
     trap 'rm -f "$GLOBAL_RULES_BUFFER"' EXIT
+
+    mkdir -p "${TARGET_SKILLS_DIR}" "${TARGET_CONFIG_SKILLS_DIR}" "${TARGET_WORKFLOWS_DIR}" "${TARGET_GLOBAL_WORKFLOWS_DIR}" "${TARGET_PLUGINS_DIR}"
   else
     if [[ ! -d "$TARGET_DIR" ]]; then
       mkdir -p "$TARGET_DIR"
@@ -192,11 +193,8 @@ setup_scope_paths() {
     TARGET_WORKFLOWS_DIR="${TARGET_AGENTS_DIR}/workflows"
     TARGET_PLUGINS_DIR="${TARGET_AGENTS_DIR}/plugins"
     SCOPE_LABEL="Workspace Level (${TARGET_DIR}/.agents)"
-  fi
 
-  mkdir -p "${TARGET_SKILLS_DIR}" "${TARGET_RULES_DIR}" "${TARGET_WORKFLOWS_DIR}" "${TARGET_PLUGINS_DIR}"
-  if [[ "$IS_GLOBAL" == true ]]; then
-    mkdir -p "${TARGET_CONFIG_SKILLS_DIR}" "${TARGET_GLOBAL_WORKFLOWS_DIR}"
+    mkdir -p "${TARGET_SKILLS_DIR}" "${TARGET_RULES_DIR}" "${TARGET_WORKFLOWS_DIR}" "${TARGET_PLUGINS_DIR}"
   fi
 }
 
@@ -287,12 +285,6 @@ sync_single_rule() {
       echo "" >> "$GLOBAL_RULES_BUFFER"
     fi
     strip_yaml_frontmatter "$rule_file" >> "$GLOBAL_RULES_BUFFER"
-
-    local config_rule_file="${TARGET_RULES_DIR}/${file_name}"
-    if [[ -f "$config_rule_file" ]]; then
-      rm -f "$config_rule_file"
-    fi
-    cp "$rule_file" "$config_rule_file"
   else
     local dest_file="${TARGET_RULES_DIR}/${file_name}"
     if [[ -f "$dest_file" ]]; then
