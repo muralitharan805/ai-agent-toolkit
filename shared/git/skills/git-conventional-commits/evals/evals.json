@@ -1,0 +1,44 @@
+{
+  "skill_name": "git-conventional-commits",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Standard Feature Commit Formatting",
+      "prompt": "Format a git commit message for adding a user authentication service in NestJS.",
+      "expected_output": "Formats commit as feat(auth): implement user authentication service with lowercase imperative verb and no trailing period.",
+      "assertions": [
+        "Uses valid feat type and scope",
+        "Uses imperative present-tense description",
+        "Maintains header under 72 characters",
+        "Omits trailing period from summary line"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Breaking Change Formatting with Footer",
+      "prompt": "Format a breaking change commit message migrating from cookie session to bearer JWT tokens.",
+      "expected_output": "Includes exclamation mark in header or BREAKING CHANGE footer explaining migration.",
+      "assertions": [
+        "Includes exclamation mark after scope or BREAKING CHANGE footer",
+        "Explains the breaking change rationale and migration path",
+        "Adheres to Conventional Commits syntax",
+        "Avoids generic commit summaries"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Rejection of Generic or Unscoped Commit Messages",
+      "prompt": "Evaluate a git commit message: 'fixed stuff and updated code.'",
+      "expected_output": "Rejects message as vague, untyped, and missing scope and imperative verb.",
+      "assertions": [
+        "Rejects generic commit description",
+        "Identifies missing commit type and scope",
+        "Flags trailing period violation",
+        "Recommends specific Conventional Commit replacement"
+      ],
+      "files": []
+    }
+  ]
+}

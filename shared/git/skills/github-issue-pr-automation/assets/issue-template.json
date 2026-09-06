@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JuniorFriendlyGitHubIssueTemplate",
+  "description": "Template schema for generating structured, clear, and actionable GitHub Issues.",
+  "type": "object",
+  "required": ["title", "body", "labels"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Conventional commit style issue title (e.g. feat(auth): add refresh token endpoint)."
+    },
+    "body": {
+      "type": "string",
+      "description": "Markdown body containing Overview, Technical Context, and Acceptance Criteria checklist."
+    },
+    "labels": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "default": {
+    "title": "feat(<scope>): <short description>",
+    "body": "## Overview\nBrief description of what feature is being built or what bug is being resolved.\n\n## Technical Context\nArchitectural considerations, relevant files, and services involved.\n\n## Acceptance Criteria\n- [ ] Core business logic implemented adhering to Clean Code standards\n- [ ] Colocated unit test suite achieves >= 80% coverage\n- [ ] TypeScript compilation passes cleanly without any explicit any types",
+    "labels": ["enhancement"]
+  }
+}
