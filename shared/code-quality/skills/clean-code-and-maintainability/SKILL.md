@@ -1,128 +1,121 @@
 ---
 name: clean-code-and-maintainability
-description: "Guidelines for writing clean, self-documenting, maintainable, and scalable software adhering to Robert C. Martin's Clean Code principles, mandatory TSDoc/JSDoc comments, SOLID design, and junior-developer-friendly readability."
+description: Enforces Robert C. Martin's Clean Code principles, mandatory TSDoc/JSDoc block comments, strict TypeScript typing (no any type), function length limits, parameter DTO encapsulation, and guard clauses. Triggered by 'clean-code:', 'refactor:', or 'code-quality:'.
 ---
 
-# Clean Code & Long-Term Maintainability Guidelines
+# Clean Code & Maintainability Standards Skill
 
-## Goal
-Guide AI coding agents and developers in writing enterprise-grade, clean, self-documenting code that adheres to Robert C. Martin's **Clean Code** principles, mandatory **TSDoc/JSDoc block comments**, **SOLID design patterns**, and junior-developer-friendly readability.
+## Overview
+
+This skill guides AI coding agents and software engineers in writing enterprise-grade, self-documenting, and scalable software adhering to Robert C. Martin's **Clean Code** principles, **SOLID design patterns**, and strict **TypeScript zero-`any` invariants**. It guarantees that any junior or fresher developer can understand and maintain the codebase with minimal cognitive load.
+
+```
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                          5-Phase Clean Code Lifecycle                          │
+└────────────────────────────────────────────────────────────────────────────────┘
+  [Phase 1: Naming & Constants]   ──► Intention-revealing names & Enums
+               │
+  [Phase 2: Scope & Parameters]   ──► Max 35 lines/func, <= 3 positional parameters
+               │
+  [Phase 3: Guard Clauses]        ──► Max 2 nesting levels, early return / throw
+               │
+  [Phase 4: Strict Zero-Any]      ──► Type narrowing with `unknown`, type guards
+               │
+  [Phase 5: Mandatory TSDoc]      ──► Public APIs documented with @param & @returns
+```
 
 ---
 
-# Core Clean Code & Readability Principles
+## 5-Phase Execution Pipeline
 
-### 1. Meaningful & Intention-Revealing Names
-- Names MUST reveal intent without needing explanatory inline comments.
-- **Bad**: `const d = 86400;`, `function proc(x: any)`
-- **Good**: `const ONE_DAY_IN_SECONDS = 86400;`, `function calculateMonthlyEmi(principal: number, interestRate: number)`
+### Phase 1: Intention-Revealing Naming & Magic Value Elimination
+1. **Self-Documenting Identifiers**:
+   - Variable, function, and class names must clearly communicate their purpose without requiring inline comments.
+   - Single-letter variable names are strictly forbidden, except for basic loop indexes (`i`, `j`).
+2. **Magic Value Elimination**:
+   - Never embed numeric constants or raw status strings in business logic:
+   ```typescript
+   // Bad: Magic number
+   if (status === 2) { ... }
 
-### 2. Single Responsibility Principle (SRP)
-- Functions should do ONE thing, do it well, and do it only.
-- Function length SHOULD NOT exceed 30 lines. If a method performs multiple steps, extract helper functions.
+   // Good: TypeScript Enum
+   export enum OrderStatus {
+     PENDING = 'PENDING',
+     COMPLETED = 'COMPLETED',
+   }
+   if (status === OrderStatus.COMPLETED) { ... }
+   ```
 
-### 3. Mandatory TSDoc / JSDoc Block Comments
-Every exported class, interface, service method, controller endpoint, and utility algorithm MUST include TSDoc comments so fresher/junior developers can instantly understand the business purpose:
+### Phase 2: Function Scope & Parameter Reduction
+1. **Length Limit ($\le 35$ Lines)**:
+   - Functions must not exceed 35 lines of executable logic. Extract secondary transformations into private helper methods.
+2. **Positional Parameter Limit ($\le 3$ Parameters)**:
+   - Functions requiring 4 or more inputs must encapsulate them into a typed DTO interface or options object:
+   ```typescript
+   // Bad: 5 positional parameters
+   function createInvoice(user: string, total: number, tax: number, date: Date, ref: string)
 
-```typescript
-/**
- * Calculates the monthly EMI installment and full amortization schedule for a loan.
- *
- * @param principal - Total principal loan amount in base currency (e.g. ₹25,00,000)
- * @param annualInterestRate - Annual interest rate percentage (e.g. 8.5 for 8.5%)
- * @param tenureMonths - Loan duration in months (e.g. 240 for 20 years)
- * @param startDate - Date when loan repayment begins
- * 
- * @returns Array of amortization schedule rows containing principal/interest split & remaining balance
- * 
- * @throws {BadRequestException} If principal, rate, or tenure are non-positive values
- * 
- * @example
- * const schedule = amortizationService.calculateSchedule(2500000, 8.5, 240, new Date());
- */
-export function calculateAmortizationSchedule(
-  principal: number,
-  annualInterestRate: number,
-  tenureMonths: number,
-  startDate: Date
-): AmortizationScheduleRow[] {
-  // Implementation...
-}
+   // Good: Encapsulated DTO
+   function createInvoice(dto: CreateInvoiceDto): Invoice
+   ```
+
+### Phase 3: Guard Clauses & Deep Nesting Flattening
+1. **Flattening Conditional Pyramids**:
+   - Code must not contain nested `if/else` conditions deeper than 2 levels.
+   - Validate preconditions at the top of the function and return or throw immediately:
+   ```typescript
+   // Good: Guard clause with early throw
+   function activateAccount(user: User | null): void {
+     if (!user) {
+       throw new NotFoundException('User entity not found');
+     }
+     if (user.isSuspended) {
+       throw new ForbiddenException('Suspended accounts cannot be activated');
+     }
+     user.isActive = true;
+   }
+   ```
+
+### Phase 4: Strict Zero-`any` Typing & Type Narrowing
+1. **Zero `any` Invariant**:
+   - Explicit `any` type annotations (`: any`, `as any`, `<any>`) are strictly forbidden across application and test code.
+2. **Safe Narrowing with `unknown`**:
+   - Validate un-trusted external inputs (HTTP bodies, message queues) using user-defined type guard predicates (`value is TargetType`) before accessing properties.
+
+### Phase 5: Mandatory TSDoc / JSDoc Block Comments
+1. **Public API Documentation**:
+   - Every exported class, interface, service method, controller endpoint, and public utility MUST include a TSDoc block comment (`/** ... */`).
+2. **Required Tags**:
+   - Document domain purpose, all `@param` inputs, `@returns` payload, and `@throws` exceptions. Include `@example` blocks for complex utilities.
+
+---
+
+## Local References & Assets
+
+- **Clean Code & SOLID Patterns Guide**: [references/clean-code-and-solid-patterns.md](references/clean-code-and-solid-patterns.md)
+- **TypeScript Strict Typing & Narrowing**: [references/typescript-strict-typing-and-narrowing.md](references/typescript-strict-typing-and-narrowing.md)
+- **Automated Clean Code CLI Auditor**: [scripts/audit_clean_code.py](scripts/audit_clean_code.py)
+- **Enterprise Clean Code Checklist**: [assets/clean-code-checklist.json](assets/clean-code-checklist.json)
+- **TSDoc Starter Templates Collection**: [assets/tsdoc-starter-templates.json](assets/tsdoc-starter-templates.json)
+
+---
+
+## Automated Verification Protocol
+
+Run the bundled CLI tool to audit source directories for clean code compliance:
+```bash
+python3 scripts/audit_clean_code.py --path src/ --strict
 ```
 
-### 4. Parameter Count Control (Max 3 Parameters)
-- Functions SHOULD accept at most 3 positional parameters.
-- If a function requires 4 or more parameters, wrap them in a typed DTO class or Options object:
+---
 
-```typescript
-// Bad
-function createLoan(account: string, rate: number, tenure: number, date: Date, extra: number, user: string)
+## Gotchas & Anti-Patterns
 
-// Good: Uses typed DTO
-function createLoan(dto: CreateLoanDto)
-```
-
-### 5. No Magic Numbers or Hardcoded Strings
-- Replace magic numbers and inline string literals with explicit Enums or `readonly` Constants:
-
-```typescript
-// Bad
-if (user.role === 2) { ... }
-
-// Good
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  MEMBER = 'MEMBER',
-}
-if (user.role === UserRole.ADMIN) { ... }
-```
-
-### 6. SOLID Architecture Principles
-
-| Principle | Description | Implementation |
+| Anti-Pattern | Why It Fails | Modern Clean Code Replacement |
 | :--- | :--- | :--- |
-| **S** - Single Responsibility | A class should have only one reason to change. | Separate `LedgerService` from `PdfExportService`. |
-| **O** - Open / Closed | Open for extension, closed for modification. | Use strategy pattern for different report exporters. |
-| **L** - Liskov Substitution | Derived classes must be substitutable for base types. | Custom exception classes extending `HttpException`. |
-| **I** - Interface Segregation | Don't force implementation of unused interfaces. | Small, focused interfaces (`IUserRepository`, `IEmiCalculator`). |
-| **D** - Dependency Inversion | Depend on abstractions, not concrete implementations. | Inject abstract provider tokens via NestJS DI. |
-
----
-
-# Refactoring Checklist for AI Agents & Developers
-
-1. **Readability Check**: Can a fresher developer read this file top-to-bottom and understand what it does within 2 minutes?
-2. **Comment Check**: Are all public service methods documented with TSDoc `@param` and `@returns` tags?
-3. **Complexity Check**: Are there deeply nested `if/else` conditionals (> 3 levels)? Use early returns / guard clauses instead:
-
-```typescript
-// Bad (Deep nesting)
-function processPayment(user: User, amount: number) {
-  if (user) {
-    if (user.isActive) {
-      if (amount > 0) {
-        // Do payment
-      }
-    }
-  }
-}
-
-// Good (Guard clauses / Early return)
-function processPayment(user: User, amount: number): void {
-  if (!user || !user.isActive) {
-    throw new UnauthorizedException('User account is inactive.');
-  }
-  if (amount <= 0) {
-    throw new BadRequestException('Payment amount must be positive.');
-  }
-
-  // Do payment
-}
-```
-
----
-
-# Verification Protocols
-
-1. **JSDoc Validation**: Ensure all exported methods contain complete JSDoc annotations.
-2. **Linting Check**: Run `pnpm run lint` to enforce clean code syntax and zero `any` types.
+| **Using Explicit `any`** | Silently turns off TypeScript compiler, allowing runtime bugs to escape to production. | Use `unknown` with user-defined type guards or specific interfaces. |
+| **Monolithic 100-Line Functions** | Violates Single Responsibility, impossible to unit test effectively, overwhelms juniors. | Decompose into focused private helpers with single responsibilities ($\le 35$ lines). |
+| **4+ Positional Parameters** | Easily causes transposed arguments at call sites (e.g. swapping `tax` and `discount`). | Wrap multiple parameters into a typed DTO options object. |
+| **Deeply Nested `if/else` (3+ Levels)** | Creates cognitive overload and cyclomatic complexity explosions. | Flatten execution paths using early return or early throw guard clauses. |
+| **Undocumented Public APIs** | Forces consumers and new developers to reverse-engineer implementation details. | Mandatory TSDoc block comments with `@param`, `@returns`, and `@throws`. |
+| **Magic Numbers in Conditionals** | Obscures domain intent (`status === 3` is meaningless without external lookup). | Define explicit TypeScript `enum`s or `readonly` constant dictionaries. |

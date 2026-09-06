@@ -1,0 +1,64 @@
+{
+  "checklist_name": "Enterprise Clean Code & Maintainability Checklist",
+  "version": "1.0.0",
+  "categories": [
+    {
+      "name": "Self-Documenting Code & TSDoc",
+      "items": [
+        {
+          "id": "CC-TSDOC-01",
+          "rule": "Mandatory TSDoc on Public Symbols",
+          "description": "Every exported class, interface, service method, controller endpoint, and public utility must contain a TSDoc block comment.",
+          "required_tags": ["@param", "@returns", "@throws"],
+          "severity": "CRITICAL"
+        },
+        {
+          "id": "CC-TSDOC-02",
+          "rule": "Intention-Revealing Naming",
+          "description": "Names must self-describe business purpose without single-letter variables (except i, j in loops).",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "name": "Function Scope & Complexity Controls",
+      "items": [
+        {
+          "id": "CC-FUNC-01",
+          "rule": "Function Length Ceiling (<= 35 Lines)",
+          "description": "Functions must not exceed 35 lines of executable logic; decompose complex logic into focused helper functions.",
+          "severity": "HIGH"
+        },
+        {
+          "id": "CC-FUNC-02",
+          "rule": "Parameter Count Control (<= 3 Positional Parameters)",
+          "description": "Functions must accept at most 3 positional parameters; functions requiring 4+ inputs must use a typed DTO.",
+          "severity": "CRITICAL"
+        },
+        {
+          "id": "CC-FUNC-03",
+          "rule": "Guard Clauses & Early Returns",
+          "description": "Never nest if/else blocks deeper than 2 levels. Validate preconditions and return or throw immediately.",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "name": "Strict Typing & Magic Value Prohibition",
+      "items": [
+        {
+          "id": "CC-TYPE-01",
+          "rule": "Zero 'any' Type Invariant",
+          "description": "Explicit 'any' is strictly forbidden. Use unknown, generics, discriminated unions, or utility types.",
+          "severity": "CRITICAL"
+        },
+        {
+          "id": "CC-CONST-01",
+          "rule": "Magic Number & String Prohibition",
+          "description": "All status codes, roles, and constant thresholds must be defined using TypeScript enums or readonly constant objects.",
+          "severity": "HIGH"
+        }
+      ]
+    }
+  ]
+}
