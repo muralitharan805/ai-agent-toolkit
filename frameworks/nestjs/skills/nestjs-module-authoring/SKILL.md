@@ -1,70 +1,141 @@
 ---
 name: nestjs-module-authoring
-description: "Guides the creation of scalable, maintainable NestJS feature modules adhering to Clean Architecture, robust DTO validation, dependency injection, and comprehensive unit testing."
+description: "Scaffolds enterprise NestJS domain feature modules adhering to Clean Architecture: DTO validation, abstract repository DI, OpenAPI, and unit test isolation."
 ---
-# Goal
-Standardize the construction of production-ready NestJS feature modules to guarantee long-term maintainability, isolation, microservices compatibility, and high unit test coverage.
 
-# Instructions
-1. **Module Architecture Planning**:
-   - Define domain boundaries for the feature. Create a directory layout under `src/modules/[feature-name]/` containing `dto/`, `entities/` (or `domain/`), `interfaces/`, `controllers/`, `services/`, `repositories/`, and `spec/`.
-2. **DTO & Schema Definition**:
-   - Create explicit DTOs for request payloads (`create-[feature].dto.ts`, `update-[feature].dto.ts`, `query-[feature].dto.ts`).
-   - Annotate all DTO properties with `class-validator` rules (`@IsString()`, `@IsOptional()`, `@Nested()`, etc.) and OpenAPI Swagger metadata (`@ApiProperty()`).
-3. **Repository Abstraction & Persistence Layer**:
-   - Define a domain repository interface `I[Feature]Repository` in `interfaces/`.
-   - Implement the concrete ORM repository (Prisma, TypeORM, or Mongoose) in `repositories/`.
-   - Bind the interface token in the feature module using `providers: [{ provide: FEATURE_REPOSITORY, useClass: FeatureOrmRepository }]`.
-4. **Service Layer Implementation**:
-   - Implement `@Injectable()` business service methods containing domain validation, transaction boundaries, and event dispatching.
-   - Throw NestJS standard exceptions (`NotFoundException`, `ConflictException`, `BadRequestException`) for domain failures.
-   - Maintain pure return types (`Promise<FeatureEntity>`) to ensure caller predictability.
-5. **Controller Layer Implementation**:
-   - Decorate class with `@Controller('[feature-name]')` and `@ApiTags('[feature-name]')`.
-   - Use standard NestJS decorators (`@Get()`, `@Post()`, `@Put()`, `@Delete()`, `@Body()`, `@Param()`, `@Query()`).
-   - Enforce authentication/authorization using `@UseGuards(JwtAuthGuard, RolesGuard)`.
-6. **Module Configuration & Export**:
-   - Declare controllers, providers, and exported services in `[feature].module.ts`.
-   - Re-export services needed by external modules to prevent duplicate provider instantiations.
-7. **Unit & Integration Test Setup**:
-   - Scaffold unit tests (`.spec.ts`) using `@nestjs/testing` `Test.createTestingModule()`.
-   - Mock repository dependencies using `jest.fn()` or dedicated mock classes to isolate unit tests from live databases.
+# NestJS Feature Module Authoring Skill
 
-# Examples
-Input: Scaffold a NestJS `ProductModule` with catalog management and inventory checks.
-Output:
-```typescript
-// src/modules/product/interfaces/product-repository.interface.ts
-export const PRODUCT_REPOSITORY = Symbol('PRODUCT_REPOSITORY');
+## 1. Overview & 5-Pillar Architecture
 
-export interface IProductRepository {
-  findById(id: string): Promise<ProductEntity | null>;
-  create(data: CreateProductDomainInput): Promise<ProductEntity>;
-  updateStock(id: string, delta: number): Promise<ProductEntity>;
-}
+This skill provides an enterprise standard for constructing production-ready NestJS domain feature modules adhering to Clean Architecture principles. It enforces strict separation of concerns, request payload validation via `class-validator`, dependency inversion using abstract repository interfaces and Symbol tokens, automated OpenAPI Swagger contracts, and isolated unit testing.
 
-// src/modules/product/product.module.ts
-import { Module } from '@nestjs/common';
-import { ProductController } from './product.controller';
-import { ProductService } from './product.service';
-import { ProductPrismaRepository } from './repositories/product-prisma.repository';
-import { PRODUCT_REPOSITORY } from './interfaces/product-repository.interface';
-
-@Module({
-  controllers: [ProductController],
-  providers: [
-    ProductService,
-    {
-      provide: PRODUCT_REPOSITORY,
-      useClass: ProductPrismaRepository,
-    },
-  ],
-  exports: [ProductService],
-})
-export class ProductModule {}
+```text
+frameworks/nestjs/skills/nestjs-module-authoring/
+├── SKILL.md                          # Core procedural instruction (< 500 lines) + Gotchas
+├── references/                       # Authoritative architectural runbooks
+│   ├── clean-architecture-module-patterns.md # Layer boundaries and repository tokens
+│   └── dto-validation-and-openapi.md # class-validator rules and Swagger inheritance
+├── scripts/                          # Automated scaffolding & compliance CLI
+│   └── scaffold_nestjs_module.py     # Standalone PEP 723 generator and auditor
+├── assets/                           # Production-ready drop-in templates
+│   ├── feature.controller.ts         # Clean controller router with Swagger decorators
+│   ├── feature.service.ts            # Domain business service with exception handling
+│   ├── feature-repository.interface.ts # Abstract repository contract & Symbol token
+│   ├── feature-prisma.repository.ts  # Concrete Prisma repository adapter
+│   ├── create-feature.dto.ts         # Input contract with class-validator
+│   ├── update-feature.dto.ts         # Update contract inheriting PartialType
+│   ├── feature.module.ts             # Module wiring with custom provider binding
+│   └── feature.service.spec.ts       # Isolated unit test specification with mocks
+└── evals/                            # Quality verification test suite
+    ├── evals.json                    # Automated assertions and evaluation cases
+    └── grading.json                  # Net skill lift and benchmark metrics
 ```
 
-# Constraints
-- Do NOT import database ORM entities across module boundaries; expose domain entities or interfaces instead.
-- Do NOT use global mutable variables inside NestJS services to prevent race conditions in multi-threaded runtime environments.
-- Always use `@Injectable()` scope `DEFAULT` (singleton) unless request-scoped processing is explicitly required for multi-tenant isolation.
+---
+
+## 2. 7-Step Feature Module Scaffolding Protocol
+
+When generating a new domain feature module, execute the following 7 steps in sequence:
+
+### Step 1: Directory Layout & Domain Boundaries
+Create the domain feature folder layout under `src/features/[feature-name]/`:
+```bash
+mkdir -p src/features/[feature-name]/{dto,entities,interfaces,repositories,spec}
+```
+
+### Step 2: Request Payload DTOs & Swagger Annotations
+1. Create `dto/create-[feature].dto.ts` with `class-validator` rules (`@IsString()`, `@IsNotEmpty()`, `@MaxLength()`) and `@ApiProperty()`.
+2. Create `dto/update-[feature].dto.ts` extending `PartialType(Create[Feature]Dto)` from `@nestjs/swagger`.
+
+### Step 3: Abstract Repository Interface & Symbol Token
+Define domain interfaces and the injection token in `interfaces/[feature]-repository.interface.ts`:
+```typescript
+export const FEATURE_REPOSITORY = Symbol('FEATURE_REPOSITORY');
+
+export interface IFeatureRepository {
+  findById(id: string): Promise<FeatureEntity | null>;
+  findAll(skip: number, limit: number): Promise<[FeatureEntity[], number]>;
+  create(data: CreateFeatureInput): Promise<FeatureEntity>;
+  update(id: string, data: UpdateFeatureInput): Promise<FeatureEntity>;
+  delete(id: string): Promise<void>;
+}
+```
+
+### Step 4: Concrete Database Repository Adapter
+Implement the concrete ORM adapter in `repositories/[feature]-prisma.repository.ts` implementing `IFeatureRepository`.
+
+### Step 5: Domain Service & Business Logic
+Create `[feature].service.ts` injecting the repository token:
+```typescript
+@Injectable()
+export class FeatureService {
+  constructor(
+    @Inject(FEATURE_REPOSITORY)
+    private readonly featureRepo: IFeatureRepository,
+  ) {}
+}
+```
+Throw standard NestJS exceptions (`NotFoundException`, `ConflictException`, `BadRequestException`) for business rule failures.
+
+### Step 6: HTTP Controller & Routing
+Create `[feature].controller.ts` decorated with `@ApiTags('[Feature]')`, `@ApiBearerAuth()`, and `@Controller('[feature]')`. Ensure controllers only delegate to services without business logic or direct database queries.
+
+### Step 7: Module Wiring & DI Registration
+In `[feature].module.ts`, bind the repository interface token:
+```typescript
+@Module({
+  controllers: [FeatureController],
+  providers: [
+    FeatureService,
+    {
+      provide: FEATURE_REPOSITORY,
+      useClass: FeaturePrismaRepository,
+    },
+  ],
+  exports: [FeatureService, FEATURE_REPOSITORY],
+})
+export class FeatureModule {}
+```
+Register `[Feature]Module` in `app.module.ts`.
+
+---
+
+## 3. Core Clean Architecture Patterns
+
+### Dependency Inversion Principle (DIP)
+- Domain services MUST depend on the abstract repository interface `IFeatureRepository`, NEVER on the concrete ORM adapter (`PrismaService` or `FeaturePrismaRepository`).
+- Swapping the database layer (e.g. from Prisma to TypeORM or an in-memory test double) requires zero modifications to service logic.
+
+### Controller Decoupling
+- Controllers act purely as protocol adapters. They extract HTTP parameters, invoke domain services, and return responses.
+- Controllers MUST NEVER execute raw database queries or direct transaction blocks.
+
+---
+
+## 4. Automated Verification & Scaffolding CLI
+
+Use the bundled CLI tool to audit or scaffold feature modules:
+```bash
+# Audit an existing module for Clean Architecture compliance
+python3 frameworks/nestjs/skills/nestjs-module-authoring/scripts/scaffold_nestjs_module.py --audit src/features/users
+
+# Output machine-readable JSON
+python3 frameworks/nestjs/skills/nestjs-module-authoring/scripts/scaffold_nestjs_module.py --audit src/features/users --json
+
+# Run in strict mode for CI/CD pipelines
+python3 frameworks/nestjs/skills/nestjs-module-authoring/scripts/scaffold_nestjs_module.py --audit src/features/users --strict
+```
+
+---
+
+## 5. Gotchas & Anti-Patterns
+
+| Category | Deprecated / Broken Pattern (❌) | Modern Production Replacement (✅) |
+|---|---|---|
+| **ORM Coupling** | Injecting PrismaService directly into controllers | Inject domain services; controllers never touch the ORM |
+| **Direct Class Injection** | Injecting concrete `FeaturePrismaRepository` in service | Inject abstract interface via `@Inject(FEATURE_REPOSITORY)` |
+| **DTO Duplication** | Manually duplicating fields in `UpdateFeatureDto` | Inherit validated fields using `PartialType(CreateFeatureDto)` |
+| **Untyped Payloads** | Using `@Body() body: any` in controllers | Validate all request payloads with explicit `class-validator` DTOs |
+| **Cross-Module Leak** | Importing ORM entities directly across module boundaries | Export domain interfaces or DTOs from the host module |
+| **Unit Test Isolation** | Running unit tests against live database connections | Mock `IFeatureRepository` methods using `jest.fn()` |
+| **Type Safety** | Using explicit `any` in service return signatures | Explicitly declare `Promise<FeatureEntity>` or `Promise<void>` |
