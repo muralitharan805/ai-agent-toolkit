@@ -1,6 +1,6 @@
 ---
-trigger: always_on
 description: "Enforces strict architectural boundaries, dependency injection practices, DTO validation, exception filtering, and configuration safety for long-term NestJS backend maintainability."
+trigger: model_decision
 ---
 # NestJS Architecture and Maintainability Standards
 
