@@ -7,28 +7,11 @@ description: "Mandates strict Cloudflare edge compatibility for Angular 21 SSR, 
 ## Description
 Enforces runtime safety, Vitest SSR test compliance, and Cloudflare Worker runtime restrictions for all Angular Server-Side Rendered (SSR) components and services.
 
-## Strict Rules
+## Constraints
 
 ### 1. Browser Global Access Guarding
 - NEVER directly reference `window`, `document`, `navigator`, `localStorage`, `sessionStorage`, or `location` at component initialization or constructor level.
-- ALWAYS inject `PLATFORM_ID` and check `isPlatformBrowser(platformId)` before executing browser APIs:
-
-```typescript
-import { Component, inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-
-@Component({ ... })
-export class ShowcaseComponent {
-  private platformId = inject(PLATFORM_ID);
-
-  ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      // Browser-only code execution
-      console.log(window.innerWidth);
-    }
-  }
-}
-```
+- ALWAYS inject `PLATFORM_ID` and check `isPlatformBrowser(platformId)` before executing browser APIs.
 
 ### 2. Node.js Native Module Restrictions
 - Do NOT import `fs`, `path`, `crypto` (Node native), `net`, or `child_process` in Angular SSR services or server routes. Cloudflare Workers execute on V8 isolate runtime (`workerd`), not standard Node.js binary.
@@ -39,3 +22,36 @@ export class ShowcaseComponent {
 
 ### 4. Hydration Safety
 - Ensure conditional layout elements (`*ngIf` / `@if`) depending on browser-only state (`isMobile`, `windowWidth`) do NOT render differently during server pre-rendering versus client hydration.
+
+## Examples
+
+- **Correct implementation:**
+```typescript
+import { Component, inject, PLATFORM_ID, OnInit } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+
+@Component({
+  selector: 'app-showcase',
+  standalone: true,
+  template: `<h1>SSR Safe Component</h1>`
+})
+export class ShowcaseComponent implements OnInit {
+  private readonly platformId = inject(PLATFORM_ID);
+
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Browser-only execution safely guarded
+      console.log(window.innerWidth);
+    }
+  }
+}
+```
+
+- **Incorrect implementation (FORBIDDEN):**
+```typescript
+@Component({ ... })
+export class ShowcaseComponent {
+  // CRITICAL ERROR: Direct window access during SSR throws ReferenceError in workerd!
+  private readonly windowWidth = window.innerWidth;
+}
+```

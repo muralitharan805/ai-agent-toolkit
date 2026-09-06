@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SkillEvaluationGrading",
+  "description": "Schema for Agent Skill evaluation report emitted by run_evals.py and eval-skill",
+  "type": "object",
+  "required": [
+    "skill_name",
+    "evaluated_at",
+    "quality_score_percent",
+    "verdict",
+    "summary",
+    "test_cases"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "skill_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evaluator": {
+      "type": "string"
+    },
+    "quality_score_percent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["passed", "needs_revision", "failed"]
+    },
+    "benchmark": {
+      "type": "object",
+      "properties": {
+        "baseline_pass_rate_percent": { "type": "number" },
+        "equipped_pass_rate_percent": { "type": "number" },
+        "delta_improvement_percent": { "type": "number" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_test_cases",
+        "passed_test_cases",
+        "total_assertions",
+        "passed_assertions"
+      ],
+      "properties": {
+        "total_test_cases": { "type": "integer", "minimum": 0 },
+        "passed_test_cases": { "type": "integer", "minimum": 0 },
+        "total_assertions": { "type": "integer", "minimum": 0 },
+        "passed_assertions": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "test_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "passed",
+          "assertions_total",
+          "assertions_passed",
+          "details"
+        ],
+        "properties": {
+          "id": {
+            "type": ["integer", "string"]
+          },
+          "name": {
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "assertions_total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "assertions_passed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["assertion", "passed", "evidence"],
+              "properties": {
+                "assertion": { "type": "string" },
+                "passed": { "type": "boolean" },
+                "evidence": { "type": "string" },
+                "remediation": { "type": ["string", "null"] }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

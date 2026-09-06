@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "ai-agent-toolkit-context",
+  "evaluated_at": "2026-09-06T10:34:41.347074+00:00",
+  "evaluator": "eval-skill-runner v1.0.0",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "benchmark": {
+    "baseline_pass_rate_percent": 50,
+    "equipped_pass_rate_percent": 100,
+    "delta_improvement_percent": 50
+  },
+  "summary": {
+    "total_test_cases": 2,
+    "passed_test_cases": 2,
+    "total_assertions": 8,
+    "passed_assertions": 8
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Toolkit Architecture & Core Concepts Orientation",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Identifies frameworks/, infra/, shared/, and domains/ directory taxonomy",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Explains the 5-pillar skill architecture (SKILL.md, references, scripts, assets, evals)",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Details the 4 rule triggers (model_decision default, always_on, glob, manual)",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Provides exact bin/sync-context.sh CLI commands for workspace (-w) and global (-g) sync",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "New Component Scaffolding & Validation Protocol",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Recommends using /generate-agent-suite or dedicated generator skills",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Mandates running validate_skill.py, validate_rule.py, or verify_suite.py CLI tools",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Strictly prohibits creating legacy standalone .agents/workflows/*.md files",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Enforces the Principal Architect mindset and zero-any type safety",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    }
+  ]
+}

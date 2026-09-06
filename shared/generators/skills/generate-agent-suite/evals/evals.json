@@ -1,0 +1,31 @@
+{
+  "skill_name": "generate-agent-suite",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create an agent suite for Next.js 15 Server Actions with strict validation using Zod and CSRF protection.",
+      "expected_output": "Analyzes requirements and generates a Domain Skill for Next.js Server Actions plus an Antigravity Rule enforcing CSRF protection and input validation.",
+      "assertions": [
+        "Outputs === AGENT SUITE ANALYSIS & DISCOVERY === block",
+        "Scaffolds or updates a modular Skill under frameworks/nextjs/skills/",
+        "Scaffolds or updates an Antigravity Rule under frameworks/nextjs/rules/",
+        "Does NOT generate legacy standalone .md workflows",
+        "Runs verify_suite.py on the resulting suite directory",
+        "Provides exact bin/sync-context.sh command"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Create an automated deployment pipeline for deploying NestJS microservices to AWS ECS with Fargate.",
+      "expected_output": "Recognizes procedural task and generates a Procedural Execution Skill with step-by-step checklist, rollback instructions, and pre-flight scripts.",
+      "assertions": [
+        "Classifies task as Archetype B (Procedural Execution Skill)",
+        "Generates SKILL.md with sequential checklist (- [ ] Step...)",
+        "Includes scripts/ for pre-flight deployment health check",
+        "Avoids legacy .agents/workflows/*.md format"
+      ],
+      "files": []
+    }
+  ]
+}

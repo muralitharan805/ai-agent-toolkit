@@ -1,0 +1,9 @@
+=== AGENT SUITE ANALYSIS & DISCOVERY ===
+Scenario: [Brief user request summary in professional English]
+Target Topic Directory: [e.g., frameworks/angular, infra/redis, shared/git, or domains/civicpath]
+Action Plan:
+  - Skill (Domain or Procedural): [UPDATE existing `...` OR CREATE new modular bundle `SKILL.md` + `references/` + `scripts/` + `evals/` OR SKIPPED]
+  - Rule: [UPDATE existing `...` OR CREATE new `...` OR SKIPPED (Provide clear 1-sentence technical rationale)]
+  - Workflow: DEPRECATED (Routed into Procedural Skill)
+Verification Command: python3 shared/generators/skills/generate-agent-suite/scripts/verify_suite.py [target-topic-directory]
+========================================

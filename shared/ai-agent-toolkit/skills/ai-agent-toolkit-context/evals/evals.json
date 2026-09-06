@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "ai-agent-toolkit-context",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Toolkit Architecture & Core Concepts Orientation",
+      "prompt": "I am working inside the ai-agent-toolkit repository. Can you explain the repository structure, how skills and rules are designed, and how to sync context?",
+      "expected_output": "Comprehensive architectural overview explaining frameworks, infra, shared, and domains, the 5-pillar skill structure, Antigravity rule triggers, and sync-context.sh usage.",
+      "assertions": [
+        "Identifies frameworks/, infra/, shared/, and domains/ directory taxonomy",
+        "Explains the 5-pillar skill architecture (SKILL.md, references, scripts, assets, evals)",
+        "Details the 4 rule triggers (model_decision default, always_on, glob, manual)",
+        "Provides exact bin/sync-context.sh CLI commands for workspace (-w) and global (-g) sync"
+      ],
+      "files": [
+        "shared/ai-agent-toolkit/skills/ai-agent-toolkit-context/SKILL.md",
+        "shared/ai-agent-toolkit/rules/ai-toolkit-authoring-rules.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "New Component Scaffolding & Validation Protocol",
+      "prompt": "How do I add a new skill or rule to ai-agent-toolkit, and how do I verify it before committing?",
+      "expected_output": "Step-by-step guidance utilizing /generate-agent-suite or generator tools, running automated python validators, and enforcing the sunset of legacy workflows.",
+      "assertions": [
+        "Recommends using /generate-agent-suite or dedicated generator skills",
+        "Mandates running validate_skill.py, validate_rule.py, or verify_suite.py CLI tools",
+        "Strictly prohibits creating legacy standalone .agents/workflows/*.md files",
+        "Enforces the Principal Architect mindset and zero-any type safety"
+      ],
+      "files": [
+        "shared/generators/skills/generate-agent-suite/scripts/verify_suite.py"
+      ]
+    }
+  ]
+}

@@ -22,7 +22,7 @@ SELECTORS=()
 START_TAG="<!-- AGENT_TOOLKIT_START -->"
 END_TAG="<!-- AGENT_TOOLKIT_END -->"
 
-# Default curated rules for global sync when no specific selector is provided
+# Default curated rules for global sync into ~/.gemini/GEMINI.md
 DEFAULT_GLOBAL_RULE_DIRS=(
   "shared/code-quality"
   "shared/communication"
@@ -30,6 +30,17 @@ DEFAULT_GLOBAL_RULE_DIRS=(
   "shared/package-management"
   "shared/security"
   "shared/git"
+)
+
+# Default curated modules synced when --global is invoked without arguments
+DEFAULT_GLOBAL_MODULES=(
+  "shared/code-quality"
+  "shared/communication"
+  "shared/logging"
+  "shared/package-management"
+  "shared/security"
+  "shared/git"
+  "shared/generators"
 )
 
 # ------------------------------------------------------------------------------
@@ -377,6 +388,49 @@ is_module_dir() {
   [[ -d "${dir}/skills" || -d "${dir}/rules" || -d "${dir}/workflows" || -d "${dir}/plugins" ]]
 }
 
+prune_retired_generator_artifacts() {
+  local retired_wfs=(
+    "audit-agent-toolkit.md"
+    "consolidate-agent-toolkit.md"
+    "eval-skill.md"
+    "generate-agent-suite.md"
+    "generate-prompt.md"
+    "generate-rule.md"
+    "generate-skill.md"
+    "generate-workflow.md"
+  )
+
+  if [[ "$IS_GLOBAL" == true ]]; then
+    for wf in "${retired_wfs[@]}"; do
+      if [[ -f "${TARGET_GLOBAL_WORKFLOWS_DIR}/${wf}" ]]; then
+        rm -f "${TARGET_GLOBAL_WORKFLOWS_DIR}/${wf}"
+        echo "  [Prune] 🗑️ Removed retired global workflow: ${wf}"
+      fi
+      if [[ -f "${TARGET_WORKFLOWS_DIR}/${wf}" ]]; then
+        rm -f "${TARGET_WORKFLOWS_DIR}/${wf}"
+      fi
+    done
+    if [[ -d "${TARGET_CONFIG_SKILLS_DIR}/skill-authoring-standards" ]]; then
+      rm -rf "${TARGET_CONFIG_SKILLS_DIR}/skill-authoring-standards"
+      echo "  [Prune] 🗑️ Removed merged skill: skill-authoring-standards"
+    fi
+    if [[ -d "${TARGET_SKILLS_DIR}/skill-authoring-standards" ]]; then
+      rm -rf "${TARGET_SKILLS_DIR}/skill-authoring-standards"
+    fi
+  else
+    for wf in "${retired_wfs[@]}"; do
+      if [[ -f "${TARGET_WORKFLOWS_DIR}/${wf}" ]]; then
+        rm -f "${TARGET_WORKFLOWS_DIR}/${wf}"
+        echo "  [Prune] 🗑️ Removed retired workspace workflow: ${wf}"
+      fi
+    done
+    if [[ -d "${TARGET_SKILLS_DIR}/skill-authoring-standards" ]]; then
+      rm -rf "${TARGET_SKILLS_DIR}/skill-authoring-standards"
+      echo "  [Prune] 🗑️ Removed merged skill: skill-authoring-standards"
+    fi
+  fi
+}
+
 # ------------------------------------------------------------------------------
 # Dynamic Path Resolution & Classifier (Zero Hardcoding)
 # ------------------------------------------------------------------------------
@@ -608,7 +662,7 @@ main() {
   else
     if [[ "$IS_GLOBAL" == true ]]; then
       echo "🌐 Syncing Curated Universal Global Context..."
-      for default_dir in "${DEFAULT_GLOBAL_RULE_DIRS[@]}"; do
+      for default_dir in "${DEFAULT_GLOBAL_MODULES[@]}"; do
         local resolved
         if resolved="$(resolve_selector_path "$default_dir")"; then
           dispatch_path "$resolved"
@@ -623,6 +677,9 @@ main() {
       fi
     fi
   fi
+
+  # Prune retired generator artifacts (migrated workflows and merged skills)
+  prune_retired_generator_artifacts
 
   if [[ "$IS_GLOBAL" == true ]]; then
     update_global_gemini_md

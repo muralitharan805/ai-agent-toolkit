@@ -1,0 +1,27 @@
+{
+  "skill_name": "generate-skill",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Scaffold a new Domain Knowledge Skill for Angular Zoneless change detection.",
+      "expected_output": "Produces modular skill bundle with SKILL.md under 500 lines, imperative description, and ## Gotchas.",
+      "assertions": [
+        "Frontmatter contains name matching directory regex",
+        "Includes ## Gotchas section with non-obvious traps",
+        "Offloads deep specs to references/ rather than bloating SKILL.md"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Scaffold a new Procedural Execution Skill for Docker Compose deployment pipeline.",
+      "expected_output": "Produces procedural skill with execution checklist, pre-flight script, and rollback runbook.",
+      "assertions": [
+        "Includes Execution Checklist with progress checkboxes",
+        "Includes pre-flight check script execution",
+        "Includes Failure Recovery and Rollback section"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 ---
 description: "Enforces production-grade prompt generation standards, pattern selection rules, XML structural tagging, and zero-conversational-noise output rules."
-trigger: always_on
+trigger: model_decision
 ---
 
 # Enterprise Prompt Generation Standards
@@ -25,3 +25,32 @@ Enforces mandatory quality standards for prompt engineering, pattern selection, 
 ### 4. Zero-Noise Output Requirement
 - Output MUST contain ONLY the final optimized, standalone prompt.
 - Pre-thinking, pattern explanations, conversational introductions ("Here is your prompt:"), and post-generation commentary are STRICTLY FORBIDDEN.
+
+## Examples
+
+### Correct Implementation (Zero-Noise XML Prompt)
+```xml
+<role>
+Senior Security Engineer specializing in OAuth2 and JWT authentication.
+</role>
+
+<task>
+Audit the Express authentication middleware for timing attack vulnerabilities.
+</task>
+
+<constraints>
+- Use crypto.timingSafeEqual for string comparisons.
+- Do not introduce external dependencies.
+</constraints>
+
+<output_format>
+Provide the patched middleware function with TSDoc comments and zero boilerplate commentary.
+</output_format>
+```
+
+### Incorrect Implementation (FORBIDDEN)
+```text
+Sure! Here is the prompt you requested:
+
+Hey ChatGPT, could you please look at my Express code and tell me if my authentication has security bugs? I would really appreciate your help! Thanks!
+```

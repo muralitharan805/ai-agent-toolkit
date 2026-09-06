@@ -1,0 +1,58 @@
+---
+name: consolidate-agent-toolkit
+description: "Audits ai-agent-toolkit workspace, discovers fragmented skills and rules, semantically merges them by topic, cleans up duplicates, and syncs README.md. Triggered by 'consolidate:', 'grouping:', or '/consolidate-agent-toolkit'."
+---
+
+# Consolidate Agent Toolkit (`consolidate-agent-toolkit`)
+
+## Persona
+Act as a Principal Knowledge Architect and Systems Optimizer. You specialize in auditing AI agent knowledge bases, scanning workspace files (`frameworks/`, `infra/`, `shared/`, `.agents/`), identifying semantically related or fragmented skills and rules, grouping them logically into cohesive topic suites, merging content without data loss, and eliminating redundant duplicate files.
+
+---
+
+## Task Execution Protocol
+
+### Step 1: Workspace Inventory & Semantic Scan
+Recursively scan all files in `frameworks/`, `infra/`, `shared/`, `domains/`, and `.agents/`:
+- **EXCLUSION**: Completely ignore the `shared/generators/` directory. This contains intentional definitions for specific project use cases and MUST NOT be scanned, audited, merged, or deleted.
+- Inventory all `SKILL.md` files and `.md` rules.
+- Group files semantically by primary topic (e.g., Angular, NestJS, Strapi, Docker, Postgres, Redis, Git, Security, Domains).
+- Identify overlapping or duplicate topics (e.g., multiple skills discussing the same framework features or multiple rules enforcing similar constraints).
+- Identify misplaced files (e.g., framework-specific rules placed in `shared/`).
+
+### Step 2: Output Consolidation Audit Report
+Before mutating workspace files, print a structured Audit Report:
+
+```
+=== TOOLKIT CONSOLIDATION & GROUPING AUDIT ===
+Workspace Files Audited: [Total count]
+Topics Discovered: [List of topics: e.g. frameworks/angular, infra/docker, domains/sample-app, shared/git]
+
+Proposed Merges & Relocations:
+1. [Merge source-file.md ➔ into target-file.md (Rationale)]
+2. [Move misplaced-file.md ➔ to correct-topic-directory (Rationale)]
+
+Redundant Files to Remove:
+- [List files scheduled for cleanup after merge]
+==============================================
+```
+
+### Step 3: Semantic Merge & Relocation Protocol
+1. **Content Preservation & Boundary Limits**: When merging two files on the same topic, preserve all non-trivial instructions, unique code examples, constraints, and frontmatter metadata. Never delete unique knowledge. Ensure merged rule files stay strictly under the 12,000-character limit, and skills stay under 500 lines.
+2. **Directory Normalization**: Ensure target files reside in canonical topic directories:
+   - Frameworks: `frameworks/[framework]/[skills|rules]/`
+   - Infrastructure: `infra/[tool]/[skills|rules]/`
+   - Private Domains: `domains/[name]/[skills|rules]/`
+   - Shared/Cross-cutting: `shared/[topic]/[skills|rules]/`
+3. **Trigger Validation**: Ensure merged rules use appropriate triggers (`model_decision`, `glob`, `always_on`, or `manual`), avoiding blanket `always_on` defaults.
+4. **Cleanup**: Safely remove empty or fully merged duplicate files.
+
+### Step 4: README & Index Auto-Sync
+After completing file merges and restructuring:
+- Update the directory tree diagram in `README.md` to accurately reflect the current clean topic structure.
+- Verify that all generator paths and triggers remain intact.
+
+## Gotchas
+- NEVER delete or merge files inside the `shared/generators/` directory.
+- NEVER delete unique technical knowledge during consolidation; always merge into the master topic file.
+- All new sequential procedures should be scaffolded as Procedural Skills, not legacy workflows.

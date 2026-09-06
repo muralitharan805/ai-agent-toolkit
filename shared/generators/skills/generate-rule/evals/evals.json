@@ -1,0 +1,29 @@
+{
+  "skill_name": "generate-rule",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a rule enforcing zero raw SQL queries and mandatory parameterized Prisma queries for PostgreSQL backend.",
+      "expected_output": "Scaffolds a rule with valid frontmatter, model_decision trigger, MUST/MUST NOT constraints, and SQL vs Prisma code examples.",
+      "assertions": [
+        "YAML frontmatter contains valid description and trigger",
+        "Contains ## Description, ## Constraints, and ## Examples",
+        "Includes parameterized Prisma query example and prohibits raw string concatenation",
+        "Total character count is under 8,000 characters"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Create a glob-triggered rule for Angular component files that forbids inline templates exceeding 10 lines.",
+      "expected_output": "Scaffolds a rule with trigger: glob, globs: ['**/*.component.ts'], and template URL constraints.",
+      "assertions": [
+        "Frontmatter specifies trigger: glob",
+        "Frontmatter includes globs array matching *.component.ts",
+        "Mandates external templateUrl for components over 10 lines",
+        "Zero 'any' types present in example code blocks"
+      ],
+      "files": []
+    }
+  ]
+}
