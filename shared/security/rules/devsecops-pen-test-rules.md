@@ -36,13 +36,50 @@ Enforces mandatory security controls, vulnerability scanning, security header pr
 - **No Sensitive Data in `.env.example`**: The `.env.example` file MUST NEVER contain real sensitive data (use placeholder values like `your_api_key_here`).
 - **Junior-Friendly Documentation**: The agent MUST add a clear, descriptive comment above every variable in `.env.example`. The comment must explain what the variable does, its expected format, and where to obtain it, so that any junior developer or newcomer can easily set up the project without confusion.
 
+## Examples
+
+### 1. Parameterized Query vs Forbidden Raw Concatenation
 ```typescript
-// Correct implementation
-const dbUri = process.env.DATABASE_URL;
-if (!dbUri) {
-  throw new Error("DATABASE_URL environment variable is required");
+// ✅ CORRECT: Parameterized ORM prepared query prevents SQL Injection
+async function findUserByEmail(email: string): Promise<User | null> {
+  return prisma.user.findUnique({
+    where: { email },
+  });
 }
 
-// Incorrect implementation (FORBIDDEN)
-const dbUri = "postgres://admin:secretpassword123@localhost:5432/mydb"; // Security Risk!
+// ❌ FORBIDDEN: String concatenation vulnerable to SQL Injection
+async function findUserByEmail(email: string): Promise<User | null> {
+  return prisma.$queryRawUnsafe(`SELECT * FROM users WHERE email = '${email}'`);
+}
+```
+
+### 2. Secure HTTP-Only Cookie Authentication vs Insecure Storage
+```typescript
+// ✅ CORRECT: Secure HTTP-Only, SameSite cookie prevents XSS token theft
+response.cookie('refreshToken', token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+});
+
+// ❌ FORBIDDEN: Storing sensitive refresh tokens in browser localStorage
+localStorage.setItem('refreshToken', token); // Vulnerable to XSS exfiltration!
+```
+
+### 3. Junior-Friendly `.env.example` Documentation & Strict Parity
+```bash
+# ==============================================================================
+# Database Connection URI
+# Format: postgresql://[user]:[password]@[host]:[port]/[database]?schema=public
+# Source: Obtain from your local Docker Compose service or AWS RDS instance
+# ==============================================================================
+DATABASE_URL="postgresql://postgres:your_local_password@localhost:5432/myapp_dev?schema=public"
+
+# ==============================================================================
+# JWT Secret Signing Key
+# Format: Minimum 32-character high-entropy cryptographic string
+# Generation: Run `openssl rand -base64 32` to generate a secure key
+# ==============================================================================
+JWT_SECRET="replace_with_32_char_cryptographic_secret_key"
 ```
