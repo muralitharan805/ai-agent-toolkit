@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "audit-agent-toolkit",
+  "evaluated_at": "2026-09-06T10:46:00.686371+00:00",
+  "evaluator": "eval-skill-runner v1.0.0",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "benchmark": {
+    "baseline_pass_rate_percent": 50,
+    "equipped_pass_rate_percent": 100,
+    "delta_improvement_percent": 50
+  },
+  "summary": {
+    "total_test_cases": 2,
+    "passed_test_cases": 2,
+    "total_assertions": 7,
+    "passed_assertions": 7
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Ecosystem Health & Hard Limits Audit",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Executes scripts/audit_toolkit.py across the repository root",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Audits line counts for skills (must be <= 500 lines) and character limits for rules (<= 12,000 chars)",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Flags deprecated standalone workflows slated for retirement on November 1, 2026",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Validates open-source security isolation ensuring zero proprietary domain leaks",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Global Parity & Token Budget Audit",
+      "passed": true,
+      "assertions_total": 3,
+      "assertions_passed": 3,
+      "details": [
+        {
+          "assertion": "Checks character count of ~/.gemini/GEMINI.md against the 12,000 character limit",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Identifies orphan skills or stale rules in ~/.gemini/ not present in the toolkit",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Outputs structured visual health scorecard with overall ecosystem percentage",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "consolidate-agent-toolkit",
+  "evaluated_at": "2026-09-06T10:47:35.691380+00:00",
+  "evaluator": "eval-skill-runner v1.0.0",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "benchmark": {
+    "baseline_pass_rate_percent": 50,
+    "equipped_pass_rate_percent": 100,
+    "delta_improvement_percent": 50
+  },
+  "summary": {
+    "total_test_cases": 2,
+    "passed_test_cases": 2,
+    "total_assertions": 6,
+    "passed_assertions": 6
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Scan and Identify Duplicate & Fragmented Clusters",
+      "passed": true,
+      "assertions_total": 3,
+      "assertions_passed": 3,
+      "details": [
+        {
+          "assertion": "Executes scripts/scan_duplicates.py across the repository or specified module",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Clusters related skills and rules by semantic topic and identifies merge candidates",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Strictly excludes shared/generators and internal auxiliary directories from modification",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Execute Zero-Loss 5-Pillar Skill Consolidation",
+      "passed": true,
+      "assertions_total": 3,
+      "assertions_passed": 3,
+      "details": [
+        {
+          "assertion": "Follows the 4-stage merge protocol from references/merging-and-deduplication-playbook.md",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Preserves all unique instructions, code examples, schemas, and Gotchas in the master bundle",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Validates the master skill bundle with validate_skill.py and runs evals",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    }
+  ]
+}

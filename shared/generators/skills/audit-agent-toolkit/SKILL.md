@@ -6,50 +6,107 @@ description: "Audits ai-agent-toolkit and global configuration for character lim
 # Audit Agent Toolkit (`audit-agent-toolkit`)
 
 ## Persona
-Act as a Principal AI Systems Auditor and Quality Control Inspector. You specialize in auditing AI agent knowledge bases (`frameworks/`, `infra/`, `shared/`, `domains/`, `.agents/`, `~/.gemini/`), verifying strict boundary limits, checking global parity, validating frontmatter GUI compatibility, and enforcing open-source security isolation.
+Act as a Principal AI Systems Auditor and Ecosystem Quality Inspector. You specialize in auditing AI agent knowledge bases (`frameworks/`, `infra/`, `shared/`, `domains/`, `.agents/`, `~/.gemini/`), verifying strict token budgets, validating frontmatter GUI compatibility, detecting deprecated workflows, checking global parity, and enforcing open-source security isolation.
 
 ---
 
-## Task Execution Protocol
+## 5-Pillar Directory Map
 
-### Step 1: Ecosystem Boundary & Size Audit
-Recursively inspect all files in `frameworks/`, `infra/`, `shared/`, `domains/`, `.agents/`, and `~/.gemini/`:
-1. **Rule Size & Modularity**: Flag warnings for rules exceeding **10,000 characters** (recommending modular split), and FAIL if any `.md` rule exceeds **12,000 characters** (Hard IDE truncation limit).
-2. **Skill Size Limit**: Ensure no `SKILL.md` exceeds **500 lines** (reference material must be in `references/`, `examples/`, or `scripts/`).
-3. **Global GEMINI.md Specification**: Ensure global rules are upserted exclusively into `~/.gemini/GEMINI.md` per official Antigravity specification (legacy `AGENTS.md` must remain clean).
-4. **Global Customizations Token Budget Limit**: Ensure total content in `~/.gemini/GEMINI.md` remains strictly under the **12,000 characters** hard limit to prevent system prompt truncation, and verify zero framework-specific rules (`angular-*`, `nestjs-*`, `docker-*`) leak into global scope.
-
-### Step 2: Global Parity & Sync Audit (`~/.gemini/` vs Toolkit)
-1. Verify that all global skills in `~/.gemini/antigravity/skills/` and `~/.gemini/config/skills/` originate from `ai-agent-toolkit`.
-2. Flag any stale or orphan global skills/rules in `~/.gemini/` that no longer exist in `ai-agent-toolkit`.
-
-### Step 3: Frontmatter & GUI Syntax Audit
-1. **Skills**: Must include valid `name:` (kebab-case, matches directory) and `description:` (third-person routing statement).
-2. **Rules**: Must include a valid official trigger (`always_on`, `model_decision`, `glob` with `globs: [...]`, or `manual`), plus a clear `description:`.
-
-### Step 4: Open-Source Security & Isolation Audit
-1. **Gitignore Protection**: Verify that `.gitignore` contains `domains/*` (and `!domains/README.md`).
-2. **Domain Isolation**: Ensure zero proprietary project keywords (`nidhiflow`, `seyalicraft`, `civicpath`, `finance`, `docker-dev-infra`) leak into open-source public folders (`frameworks/`, `infra/`, `shared/`).
+```text
+shared/generators/skills/audit-agent-toolkit/
+├── SKILL.md                                        # Tier 2 Core Audit Protocol (< 500 lines)
+├── references/
+│   └── audit-criteria-and-token-budgets.md         # Detailed token ceilings and isolation criteria
+├── scripts/
+│   └── audit_toolkit.py                            # Standalone whole-repo CLI audit utility (PEP 723)
+└── evals/
+    ├── evals.json                                  # Objective test cases for ecosystem audit
+    └── grading.json                                # Automated verification scorecard
+```
 
 ---
 
-## Output Audit Scorecard Format
+## Authoritative Reference Grounding
+Consult the bundled reference guides and tools:
+- [Audit Criteria & Token Budgets](references/audit-criteria-and-token-budgets.md): Exact character ceilings, line limits, and domain isolation criteria.
+- [AI Toolkit Authoring Standards Rule](../../../ai-agent-toolkit/rules/ai-toolkit-authoring-rules.md): Supreme governing authoring rule for the repository.
+- [Audit CLI Script](scripts/audit_toolkit.py): Automated tool executing comprehensive whole-repo inspection.
 
-Print a structured visual Health Scorecard summary upon completing the audit:
+---
 
+## Task Protocol
+
+### Phase 1: Preparation & Target Identification
+1. Identify whether the audit is targeting the **local repository**, a **specific module**, or includes **global context** (`~/.gemini/`).
+2. Read [references/audit-criteria-and-token-budgets.md](references/audit-criteria-and-token-budgets.md) to review the 4 audit dimensions.
+
+---
+
+### Phase 2: Automated CLI Ecosystem Audit
+Execute the bundled audit utility directly via terminal:
+
+```bash
+# Standard whole-repo audit:
+python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py
+
+# Machine-readable JSON output:
+python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py --json
+
+# Strict mode (warnings treated as failures):
+python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py --strict
+
+# Include global ~/.gemini/ parity check:
+python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py --check-global
 ```
-=== 🛡️ AI AGENT ECOSYSTEM HEALTH AUDIT ===
-Files Audited: [Total count]
 
-1. 📏 Size & Boundary Limits   : [PASS / FAIL - Details]
-2. 🔄 Global Parity (~/.gemini)   : [PASS / FAIL - Details]
-3. 🏷️ Frontmatter GUI Syntax    : [PASS / FAIL - Details]
-4. 🔒 Open-Source Security        : [PASS / FAIL - Details]
+---
 
-Overall Ecosystem Health Score: [Score / 100 🟢/🔴]
-==============================================
+### Phase 3: Evaluating the 4 Audit Dimensions
+
+The audit script inspects:
+1. **📏 Size & Boundary Limits**:
+   - Every `SKILL.md` MUST be $\le 500$ lines.
+   - Every `.md` rule file MUST be $\le 12,000$ characters (warns if $> 8,000$ chars).
+2. **🏷️ YAML Frontmatter & GUI Syntax**:
+   - Skills must have valid `name:` matching directory and imperative `description:`.
+   - Rules must have valid `trigger:` (`model_decision`, `glob`, `always_on`, `manual`).
+3. **⚠️ Deprecated Workflows**:
+   - Flags any legacy standalone `.agents/workflows/*.md` or `workflows/` files slated for retirement on November 1, 2026.
+4. **🔒 Open-Source Security & Domain Isolation**:
+   - Ensures zero proprietary domain tokens (`nidhiflow`, `civicpath`, `seyalicraft`, `docker-dev-infra`) leak into open-source public folders (`frameworks/`, `infra/`, `shared/`).
+5. **🌐 Global Parity (`~/.gemini/`)**:
+   - Checks `~/.gemini/GEMINI.md` total characters ($\le 12,000$).
+   - Flags orphan skills in `~/.gemini/` that no longer exist in `ai-agent-toolkit`.
+
+---
+
+### Phase 4: Scorecard Presentation & Remediation Protocol
+
+1. Present the visual Health Scorecard to the user:
+
+```text
+========================================================
+🛡️  AI AGENT TOOLKIT ECOSYSTEM HEALTH AUDIT
+========================================================
+Repository Root    : [path]
+Overall Health     : [Score]% [🟢/🟡/🔴]
+Status             : [PASS 🟢 | NEEDS ATTENTION 🔴]
+--------------------------------------------------------
+📦 Skills Audited  : [Passed]/[Total] Passed
+📜 Rules Audited   : [Passed]/[Total] Passed
+⚠️  Deprecated WFs : [Count] Found
+🔒 Domain Security : [CLEAN 🟢 | LEAK DETECTED 🔴]
+========================================================
 ```
+
+2. **Remediation Action Plan**:
+   - If a rule exceeds 12,000 characters: Recommend splitting into focused sub-rules using `model_decision` or `glob`.
+   - If a skill exceeds 500 lines: Move reference manuals to `references/` or code to `scripts/`.
+   - If deprecated workflows exist: Propose migrating them to 5-pillar **Procedural Skills**.
+
+---
 
 ## Gotchas
-- Antigravity IDE enforces a hard 12,000 character cutoff on rules. Never allow a rule file to exceed 12,000 characters.
-- Never allow proprietary domain tokens or project keys in public open-source skills.
+- **Hard Truncation Ceiling**: Antigravity IDE enforces a hard 12,000-character cutoff on rules. Never allow a rule file to approach 12,000 characters.
+- **Factory Protection**: Never alter or delete generator skills under `shared/generators/`.
+- **Zero Proprietary Leaks**: Public open-source commits must never leak private company domain keys or names.

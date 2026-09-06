@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "audit-agent-toolkit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Ecosystem Health & Hard Limits Audit",
+      "prompt": "Run a full health and security audit on the ai-agent-toolkit repository and output an ecosystem scorecard.",
+      "expected_output": "Comprehensive audit report inspecting all skills, rules, deprecated workflows, and domain isolation with a visual scorecard.",
+      "assertions": [
+        "Executes scripts/audit_toolkit.py across the repository root",
+        "Audits line counts for skills (must be <= 500 lines) and character limits for rules (<= 12,000 chars)",
+        "Flags deprecated standalone workflows slated for retirement on November 1, 2026",
+        "Validates open-source security isolation ensuring zero proprietary domain leaks"
+      ],
+      "files": [
+        "shared/generators/skills/audit-agent-toolkit/SKILL.md",
+        "shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Global Parity & Token Budget Audit",
+      "prompt": "Audit ~/.gemini/ global configuration against the toolkit to check for orphan skills and token budget limits in GEMINI.md.",
+      "expected_output": "Global audit report analyzing GEMINI.md character count against the 12,000 limit and identifying orphan global skills.",
+      "assertions": [
+        "Checks character count of ~/.gemini/GEMINI.md against the 12,000 character limit",
+        "Identifies orphan skills or stale rules in ~/.gemini/ not present in the toolkit",
+        "Outputs structured visual health scorecard with overall ecosystem percentage"
+      ],
+      "files": [
+        "shared/generators/skills/audit-agent-toolkit/references/audit-criteria-and-token-budgets.md"
+      ]
+    }
+  ]
+}
