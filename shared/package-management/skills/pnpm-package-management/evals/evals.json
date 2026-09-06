@@ -1,0 +1,44 @@
+{
+  "skill_name": "pnpm-package-management",
+  "evals": [
+    {
+      "id": 1,
+      "name": "pnpm Monorepo Workspace Filtering & Command Execution",
+      "prompt": "Configure a multi-package monorepo using pnpm-workspace.yaml, add dependencies with workspace:* protocol, and run build across filtered packages.",
+      "expected_output": "Defines pnpm-workspace.yaml with package globs, links internal packages with workspace:*, and demonstrates pnpm --filter commands.",
+      "assertions": [
+        "Defines pnpm-workspace.yaml declaring apps/* and packages/* packages",
+        "Uses workspace:* or workspace:^ protocol for internal dependencies",
+        "Executes targeted build scripts using pnpm --filter syntax",
+        "Runs recursive scripts topologically with pnpm -r"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Prohibition of npm/yarn & Lockfile Hygiene Enforcement",
+      "prompt": "Audit a repository containing stray package-lock.json and yarn.lock files, map forbidden npm commands to pnpm, and enforce single lockfile hygiene.",
+      "expected_output": "Identifies and prunes stray lockfiles, maps npm install to pnpm install, and commits exclusively pnpm-lock.yaml.",
+      "assertions": [
+        "Identifies and deletes stray package-lock.json and yarn.lock files",
+        "Enforces single authoritative pnpm-lock.yaml in version control",
+        "Maps npm i / yarn add commands to pnpm add",
+        "Replaces npx CLI execution with pnpm dlx or pnpm exec"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "CI/CD Frozen Lockfile & Corepack Engine Verification",
+      "prompt": "Configure root package.json with Corepack packageManager pinning and write a CI/CD build script enforcing frozen lockfiles.",
+      "expected_output": "Pins packageManager: pnpm@... in package.json and configures CI pipeline with pnpm install --frozen-lockfile.",
+      "assertions": [
+        "Pins exact pnpm version in package.json via packageManager field",
+        "Configures CI/CD install script using pnpm install --frozen-lockfile",
+        "Enables Corepack via corepack enable in automated environments",
+        "Prevents unexpected lockfile mutations during build execution"
+      ],
+      "files": []
+    }
+  ]
+}

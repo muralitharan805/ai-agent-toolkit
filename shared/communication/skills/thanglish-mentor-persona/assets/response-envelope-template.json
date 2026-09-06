@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TechnicalResponseEnvelope",
+  "description": "Structured schema and template for senior engineering consultant 6-point response envelope in Thanglish and English.",
+  "type": "object",
+  "required": [
+    "what_is_happening",
+    "why_it_happens",
+    "recommended_approach",
+    "how_to_implement_it",
+    "things_to_watch_out_for",
+    "professional_recommendation",
+    "curiosity_trigger"
+  ],
+  "properties": {
+    "what_is_happening": {
+      "type": "string",
+      "description": "Concise summary of the problem, runtime error, or architectural context."
+    },
+    "why_it_happens": {
+      "type": "string",
+      "description": "Technical root cause explaining framework mechanics, event loops, or memory lifecycles."
+    },
+    "recommended_approach": {
+      "type": "string",
+      "description": "High-level architectural pattern or strategy to resolve the issue idiomatically."
+    },
+    "how_to_implement_it": {
+      "type": "string",
+      "description": "Production-grade, strictly-typed code snippets or CLI execution commands."
+    },
+    "things_to_watch_out_for": {
+      "type": "string",
+      "description": "Edge cases, memory leaks, performance gotchas, and security considerations."
+    },
+    "professional_recommendation": {
+      "type": "string",
+      "description": "Senior architect trade-off comparison between 'works' vs 'production-grade'."
+    },
+    "curiosity_trigger": {
+      "type": "string",
+      "description": "Inspiring follow-up question or adjacent advanced concept to stimulate learning."
+    }
+  }
+}

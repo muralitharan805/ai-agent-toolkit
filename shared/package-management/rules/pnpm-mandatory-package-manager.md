@@ -2,14 +2,15 @@
 trigger: always_on
 description: "Mandates that pnpm MUST be used as the exclusive package manager for installing dependencies, running scripts, and executing CLI binaries across all projects. Prohibits raw npm or yarn usage."
 ---
+
 # Mandatory `pnpm` Package Manager Rule
 
 ## Description
 Enforces `pnpm` as the single, authoritative package manager for all projects. Eliminates disk bloat, prevents phantom dependency leakage, and guarantees fast, deterministic builds via `pnpm-lock.yaml`.
 
-## Strict Command Mappings & Restrictions
+## Constraints
 
-### 1. Package Installation Commands
+### 1. Package Installation & Script Commands
 - NEVER use `npm install`, `npm i`, `yarn add`, or `yarn install`.
 - ALWAYS use `pnpm` equivalent commands:
 
@@ -36,3 +37,37 @@ Enforces `pnpm` as the single, authoritative package manager for all projects. E
 
 ### 4. CI/CD Pipeline Protocol
 - CI/CD build scripts MUST use `pnpm install --frozen-lockfile` to ensure zero unexpected lockfile mutations.
+
+## Examples
+
+### 1. Correct vs. Forbidden Dependency Management
+```bash
+# ❌ FORBIDDEN: Using npm or yarn to add packages
+npm install @angular/material
+yarn add lodash
+
+# ✅ CORRECT: Using authoritative pnpm commands
+pnpm add @angular/material
+pnpm add -D @types/lodash
+```
+
+### 2. Executing One-Off Binaries
+```bash
+# ❌ FORBIDDEN: Using npx for binary execution
+npx prisma generate
+npx eslint src/
+
+# ✅ CORRECT: Using pnpm dlx or pnpm exec
+pnpm exec prisma generate
+pnpm exec eslint src/
+```
+
+### 3. Corepack & Frozen Lockfile Invariant in CI/CD
+```bash
+# ❌ FORBIDDEN: Un-frozen lockfile installs in CI
+pnpm install
+
+# ✅ CORRECT: Deterministic CI pipeline setup
+corepack enable
+pnpm install --frozen-lockfile
+```

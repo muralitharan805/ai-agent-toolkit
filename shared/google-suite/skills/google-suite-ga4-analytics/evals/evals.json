@@ -1,0 +1,44 @@
+{
+  "skill_name": "google-suite-ga4-analytics",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Measurement ID & Subdomain Data Stream Isolation",
+      "prompt": "Configure GA4 for a multi-service platform where app, tools, and marketing sites reside on separate subdomains without cross-traffic pollution.",
+      "expected_output": "Configures isolated Web Data Streams with dedicated G-XXXXXXXXXX IDs and loads gtag.js asynchronously.",
+      "assertions": [
+        "Loads gtag.js asynchronously via official googletagmanager.com URL",
+        "Configures dedicated Measurement ID per subdomain without cross-stream pollution",
+        "Initializes global dataLayer array and gtag helper function safely",
+        "Uses valid GA4 Measurement ID syntax matching G-[A-Z0-9]+"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "SPA Route Tracking & Duplicate Pageview Prevention",
+      "prompt": "Integrate GA4 in an Angular Single Page Application, preventing duplicate initial pageviews and capturing client-side route transitions.",
+      "expected_output": "Disables automatic page_view in initial config and dispatches page_view events on router navigation completion.",
+      "assertions": [
+        "Configures send_page_view: false in initial gtag config call",
+        "Subscribes to router navigation events to track SPA view transitions",
+        "Dispatches explicit page_view event with page_path and page_title",
+        "Guards analytics service against server-side rendering execution"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Custom Event Taxonomy & PII Redaction",
+      "prompt": "Implement custom event tracking for user actions while enforcing snake_case naming conventions and strictly preventing PII transmission.",
+      "expected_output": "Emits valid custom events adhering to length and naming constraints while redacting passwords, emails, and sensitive tokens.",
+      "assertions": [
+        "Enforces snake_case event names within 40-character length boundary",
+        "Avoids reserved Google prefixes (_/ga_/google_/firebase_)",
+        "Strips passwords, auth tokens, and plaintext emails from event parameters",
+        "Wraps gtag calls with defensive runtime existence checks"
+      ],
+      "files": []
+    }
+  ]
+}

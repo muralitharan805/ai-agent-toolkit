@@ -1,0 +1,30 @@
+{
+  "catalog_name": "Curiosity Trigger Bank for Senior AI Mentorship",
+  "version": "1.0.0",
+  "domains": [
+    {
+      "domain": "Angular Modern Reactivity (v19+)",
+      "triggers": [
+        "Angular 19-la `rxResource` pathi therinjuka aasaiya iruka? Idhu async HTTP requests-ah automatic abort/cancellation semantics-oda declarative signals-ah convert pannum!",
+        "`linkedSignal` eppo use pannanum nu theriyuma? Parent signal change aagumbodhu local state reset aaga idhu dhaan modern Angular idiomatic solution!",
+        "Angular Zoneless mode (`provideExperimentalZonelessChangeDetection`) run pannum bodhu microtask change detection evlo lightning-fast aagum theriyuma?"
+      ]
+    },
+    {
+      "domain": "NestJS Backend & Microservices",
+      "triggers": [
+        "NestJS-la custom `AsyncLocalStorage` use panni request context and correlation ID-ah controllers to deep database repositories varaikum parameter illama pass panra magic pathi therinjuka aasaiya iruka?",
+        "Redis Streams vs BullMQ job queues - high throughput transactional message processing-ku edhu best nu architectural comparison paaklama?",
+        "Clean Architecture-la Domain Entities vs Prisma/TypeORM Models strict separation maintain panradhu edhuku enterprise-la mandatory theriyuma?"
+      ]
+    },
+    {
+      "domain": "Performance, Memory & DevSecOps",
+      "triggers": [
+        "Chrome DevTools MCP-la accessibility tree snapshot (`take_snapshot`) edukuradhum, full HTML DOM parse panradhukum naduvula token consumption difference evlo irukum theriyuma? Snapshot use panna 80%+ context tokens save aagum!",
+        "V8 engine-la Hidden Classes and Inline Caches (IC) object shapes dynamic-ah change pannumbodhu evlo de-optimization create pannum theriyuma?",
+        "OWASP Top 10-la NoSQL / SQL Injection prevent panna parameterized queries why 100% effective over regex sanitization nu deep dive panlama?"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "skill_name": "google-suite-adsense-monetization",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Publisher ID & Script Placement",
+      "prompt": "Embed Google AdSense publisher script in document head with async execution and configure a responsive ad unit with client ID.",
+      "expected_output": "Injects official adsbygoogle.js script tag with ca-pub-XXXXXXXXXXXXXXXX syntax and responsive ins container.",
+      "assertions": [
+        "Loads adsbygoogle.js asynchronously in document head",
+        "Includes crossorigin='anonymous' attribute on script tag",
+        "Validates 16-digit publisher account syntax (ca-pub-XXXXXXXXXXXXXXXX)",
+        "Configures responsive ad unit with data-ad-client and data-ad-slot"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Cumulative Layout Shift (CLS) Prevention",
+      "prompt": "Design CSS layout wrapper for an AdSense banner to reserve height dynamically and prevent Core Web Vitals CLS layout shifts.",
+      "expected_output": "Reserves container space using CSS min-height to eliminate content displacement when asynchronous ads render.",
+      "assertions": [
+        "Declares explicit CSS min-height reservation on ad wrapper containers",
+        "Wraps ins.adsbygoogle in responsive container element",
+        "Prevents unreserved 0px starting heights during asynchronous rendering",
+        "Supports responsive leaderboard and mobile banner dimensions"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "ads.txt Authorization & Mandatory Legal Disclosures",
+      "prompt": "Configure root ads.txt with Google canonical TAG ID and establish required Privacy Policy disclosures for third-party cookie usage.",
+      "expected_output": "Deploys compliant ads.txt file and publishes Privacy Policy disclosing Google AdSense, cookies, and opt-out mechanisms.",
+      "assertions": [
+        "Deploys root ads.txt with format 'google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0'",
+        "Discloses Google third-party vendor advertising in Privacy Policy",
+        "Explains DART cookie usage for personalized ad targeting",
+        "Provides direct user opt-out links to Google Ads Settings"
+      ],
+      "files": []
+    }
+  ]
+}

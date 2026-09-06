@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "catalog_name": "GA4 Standard Custom Event Catalog",
+  "description": "Standardized event schema and parameters for enterprise web applications.",
+  "events": [
+    {
+      "name": "cta_click",
+      "category": "engagement",
+      "description": "Triggered when a user clicks a primary call-to-action button.",
+      "parameters": {
+        "cta_name": { "type": "string", "maxLength": 40, "example": "hero_start_trial" },
+        "cta_location": { "type": "string", "maxLength": 40, "example": "homepage_header" },
+        "target_url": { "type": "string", "maxLength": 100, "example": "/register" }
+      }
+    },
+    {
+      "name": "tool_execute",
+      "category": "workflow",
+      "description": "Triggered when a developer utility tool processes an input successfully.",
+      "parameters": {
+        "tool_id": { "type": "string", "maxLength": 40, "example": "geojson_formatter" },
+        "execution_time_ms": { "type": "number", "example": 45 },
+        "status": { "type": "string", "enum": ["success", "warning", "error"] }
+      }
+    },
+    {
+      "name": "form_submit",
+      "category": "conversion",
+      "description": "Triggered when a multi-step or single-step form is submitted.",
+      "parameters": {
+        "form_id": { "type": "string", "maxLength": 40, "example": "contact_sales" },
+        "step_number": { "type": "number", "example": 1 },
+        "submission_status": { "type": "string", "enum": ["complete", "failed"] }
+      }
+    },
+    {
+      "name": "file_export",
+      "category": "engagement",
+      "description": "Triggered when generated files are exported or downloaded.",
+      "parameters": {
+        "export_format": { "type": "string", "maxLength": 10, "example": "json" },
+        "file_size_kb": { "type": "number", "example": 128 }
+      }
+    },
+    {
+      "name": "app_error",
+      "category": "diagnostics",
+      "description": "Triggered when client-side errors occur without exposing sensitive stack traces.",
+      "parameters": {
+        "error_code": { "type": "string", "maxLength": 20, "example": "ERR_HTTP_500" },
+        "error_category": { "type": "string", "maxLength": 40, "example": "network_timeout" },
+        "route_path": { "type": "string", "maxLength": 100, "example": "/tools/converter" }
+      }
+    }
+  ]
+}

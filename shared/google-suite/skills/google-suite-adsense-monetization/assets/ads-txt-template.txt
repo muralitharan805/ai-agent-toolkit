@@ -1,0 +1,7 @@
+# ==============================================================================
+# Authorized Digital Sellers (ads.txt) Configuration
+# Deploy to root domain: https://yourdomain.com/ads.txt
+# Replace 'pub-XXXXXXXXXXXXXXXX' with your 16-digit AdSense Publisher ID
+# ==============================================================================
+
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

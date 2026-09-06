@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Enterprise Productivity Suite",
+  "url": "https://yourdomain.com",
+  "description": "Next-generation developer productivity and workflow automation suite.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "browserRequirements": "Requires JavaScript. Requires HTML5.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "creator": {
+    "@type": "Organization",
+    "name": "My Enterprise Inc.",
+    "url": "https://yourdomain.com"
+  }
+}

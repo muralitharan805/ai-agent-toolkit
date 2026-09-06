@@ -1,0 +1,9 @@
+packages:
+  # Applications & frontends
+  - 'apps/*'
+  # Reusable core packages & libraries
+  - 'packages/*'
+  # Framework specific modules
+  - 'frameworks/*'
+  # Shared cross-cutting tooling
+  - 'shared/*'

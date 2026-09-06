@@ -1,0 +1,44 @@
+{
+  "skill_name": "structured-logging-and-observability",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Correlation ID Propagation & HTTP Latency Interceptor",
+      "prompt": "Implement NestJS middleware and an HTTP interceptor that propagates x-correlation-id on all responses and logs route execution latency in milliseconds.",
+      "expected_output": "Scaffolds CorrelationIdMiddleware and LoggingInterceptor propagating X-Correlation-ID and logging duration in milliseconds.",
+      "assertions": [
+        "Extracts or generates UUID correlation ID from incoming request headers",
+        "Sets X-Correlation-ID header on all HTTP responses",
+        "Calculates route execution latency in milliseconds",
+        "Avoids explicit 'any' types in interceptor observables and parameters"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Recursive PII & Secret Redaction with Strict Types",
+      "prompt": "Implement a recursive sanitizeLogPayload utility in TypeScript that scrubs passwords and tokens without using explicit any types.",
+      "expected_output": "Implements strictly-typed recursive sanitizer using unknown and type narrowing, replacing sensitive keys with [REDACTED].",
+      "assertions": [
+        "Eliminates explicit 'any' types, accepting input as 'unknown'",
+        "Recursively scrubs nested objects and arrays",
+        "Replaces sensitive keys like password, token, and secret with [REDACTED]",
+        "Safely handles null, undefined, and primitive values without throwing"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Single-Line Structured JSON Output & Elimination of Raw console.log",
+      "prompt": "Refactor a backend service that uses raw console.log statements into a dedicated structured logger emitting single-line JSON records.",
+      "expected_output": "Replaces all console.log calls with application Logger service emitting structured JSON with timestamp, level, correlationId, and message.",
+      "assertions": [
+        "Eliminates all raw console.log, console.warn, and console.error calls",
+        "Injects or instantiates application Logger service",
+        "Emits single-line structured JSON logs with correlationId and level",
+        "Attaches contextual metadata without leaking un-sanitized credentials"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# ==============================================================================
+# Universal Robots.txt Configuration
+# Directives for Web Crawlers, Googlebot, and Bingbot
+# ==============================================================================
+
+User-agent: *
+Allow: /
+
+# Disallow administrative and internal endpoints
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /_app/
+
+# Mandatory Search Engine Sitemap Reference
+Sitemap: https://yourdomain.com/sitemap.xml

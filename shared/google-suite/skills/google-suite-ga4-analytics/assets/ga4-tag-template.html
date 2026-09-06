@@ -1,0 +1,15 @@
+<!-- Google tag (gtag.js) GA4 Production Integration -->
+<!-- Replace 'G-XXXXXXXXXX' with environment-specific Measurement ID -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  // In Single Page Applications (SPA), disable default auto-pageview
+  // to delegate navigation tracking to the router service.
+  gtag('config', 'G-XXXXXXXXXX', {
+    send_page_view: false,
+    debug_mode: false
+  });
+</script>
