@@ -20,11 +20,14 @@ Act as a Principal AI Quality Assurance Architect and Automated Assertion Grader
 
 ---
 
-### Step 2: Test Case Execution
+### Step 2: Test Case Execution (With vs Without Skill Protocol)
 For each test case entry in `evals/evals.json`:
 1. Extract the `id`, `prompt`, `expected_output`, and `assertions` array.
-2. Formulate the execution attempt: Simulate or execute the user's prompt strictly adhering to the patterns, Gotchas, and constraints specified in the skill's `SKILL.md` and `references/`.
-3. Capture the generated code, solution, or output artifact.
+2. **Optional Baseline Simulation (Without Skill)**:
+   - Formulate what a generic agent would generate using standard weights (often stumbling on cyclic traps, soft delete queries, or missing CLI flags).
+3. **Equipped Execution (With Skill)**:
+   - Formulate or execute the user's prompt strictly adhering to the patterns, `## Gotchas`, scripts, and templates specified in the skill bundle (`SKILL.md`, `references/`, `scripts/`, `assets/`).
+4. Capture the generated code, solution, or output artifact.
 
 ---
 
@@ -46,6 +49,10 @@ For each assertion in the test case:
 Skill Directory : [path-to-skill]
 Total Test Cases: [count]
 Total Assertions: [count]
+
+Comparative Benchmark:
+  - Baseline (Without Skill): [Estimated Pass %] 🔴
+  - Equipped (With Skill)   : [Pass %] 🟢
 
 Test Case #1: "[prompt summary]"
   ✅ PASS - [assertion 1] (Evidence: [brief code snippet or proof])

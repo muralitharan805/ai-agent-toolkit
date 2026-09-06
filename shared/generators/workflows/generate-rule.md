@@ -71,9 +71,10 @@ globs: ["pattern/**"] # Only include when trigger is glob
 
 ### Sync Command:
 ```bash
-# Sync to Global level
-./bin/sync-context.sh --global --framework [framework-name] --infra [infra-name] --domain [domain-name]
+# Sync to Global level (~/.gemini/config/rules/)
+./bin/sync-context.sh --global [determined-toolkit-path]/[rule-name].md
 
-# Sync to Workspace level
-./bin/sync-context.sh --target /path/to/project --framework [framework-name] --infra [infra-name] --domain [domain-name]
+# Sync to Workspace level (<project>/.agents/rules/)
+./bin/sync-context.sh [determined-toolkit-path]/[rule-name].md -w /path/to/project
 ```
+

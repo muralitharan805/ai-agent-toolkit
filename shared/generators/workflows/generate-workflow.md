@@ -58,9 +58,10 @@ trigger: [manual / file_change / pr_creation]
 
 ### Sync Command:
 ```bash
-# Sync to Global level
-./bin/sync-context.sh --global --framework [framework-name] --infra [infra-name] --domain [domain-name]
+# Sync to Global level (~/.gemini/config/global_workflows/)
+./bin/sync-context.sh --global [determined-toolkit-path]/[workflow-name].md
 
-# Sync to Workspace level
-./bin/sync-context.sh --target /path/to/project --framework [framework-name] --infra [infra-name] --domain [domain-name]
+# Sync to Workspace level (<project>/.agents/workflows/)
+./bin/sync-context.sh [determined-toolkit-path]/[workflow-name].md -w /path/to/project
 ```
+

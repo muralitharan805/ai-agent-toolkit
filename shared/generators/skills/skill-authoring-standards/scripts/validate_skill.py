@@ -100,7 +100,7 @@ def validate_skill(skill_dir: str):
         if not NAME_REGEX.match(name_str):
             issues.append(f"Field 'name' ('{name_str}') must be lowercase alphanumeric with single hyphens.")
         if name_str != dir_name:
-            warnings.append(f"Field 'name' ('{name_str}') does not match directory name ('{dir_name}').")
+            issues.append(f"Field 'name' ('{name_str}') must match parent directory name ('{dir_name}').")
 
     # Validate description
     desc = fm.get("description")
@@ -122,10 +122,55 @@ def validate_skill(skill_dir: str):
             if not os.path.exists(target_full_path):
                 warnings.append(f"Referenced file does not exist: '{rel_target}'")
 
+    # Root directory pollution check
+    allowed_root_files = {"SKILL.md", "LICENSE", "README.md"}
+    for entry in os.listdir(skill_path):
+        entry_path = os.path.join(skill_path, entry)
+        if os.path.isfile(entry_path) and entry not in allowed_root_files:
+            warnings.append(f"Unexpected file in skill root: '{entry}'. Move documentation to references/, code to scripts/, or data to assets/.")
+
     # Check directory structure conventions
     for sub in ["references", "scripts", "examples", "assets", "evals"]:
         sub_p = os.path.join(skill_path, sub)
         stats[f"has_{sub}"] = os.path.isdir(sub_p)
+
+    # Deep validation of evals/evals.json
+    evals_dir = os.path.join(skill_path, "evals")
+    if os.path.isdir(evals_dir):
+        evals_json = os.path.join(evals_dir, "evals.json")
+        if not os.path.isfile(evals_json):
+            warnings.append("Directory 'evals/' exists but is missing 'evals.json'.")
+        else:
+            try:
+                with open(evals_json, "r", encoding="utf-8") as ef:
+                    eval_data = json.load(ef)
+                if not isinstance(eval_data, dict):
+                    issues.append("'evals/evals.json' must be a JSON object.")
+                elif "evals" not in eval_data or not isinstance(eval_data["evals"], list):
+                    issues.append("'evals/evals.json' must contain an 'evals' list.")
+                else:
+                    stats["eval_test_cases"] = len(eval_data["evals"])
+                    for idx, item in enumerate(eval_data["evals"]):
+                        if not isinstance(item, dict) or "prompt" not in item or "assertions" not in item:
+                            issues.append(f"Eval item #{idx + 1} in 'evals.json' missing 'prompt' or 'assertions'.")
+                        elif not isinstance(item["assertions"], list) or len(item["assertions"]) == 0:
+                            issues.append(f"Eval item #{idx + 1} in 'evals.json' must have non-empty assertions list.")
+            except Exception as e:
+                issues.append(f"Failed to parse 'evals/evals.json': {str(e)}")
+
+    # PEP 723 Python script validation in scripts/
+    scripts_dir = os.path.join(skill_path, "scripts")
+    if os.path.isdir(scripts_dir):
+        for script_file in os.listdir(scripts_dir):
+            if script_file.endswith(".py"):
+                script_full = os.path.join(scripts_dir, script_file)
+                try:
+                    with open(script_full, "r", encoding="utf-8", errors="ignore") as sf:
+                        script_head = sf.read(500)
+                    if "# /// script" not in script_head:
+                        warnings.append(f"Python script '{script_file}' in scripts/ does not declare PEP 723 metadata block (# /// script).")
+                except Exception:
+                    pass
 
     return {
         "valid": len(issues) == 0,

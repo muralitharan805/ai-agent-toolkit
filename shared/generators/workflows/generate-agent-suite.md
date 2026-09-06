@@ -47,10 +47,12 @@ Action Plan:
 ### Step 3: File Generation Protocol
 Output the target file locations under `ai-agent-toolkit` and complete, copy-pasteable code blocks in professional English:
 1. `SKILL.md` (with YAML frontmatter `name` matching directory, imperative `description`, Gotchas)
-2. `references/*.md` (if depth required)
-3. `evals/evals.json` (with test cases & assertions)
-4. Rule `.md` (if needed, with valid trigger)
-5. Workflow `.md` (if needed, with description <= 250 chars)
+2. `references/*.md` (if depth or complex API specs required)
+3. `scripts/*.py|sh` (if automated CLI tooling or validation checks required)
+4. `assets/*.json|yaml` (if schema contracts or starter templates required)
+5. `evals/evals.json` (with realistic test cases & assertions)
+6. Rule `.md` (if needed, with valid trigger)
+7. Workflow `.md` (if needed, with description <= 250 chars)
 
 ### Step 4: Sync & Deployment Instructions
 After generating or updating files in `ai-agent-toolkit`, provide the exact `bin/sync-context.sh` command:

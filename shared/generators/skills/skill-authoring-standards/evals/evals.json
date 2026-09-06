@@ -1,0 +1,26 @@
+{
+  "skill_name": "skill-authoring-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Scaffold a new modular skill for Docker container hardening following progressive disclosure and quality standards.",
+      "expected_output": "Produces a modular skill bundle with SKILL.md under 500 lines, imperative description, and a Gotchas section.",
+      "assertions": [
+        "Frontmatter contains name matching directory regex",
+        "Includes ## Gotchas section with non-obvious traps",
+        "Offloads deep specs to references/ rather than bloating SKILL.md"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Validate an existing skill directory for spec compliance using the bundled validator tool.",
+      "expected_output": "Executes validate_skill.py, checks frontmatter and evals schema, and outputs structured JSON report.",
+      "assertions": [
+        "Invokes python3 scripts/validate_skill.py <path>",
+        "Emits valid JSON report with valid boolean and stats"
+      ],
+      "files": []
+    }
+  ]
+}

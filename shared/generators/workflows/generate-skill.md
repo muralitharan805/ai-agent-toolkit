@@ -84,6 +84,53 @@ Depending on the specific task branch, inspect the following focused reference g
 [Detailed API endpoints, database schemas, or low-level protocol configurations]
 ````
 
+### Deterministic Agentic Script (When Automation/Validation is Required)
+**Target File Location:** `[determined-toolkit-path]/skills/[skill-name]/scripts/[tool-name].py|sh`
+````python
+#!/usr/bin/env python3
+# /// script
+# dependencies = []
+# requires-python = ">=3.9"
+# ///
+"""
+[tool-name].py: Deterministic execution tool.
+Emits structured JSON to stdout, diagnostic progress to stderr, and supports --help.
+"""
+
+import sys
+import json
+import argparse
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="[Tool purpose]")
+    parser.add_argument("--action", default="check", help="Action to perform")
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    sys.stderr.write(f"🔍 [Diagnostics] Executing {args.action}...\n")
+    print(json.dumps({"status": "success", "action": args.action}))
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()
+````
+
+### Structured Data Template / Asset (When Schema/Template is Required)
+**Target File Location:** `[determined-toolkit-path]/skills/[skill-name]/assets/[template-name].json`
+````json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "[Schema Title]",
+  "type": "object",
+  "properties": {
+    "status": { "type": "string" }
+  },
+  "required": ["status"]
+}
+````
+
+
 ### Quality Verification Suite (`evals.json`)
 **Target File Location:** `[determined-toolkit-path]/skills/[skill-name]/evals/evals.json`
 ````json
