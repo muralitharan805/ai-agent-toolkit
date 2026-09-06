@@ -1,0 +1,44 @@
+{
+  "skill_name": "angular-environment-proxy-setup",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Typed Environment Separation & Relative Proxy Path",
+      "prompt": "Configure Angular environment separation for development and production, ensuring dev uses relative /api path and production uses fully qualified gateway URL.",
+      "expected_output": "Creates typed environment.ts with relative apiUrl '/api' and environment.prod.ts with production URL, without hardcoding URLs in services.",
+      "assertions": [
+        "Configures typed EnvironmentConfig interface with production, apiUrl, and wsUrl",
+        "Sets development apiUrl to relative path '/api' to leverage reverse proxy",
+        "Sets production apiUrl to fully qualified HTTPS gateway",
+        "Imports environment symbol from base environment module without hardcoding URLs"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Development & Staging Reverse Proxy Setup",
+      "prompt": "Create reverse proxy configurations proxy.dev.json and proxy.staging.json to forward /api and WebSocket traffic and bypass CORS.",
+      "expected_output": "Generates proxy.dev.json and proxy.staging.json with target, changeOrigin true, secure flag, pathRewrite, and WebSocket ws true.",
+      "assertions": [
+        "Configures proxy.dev.json with changeOrigin set to true",
+        "Configures secure flag as false for dev and true for staging",
+        "Configures pathRewrite mapping ^/api to target backend versioned path",
+        "Includes WebSocket proxying flag ws true for real-time endpoints"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Automated Environment & Hardcoded URL Audit",
+      "prompt": "Audit an Angular codebase using audit_angular_environment.py to detect hardcoded localhost URLs and verify proxy configurations.",
+      "expected_output": "Executes scripts/audit_angular_environment.py against the workspace, reporting presence of environment files, proxy configurations, and hardcoded URL violations.",
+      "assertions": [
+        "References scripts/audit_angular_environment.py CLI audit tool",
+        "Detects raw hardcoded localhost and IP addresses in source files",
+        "Verifies presence of environment.ts and environment.prod.ts",
+        "Outputs structured compliance score and checkpoint results"
+      ],
+      "files": []
+    }
+  ]
+}
