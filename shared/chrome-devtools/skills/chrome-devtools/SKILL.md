@@ -1,58 +1,102 @@
 ---
 name: chrome-devtools
-description: Uses Chrome DevTools via MCP for browser automation, DOM inspection, UI testing, accessibility (a11y) audits, and performance tuning across Angular, React, and web applications.
+description: Uses Chrome DevTools via MCP for browser automation, DOM inspection, UI testing, accessibility (a11y) audits, and performance tuning across Angular, React, and web applications. Triggered by 'test-web-app:', 'browser-test:', or '/test-web-app-chrome-devtools'.
 ---
 
 # Chrome DevTools & Browser Automation Skill
 
 ## Overview
 
-This skill provides comprehensive operational guidelines, architectural patterns, and tool call workflows for executing browser automation, DOM tree snapshotting, visual verification, accessibility (a11y) auditing, and Core Web Vitals (LCP/CLS) performance debugging using Chrome DevTools MCP tools and subagents.
-
----
-
-## Operational Architecture & Execution Protocol
+This skill provides an enterprise operational protocol for browser automation, DOM tree snapshotting, visual verification, accessibility (a11y) auditing, and Core Web Vitals performance tuning using Chrome DevTools Model Context Protocol (MCP) tools and subagents. It absorbs end-to-end browser testing workflows, replacing speculative testing with empirical DOM snapshots and visual artifact proof.
 
 ```
-[Server Readiness Check] ──► [Tab Navigation] ──► [Wait For Hydration/Signals] ──► [DOM Snapshot / UID Lookup] ──► [Interaction / Verification]
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                           6-Phase Execution Pipeline                           │
+└────────────────────────────────────────────────────────────────────────────────┘
+  [Phase 1: Pre-Flight & Tab Init]  ──► Verify server port & open browser context
+               │
+  [Phase 2: Hydration Gate]         ──► Synchronize Signals, React state, network idle
+               │
+  [Phase 3: Snapshot & UID Lookup]  ──► `take_snapshot` (Accessibility tree & UIDs)
+               │
+  [Phase 4: Targeted Interaction]   ──► `click` / `fill` by explicit element UID
+               │
+  [Phase 5: A11y & CWV Auditing]    ──► 44x44px touch targets, contrast, CLS checks
+               │
+  [Phase 6: Artifact & Reporting]   ──► Save screenshot to brain & update walkthrough
 ```
 
-### 1. Pre-Flight Server Readiness Check
-* Always verify target application server availability (e.g. `http://localhost:4200` for Angular, `http://localhost:5173` for Vite/React) prior to initiating browser loops.
-* If the port is unresponsive, start the local development server via `pnpm run dev` or `pnpm start` before proceeding.
+---
 
-### 2. Page Navigation & Tab Management
-* List active browser tabs using `list_pages` and attach to or select the primary workspace window (`select_page`).
-* For single-page applications (SPAs) built with Angular Signals or React, wait for component hydration and initial network fetches to resolve before querying the DOM.
+## 6-Phase Execution Guide
 
-### 3. Text Snapshot vs. Visual Screenshot Strategy
-* **Text Snapshots (`take_snapshot`)**: Primary mechanism for automation loops. Retrieves the compact accessibility tree with unique element `uid` identifiers. Use this to find click targets, form inputs, and dynamic text labels while minimizing token overhead.
-* **Visual Screenshots (`take_screenshot`)**: Secondary mechanism for visual evidence. Capture full-page or element screenshots when auditing layout aesthetics, CSS flex/grid alignments, dark/light theme shifts, or saving verification evidence.
+### Phase 1: Pre-Flight Server Readiness & Tab Initialization
+1. **Server Verification**: Prior to launching browser loops, verify that the application server is responsive:
+   ```bash
+   python3 scripts/audit_browser_readiness.py --url http://localhost:4200 --timeout 5
+   ```
+   If the port is closed, start the application via `pnpm run dev` or `pnpm start`.
+2. **Tab Context Management**:
+   - Enumerate existing tabs using `list_pages`.
+   - Attach to the active session using `select_page`, or create a fresh context via `new_page`.
+   - Target desktop ($1280 \times 800\text{px}$) or mobile viewports ($375 \times 667\text{px}$) depending on test requirements.
 
-### 4. Component Interaction Protocol
-* **Button & Link Triggering**: Use `uid`-based clicks (`click`) derived from the latest `take_snapshot` execution. Re-fetch snapshots after navigation or dynamic DOM mutations.
-* **Form Submissions**: Set values on input controls using explicit target `uid`s rather than un-focused keypresses to trigger reactive Angular Form or React state bindings.
-* **Navigation Assertions**: After triggering route transitions, verify page URL changes and check `<title>` updates.
+### Phase 2: Hydration & Signal State Synchronization
+1. **Route Navigation**: Load the target URL using `navigate_page`.
+2. **Hydration Settlement**:
+   - For modern Single Page Applications (Angular 19 Signals `resource()`, `rxResource()`, React 19 concurrent transitions), do NOT use blind sleep delays.
+   - Wait for route transitions, signal-computed values, and initial network requests to resolve.
+   - Look for key rendered semantic containers (e.g. `<main>`, profile cards, data tables).
+
+### Phase 3: Accessibility Tree Snapshotting & UID Discovery
+1. **Text Snapshots (`take_snapshot`)**:
+   - Execute `take_snapshot` as the primary discovery mechanism.
+   - Extracts the compact accessibility tree with unique element `uid`s while saving up to 80% context tokens compared to raw HTML dumps.
+2. **UID Extraction**: Map interactive targets (buttons, inputs, links) to their assigned element `uid`s for subsequent actions.
+
+### Phase 4: Resilient Element Interaction & State Mutations
+1. **Targeted Interaction**:
+   - Trigger clicks (`click`) or text inputs (`fill` / `set_value`) using explicit target `uid`s.
+   - Avoid blind keyboard simulations or brittle CSS selectors.
+2. **DOM Mutation Confirmation**:
+   - After every state-altering action (form submission, tab switch, filter toggle), re-execute `take_snapshot` to confirm DOM mutation.
+   - Verify route URL changes and document `<title>` updates.
+
+### Phase 5: Accessibility (WCAG 2.1 AA) & Performance Auditing
+1. **Mobile Touch Target Ergonomics**:
+   - Verify that all interactive buttons, icon triggers, and chip filters satisfy the minimum **$44 \times 44\text{px}$** touch target area on mobile viewports ($< 768\text{px}$).
+2. **Color Contrast & Landmarks**:
+   - Confirm body text maintains at least **$4.5:1$** contrast ratio against background surfaces.
+   - Verify structural landmarks (`<main>`, `<nav>`, `<header>`, `<footer>`) and single `<h1>` hierarchy.
+3. **Core Web Vitals & Console Hygiene**:
+   - Check that dynamic elements (e.g. ad slots, lazy widgets) declare explicit `min-height` to prevent Cumulative Layout Shift (CLS).
+   - Audit browser console logs for uncaught JavaScript errors or network 4xx/5xx failures.
+
+### Phase 6: Artifact & Visual Verification Reporting
+1. **Visual Evidence**: Capture high-resolution screenshots (`take_screenshot`) of key UI milestones and layout baselines.
+2. **Persistent Storage**: Save screenshots and audit traces to the active workspace brain artifact directory:
+   `<appDataDir>/brain/<conversation-id>/`
+3. **Walkthrough Integration**: Update `walkthrough.md` embedding saved screenshot artifacts and documenting verification tables.
 
 ---
 
-## Accessibility (A11y) & Performance Auditing Protocol
+## Local References & Assets
 
-### Accessibility (WCAG 2.1 AA Compliance)
-* **Touch Target Area**: Ensure all interactive controls (buttons, icon triggers, chip filters) satisfy minimum $44 \times 44\text{px}$ touch target dimensions on mobile viewports.
-* **Semantic Landmarks & ARIA**: Verify structural landmarks (`<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>`) are present and ARIA attributes (`aria-expanded`, `aria-label`, `aria-modal`) accurately reflect UI state.
-* **Focus Management & Contrast**: Confirm modal dialogs trap keyboard focus and body text maintains minimum $4.5:1$ contrast ratio against background surfaces.
-
-### Core Web Vitals & Performance Diagnostics
-* **Largest Contentful Paint (LCP)**: Inspect hero images and primary content blocks to identify render-blocking CSS/JS assets.
-* **Cumulative Layout Shift (CLS)**: Reserve layout space (`min-height`) for dynamic elements and asynchronous AdSense containers to prevent layout shifts.
-* **Console Error Inspection**: Audit browser console logs for uncaught JavaScript exceptions, CORS failures, or 404 missing static assets.
+- **MCP Protocol & Interaction Runbook**: [references/browser-automation-and-mcp-protocol.md](references/browser-automation-and-mcp-protocol.md)
+- **A11y & Core Web Vitals Specifications**: [references/a11y-and-cwv-audit-specifications.md](references/a11y-and-cwv-audit-specifications.md)
+- **Server Readiness & Audit CLI Script**: [scripts/audit_browser_readiness.py](scripts/audit_browser_readiness.py)
+- **Browser Audit Report JSON Schema**: [assets/browser-audit-report-template.json](assets/browser-audit-report-template.json)
+- **WCAG 2.1 AA Verification Checklist**: [assets/a11y-wcag-checklist.json](assets/a11y-wcag-checklist.json)
 
 ---
 
-## Fallback & Error Remediation Protocol
+## Gotchas & Anti-Patterns
 
-* **Timeout Handling**: If a browser session action fails to respond within 30 seconds, abort the blocking loop immediately.
-* **Direct Content Fallback**: Fall back to `read_url_content` or `curl` HTTP requests to verify raw HTML response headers and server uptime.
-* **Artifact Reporting**: Store screenshots, network logs, and DOM snapshots in the active workspace brain artifact directory for persistent user review.
-
+| Deprecated / Anti-Pattern | Why It Fails | Modern Recommended Practice |
+| :--- | :--- | :--- |
+| **Speculative Test Success** | Assuming a click succeeded without validating resulting DOM changes. | Re-run `take_snapshot` or visual comparison to empirically confirm mutation. |
+| **Arbitrary Sleep Delays (`sleep(5000)`)** | Flaky, slow, and non-deterministic under varied CPU/network loads. | Synchronize on signal readiness, DOM landmark presence, or network idle. |
+| **Raw HTML Dumps for Locators** | Consumes tens of thousands of tokens and overflows model context. | Use `take_snapshot` to extract concise accessibility tree and element `uid`s. |
+| **Desktop-Only Viewport Audits** | Misses mobile touch target failures ($< 44\text{px}$) and notch layout overlaps. | Test both desktop ($1280\text{px}$) and mobile ($375\text{px}$) viewports. |
+| **Ignoring Uncaught Console Errors** | Silent failures and broken JavaScript hydration degrade end-user experience. | Audit console logs; treat uncaught exceptions and network failures as test blockers. |
+| **Zero Layout Reservation for Dynamic Ads/Widgets** | Asynchronous rendering shifts page content, penalizing Google Core Web Vitals (CLS $> 0.1$). | Reserve vertical container height (`min-height: 250px` or `aspect-ratio`) before render. |

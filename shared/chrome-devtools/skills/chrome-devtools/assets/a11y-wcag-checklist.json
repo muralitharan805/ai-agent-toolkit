@@ -1,0 +1,81 @@
+{
+  "checklist_name": "WCAG 2.1 Level AA & Mobile Ergonomics Checklist",
+  "version": "2.1.0",
+  "categories": [
+    {
+      "name": "Mobile Ergonomics & Touch Targets",
+      "items": [
+        {
+          "id": "A11Y-TOUCH-01",
+          "criterion": "Minimum $44 x 44px Touch Target Area",
+          "description": "All interactive elements (buttons, links, icons, chip filters) must measure at least 44x44px on touch viewports (< 768px).",
+          "wcag_reference": "2.5.5 Target Size / 2.5.8 Target Size (Minimum)",
+          "severity": "CRITICAL"
+        },
+        {
+          "id": "A11Y-TOUCH-02",
+          "criterion": "Adjacent Touch Target Separation",
+          "description": "Adjacent interactive controls must have at least 8px physical spacing to prevent erroneous taps.",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "name": "Visual Contrast & Perception",
+      "items": [
+        {
+          "id": "A11Y-CONTRAST-01",
+          "criterion": "Normal Text Contrast Ratio (>= 4.5:1)",
+          "description": "Body copy and text below 18pt (or 14pt bold) must maintain minimum 4.5:1 contrast against surface background.",
+          "wcag_reference": "1.4.3 Contrast (Minimum)",
+          "severity": "CRITICAL"
+        },
+        {
+          "id": "A11Y-CONTRAST-02",
+          "criterion": "Large Text & UI Component Contrast (>= 3.0:1)",
+          "description": "Headings, large text, and interactive UI boundaries (input borders, toggles) must maintain minimum 3:1 contrast.",
+          "wcag_reference": "1.4.11 Non-text Contrast",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "name": "Document Semantics & Landmarks",
+      "items": [
+        {
+          "id": "A11Y-LANDMARK-01",
+          "criterion": "Semantic Landmarks Present",
+          "description": "Page structure must contain exactly one <main> landmark, plus <nav>, <header>, and <footer> sections.",
+          "wcag_reference": "1.3.1 Info and Relationships",
+          "severity": "HIGH"
+        },
+        {
+          "id": "A11Y-HEADING-01",
+          "criterion": "Sequential Heading Hierarchy",
+          "description": "Exactly one <h1> must exist per route. Heading levels (h2-h6) must not skip numerical order.",
+          "wcag_reference": "1.3.1 Info and Relationships / 2.4.6 Headings and Labels",
+          "severity": "MEDIUM"
+        }
+      ]
+    },
+    {
+      "name": "Keyboard Navigation & Focus Management",
+      "items": [
+        {
+          "id": "A11Y-FOCUS-01",
+          "criterion": "Visible Focus Indicators",
+          "description": "Keyboard focus indicators must remain distinctly visible on all focusable elements without suppression via outline:none.",
+          "wcag_reference": "2.4.7 Focus Visible",
+          "severity": "CRITICAL"
+        },
+        {
+          "id": "A11Y-TRAP-01",
+          "criterion": "Modal Focus Trapping",
+          "description": "Active modal dialogs, drawers, and bottom sheets must trap Tab focus within the dialog bounds.",
+          "wcag_reference": "2.1.2 No Keyboard Trap",
+          "severity": "CRITICAL"
+        }
+      ]
+    }
+  ]
+}
