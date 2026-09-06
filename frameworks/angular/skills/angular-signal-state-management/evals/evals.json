@@ -1,0 +1,41 @@
+{
+  "skill_name": "angular-signal-state-management",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create an enterprise Angular 19+ Signal Store service for a Product Catalog with search query, category filtering, pagination that resets on category change, and asynchronous data fetching using rxResource.",
+      "expected_output": "Produces an injectable service using signal() for local filters, linkedSignal() to automatically reset pagination, rxResource() for HTTP data retrieval, computed() for derivations, and action methods with strict TypeScript types and zero 'any'.",
+      "assertions": [
+        "Uses signal() for local mutable filter state",
+        "Uses linkedSignal() to reset pagination upon category or search updates",
+        "Uses rxResource() or resource() for asynchronous HTTP loading",
+        "Encapsulates state by exposing readonly signals or computed projections",
+        "Zero 'any' types and full adherence to Clean Code standards"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Bridge a reactive search input text box to an Angular Signal with 300ms debounce and distinctUntilChanged using RxJS interop.",
+      "expected_output": "Constructs a standalone component with a search term signal, converts it to an Observable via toObservable(), pipes through debounceTime and switchMap, and converts back using toSignal() with an explicit initialValue.",
+      "assertions": [
+        "Uses toObservable() to bridge signal into RxJS pipeline",
+        "Pipes through debounceTime(300) and distinctUntilChanged()",
+        "Converts stream back to signal via toSignal() with explicit initialValue",
+        "Operates cleanly within an injection context"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Run an automated audit on our Angular project to detect Signal anti-patterns such as mutating state inside computed() or writing to signals in effect().",
+      "expected_output": "Invokes the bundled audit_signal_antipatterns.py script, inspecting TypeScript files for prohibited mutations, unguarded toSignal calls, and deprecated mutate methods, returning structured JSON results.",
+      "assertions": [
+        "Identifies and runs scripts/audit_signal_antipatterns.py",
+        "Checks for mutations inside computed() blocks",
+        "Emits machine-readable JSON summary report"
+      ],
+      "files": []
+    }
+  ]
+}

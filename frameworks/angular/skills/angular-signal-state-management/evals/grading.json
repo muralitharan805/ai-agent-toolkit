@@ -1,0 +1,97 @@
+{
+  "skill_name": "angular-signal-state-management",
+  "evaluated_at": "2026-09-06T13:43:00Z",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "total_test_cases": 3,
+  "total_assertions": 12,
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Enterprise Signal Store Service",
+      "passed": true,
+      "assertions_passed": 5,
+      "assertions_total": 5,
+      "details": [
+        {
+          "assertion": "Uses signal() for local mutable filter state",
+          "status": "PASS",
+          "evidence": "assets/signal-store-template.ts: Line 51 - private readonly searchKeywordState = signal<string>(...)"
+        },
+        {
+          "assertion": "Uses linkedSignal() to reset pagination upon category or search updates",
+          "status": "PASS",
+          "evidence": "assets/signal-store-template.ts: Line 57 - readonly activePageIndex = linkedSignal<string, number>({ source: ..., computation: ... })"
+        },
+        {
+          "assertion": "Uses rxResource() or resource() for asynchronous HTTP loading",
+          "status": "PASS",
+          "evidence": "assets/signal-store-template.ts: Line 63 - readonly entityResource = rxResource<readonly EntityItem[], EntityFilterCriteria>(...)"
+        },
+        {
+          "assertion": "Encapsulates state by exposing readonly signals or computed projections",
+          "status": "PASS",
+          "evidence": "assets/signal-store-template.ts: Lines 77-88 - exposes readonly computed() selectors (entities, isLoading, error) and asReadonly() streams"
+        },
+        {
+          "assertion": "Zero 'any' types and full adherence to Clean Code standards",
+          "status": "PASS",
+          "evidence": "Strict TypeScript typing across all DTOs and methods, exhaustive TSDoc comments, methods under 35 lines"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "RxJS Interoperability Stream Debounce",
+      "passed": true,
+      "assertions_passed": 4,
+      "assertions_total": 4,
+      "details": [
+        {
+          "assertion": "Uses toObservable() to bridge signal into RxJS pipeline",
+          "status": "PASS",
+          "evidence": "references/async-resources-and-rxjs-interop.md: Line 136 - toObservable(this.searchTerm).pipe(...)"
+        },
+        {
+          "assertion": "Pipes through debounceTime(300) and distinctUntilChanged()",
+          "status": "PASS",
+          "evidence": "references/async-resources-and-rxjs-interop.md: Line 139 - debounceTime(300), distinctUntilChanged()"
+        },
+        {
+          "assertion": "Converts stream back to signal via toSignal() with explicit initialValue",
+          "status": "PASS",
+          "evidence": "references/async-resources-and-rxjs-interop.md: Line 148 - toSignal(..., { initialValue: [] })"
+        },
+        {
+          "assertion": "Operates cleanly within an injection context",
+          "status": "PASS",
+          "evidence": "Property initializer within component class body maintaining active EnvironmentInjector context"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Automated Signal Anti-Pattern Auditing",
+      "passed": true,
+      "assertions_passed": 3,
+      "assertions_total": 3,
+      "details": [
+        {
+          "assertion": "Identifies and runs scripts/audit_signal_antipatterns.py",
+          "status": "PASS",
+          "evidence": "scripts/audit_signal_antipatterns.py executed via Python 3 CLI"
+        },
+        {
+          "assertion": "Checks for mutations inside computed() blocks",
+          "status": "PASS",
+          "evidence": "scripts/audit_signal_antipatterns.py: Lines 67-79 - regex scan for computed blocks mutating signals"
+        },
+        {
+          "assertion": "Emits machine-readable JSON summary report",
+          "status": "PASS",
+          "evidence": "scripts/audit_signal_antipatterns.py: Line 139 - prints formatted JSON with status, counts, and reports list"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AngularSignalStoreContract",
+  "description": "JSON schema for validating structural contracts and state metadata of Angular Signal Stores.",
+  "type": "object",
+  "properties": {
+    "storeName": {
+      "type": "string",
+      "pattern": "^[A-Z][a-zA-Z0-9]+StoreService$"
+    },
+    "providedIn": {
+      "type": "string",
+      "enum": ["root", "platform", "any"]
+    },
+    "stateNodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "primitive": {
+            "type": "string",
+            "enum": ["signal", "computed", "linkedSignal", "rxResource", "resource"]
+          },
+          "isReadonly": { "type": "boolean" },
+          "initialValue": { "type": ["string", "number", "boolean", "object", "array", "null"] }
+        },
+        "required": ["name", "type", "primitive", "isReadonly"]
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string" }
+              },
+              "required": ["name", "type"]
+            }
+          },
+          "description": { "type": "string" }
+        },
+        "required": ["name", "parameters"]
+      }
+    }
+  },
+  "required": ["storeName", "providedIn", "stateNodes", "actions"]
+}
