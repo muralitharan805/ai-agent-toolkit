@@ -24,7 +24,7 @@ Before mutating workspace files, print a structured Audit Report:
 ```
 === TOOLKIT CONSOLIDATION & GROUPING AUDIT ===
 Workspace Files Audited: [Total count]
-Topics Discovered: [List of topics: e.g. frameworks/angular, infra/docker, domains/nidhiflow, shared/git]
+Topics Discovered: [List of topics: e.g. frameworks/angular, infra/docker, domains/sample-app, shared/git]
 
 Proposed Merges & Relocations:
 1. [Merge source-file.md ➔ into target-file.md (Rationale)]

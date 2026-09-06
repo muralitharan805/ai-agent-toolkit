@@ -32,7 +32,7 @@ Output a concise evaluation block before file processing:
 ```
 === AGENT SUITE ANALYSIS & DISCOVERY ===
 Scenario: [Brief user request summary]
-Target Topic Directory: [e.g., frameworks/angular, infra/docker, or shared/nidhiflow]
+Target Topic Directory: [e.g., frameworks/angular, infra/docker, or shared/sample-topic]
 Action Plan:
   - Skill: [UPDATE existing `angular-material-styling/SKILL.md` OR CREATE new `...`]
   - Rule: [UPDATE existing `...` OR CREATE new `...` OR SKIPPED (Rationale)]

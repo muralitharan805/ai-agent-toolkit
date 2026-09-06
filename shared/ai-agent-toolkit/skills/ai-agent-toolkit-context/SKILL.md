@@ -9,7 +9,7 @@ description: Architecture, directory layout (frameworks, infra, shared, .agents)
 
 **`ai-agent-toolkit`** ([`muralitharan805/ai-agent-toolkit`](https://github.com/muralitharan805/ai-agent-toolkit)) is my-company's central management repository for AI Agent capabilities, engineering rules, automated workflows, and domain context skills.
 
-It provides a modular, deduplicated structure designed to sync context seamlessly into all my-company repositories (`my-company-frontend`, `gis-app`, `example-app`, `docker-dev-infra`) or globally into the user's system (`~/.gemini/`) via the `bin/sync-context.sh` automation script.
+It provides a modular, deduplicated structure designed to sync context seamlessly into all project repositories (`frontend-apps`, `backend-apis`, `dev-infra`, `domain-services`) or globally into the user's system (`~/.gemini/`) via the `bin/sync-context.sh` automation script.
 
 ---
 
@@ -59,12 +59,12 @@ ai-agent-toolkit/
 │   ├── security/              # Web security & auth guidelines
 │   └── testing/               # Automated testing & QA standards
 │
-├── domains/                   # Project domain layer (Private domain logic & rules)
-│   ├── civicpath/             # CivicPath GIS domain skills & state machines
-│   ├── docker-dev-infra/      # Dev Infra Compose microservices
-│   ├── finance/               # Personal finance & double-entry math
-│   ├── nidhiflow/             # Double-entry finance & loan amortization rules
-│   └── seyalicraft/           # SeyaliCraft Main Portal ecosystem & branding rules
+├── domains/                   # Project domain layer (Private domain logic & rules - gitignored)
+│   ├── gis-portal/            # GIS domain skills & administrative boundary detection
+│   ├── dev-infra/             # Dev Infra Compose microservices
+│   ├── finance-app/           # Personal finance & double-entry bookkeeping rules
+│   ├── custom-service/        # Custom domain skills & state machines
+│   └── main-portal/           # Main Portal ecosystem & branding rules
 │
 ├── bin/                       # Automation CLI scripts
 │   └── sync-context.sh         # Syncs context to Workspace (.agents/) or Global (~/.gemini/)

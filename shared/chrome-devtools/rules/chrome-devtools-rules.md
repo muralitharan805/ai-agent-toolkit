@@ -1,6 +1,12 @@
 ---
 description: "Enforces mandatory standards for Chrome DevTools MCP browser testing, visual DOM verification, accessibility compliance, and scratchpad error handling."
 trigger: glob
+globs:
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
+  - "**/*.e2e.*"
+  - "**/tests/**"
+  - "**/e2e/**"
 ---
 
 # Chrome DevTools & Browser Automation Rules
