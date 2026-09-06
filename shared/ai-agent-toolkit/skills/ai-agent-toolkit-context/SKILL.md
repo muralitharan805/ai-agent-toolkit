@@ -82,10 +82,14 @@ When authoring or updating rules, select the most token-efficient trigger:
 
 ---
 
-### Phase 5: Autonomous Generation & Automated Verification
-Utilize the built-in generator engines and CLI validation tools:
+### Phase 5: Autonomous Generation, Consolidation & Verification
+Utilize the built-in generator engines and CLI automation tools:
 1. **Master Orchestrator**: Run `/generate-agent-suite <topic>` (or `suite: <topic>`) to scaffold skills and rules.
-2. **Automated Validation Gateways**:
+2. **Cluster & Duplicate Scanner**: When consolidating or merging context, the agent MUST execute `scan_duplicates.py` to automatically detect semantic clusters and overlaps:
+   ```bash
+   python3 shared/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py <path-to-target>
+   ```
+3. **Automated Validation Gateways**:
    ```bash
    # Validate a Skill directory:
    python3 shared/generators/skills/generate-skill/scripts/validate_skill.py <path-to-skill>
@@ -98,6 +102,9 @@ Utilize the built-in generator engines and CLI validation tools:
 
    # Run empirical assertions and save scorecard:
    python3 shared/generators/skills/eval-skill/scripts/run_evals.py <path-to-skill> --save-grading
+
+   # Audit whole repository health, token ceilings, and domain leaks:
+   python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py .
    ```
 
 ---

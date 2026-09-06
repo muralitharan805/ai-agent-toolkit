@@ -12,6 +12,7 @@ This rule governs all development, scaffolding, refactoring, and synchronization
 
 ### 1. Mandatory Deduplication & Smart Upsert
 - Before creating a new file, the agent MUST inspect the workspace (`frameworks/`, `infra/`, `shared/`, `domains/`) for existing skills or rules covering the target topic.
+- When consolidating, refactoring, or deduplicating components, the agent MUST execute `python3 shared/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py <target-dir>` to automatically discover semantic clusters and overlapping files.
 - If a related component exists, the agent MUST update and merge new requirements into the existing bundle rather than creating duplicate or overlapping files.
 
 ### 2. The 5-Pillar Modular Skill Architecture (`agentskills.io` Standard)
@@ -52,11 +53,13 @@ Every skill scaffolded or modified in this repository MUST strictly implement th
 - All sequential processes, deployment pipelines, scaffolding tasks, and automation sequences MUST be authored as **Procedural Skills** under `skills/[skill-name]/` with bundled scripts and checklists.
 
 ### 6. Automated CLI Validation Gates
-Before presenting any generated or edited skill or rule to the user, the agent MUST run the bundled automated validators:
+Before presenting any generated, consolidated, or edited skill or rule to the user, the agent MUST run the bundled automated validators:
 - Validate Skill: `python3 shared/generators/skills/generate-skill/scripts/validate_skill.py <skill-path>`
 - Validate Rule: `python3 shared/generators/skills/generate-rule/scripts/validate_rule.py <rule-path>`
 - Verify Suite: `python3 shared/generators/skills/generate-agent-suite/scripts/verify_suite.py <target-dir>`
 - Grade Evals: `python3 shared/generators/skills/eval-skill/scripts/run_evals.py <skill-path> --save-grading`
+- Scan Overlaps: `python3 shared/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py <target-dir>`
+- Ecosystem Audit: `python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py <repo-path>`
 
 All scripts MUST exit cleanly with code `0` (zero errors, zero warnings).
 

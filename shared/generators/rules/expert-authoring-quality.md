@@ -37,6 +37,7 @@ This rule mandates that whenever the AI agent creates or modifies modular skills
 
 ### 4. Deduplication & Smart Upsert
 - Before creating a new file, the agent MUST inspect the workspace (`frameworks/`, `infra/`, `shared/`, `domains/`, `.agents/`) for existing skills or rules covering the target topic.
+- When consolidating or refactoring existing context, the agent MUST run `python3 shared/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py <target-dir>` to automatically detect clusters and semantic overlaps.
 - If a related file exists, the agent MUST update and merge new requirements into the existing file instead of creating duplicate files.
 
 ### 5. Modular Skill Bundling & Progressive Disclosure (5-Pillar Standard)

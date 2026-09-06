@@ -221,6 +221,8 @@ graph TD
 | **Rule Generator** | `/generate-rule`<br>`rule: <topic>` | Scaffolds a strict, token-budgeted Antigravity Rule file with valid trigger and canonical sections. |
 | **Evaluation Runner** | `/eval-skill <path>`<br>`eval: <path>` | Runs objective assertions from `evals.json` using `run_evals.py` and emits a visual scorecard and `grading.json`. |
 | **Prompt Architect** | `/generate-prompt`<br>`prompt-architect:` | Transforms raw user requests into zero-noise, production-ready XML-tagged prompts. |
+| **Toolkit Consolidator** | `/consolidate-agent-toolkit`<br>`consolidate: <path>` | Automatically executes `scan_duplicates.py` to detect semantic clusters and overlaps, merges fragmented skills/rules into canonical 5-pillar bundles, and safely prunes redundant files. |
+| **Ecosystem Auditor** | `/audit-agent-toolkit`<br>`audit: <path>` | Audits repository health, character/line limits, frontmatter syntax, global parity, and domain isolation leaks using `audit_toolkit.py`. |
 
 ### CLI Validation & Verification Utilities
 
@@ -238,6 +240,12 @@ python3 shared/generators/skills/generate-agent-suite/scripts/verify_suite.py sh
 
 # 4. Run an empirical evaluation suite and save the scorecard:
 python3 shared/generators/skills/eval-skill/scripts/run_evals.py shared/generators/skills/eval-skill --save-grading
+
+# 5. Scan a framework or category for duplicate skills, rules, and semantic clusters:
+python3 shared/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py frameworks/angular
+
+# 6. Audit entire repository health, character/line limits, and open-source isolation:
+python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py .
 ```
 
 ---
