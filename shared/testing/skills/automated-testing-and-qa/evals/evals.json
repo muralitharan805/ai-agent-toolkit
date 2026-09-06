@@ -1,0 +1,44 @@
+{
+  "skill_name": "automated-testing-and-qa",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Service Unit Test Isolation & Mocked Dependency Injection",
+      "prompt": "Author an isolated unit test spec for a NestJS domain service using Vitest, mocking external repository calls and verifying exception throwing.",
+      "expected_output": "Scaffolds colocated user.service.spec.ts with mock repository provider, tests happy path and NotFoundException, and cleans up mocks in beforeEach.",
+      "assertions": [
+        "Colocates spec file alongside target service",
+        "Mocks external repository methods using vi.fn",
+        "Asserts domain exceptions on missing entities",
+        "Resets mock calls in beforeEach hook"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Code Coverage Gate & Threshold Enforcement",
+      "prompt": "Configure test coverage thresholds in Vitest requiring 80% line and 75% branch coverage and audit missing colocated spec files.",
+      "expected_output": "Defines coverage thresholds in vitest.config.ts and verifies that CI fails if coverage drops below 80% line or 75% branch boundaries.",
+      "assertions": [
+        "Configures minimum 80% line coverage threshold in test config",
+        "Configures minimum 75% branch coverage threshold in test config",
+        "Identifies production source files lacking colocated spec tests",
+        "Fails build when test coverage drops below required thresholds"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Playwright E2E Test Suite & Resilient Locator Scaffolding",
+      "prompt": "Author a Playwright E2E test script automating user authentication and form submission using resilient locators and auto-waiting.",
+      "expected_output": "Scaffolds e2e/auth.spec.ts utilizing getByRole, getByLabel, avoiding arbitrary sleeps, and verifying visual assertion states.",
+      "assertions": [
+        "Uses accessible locators like getByRole and getByLabel instead of brittle CSS",
+        "Leverages Playwright web-first auto-waiting assertions",
+        "Avoids arbitrary sleep or waitForTimeout delays",
+        "Configures multi-browser execution in playwright.config.ts"
+      ],
+      "files": []
+    }
+  ]
+}

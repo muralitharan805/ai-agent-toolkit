@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "automated-testing-and-qa",
+  "evaluated_at": "2026-09-06T16:44:54.397070+00:00",
+  "evaluator": "eval-skill-runner v1.0.0",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "benchmark": {
+    "baseline_pass_rate_percent": 50,
+    "equipped_pass_rate_percent": 100,
+    "delta_improvement_percent": 50
+  },
+  "summary": {
+    "total_test_cases": 3,
+    "passed_test_cases": 3,
+    "total_assertions": 12,
+    "passed_assertions": 12
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Service Unit Test Isolation & Mocked Dependency Injection",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Colocates spec file alongside target service",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Mocks external repository methods using vi.fn",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Asserts domain exceptions on missing entities",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Resets mock calls in beforeEach hook",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Code Coverage Gate & Threshold Enforcement",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Configures minimum 80% line coverage threshold in test config",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Configures minimum 75% branch coverage threshold in test config",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Identifies production source files lacking colocated spec tests",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Fails build when test coverage drops below required thresholds",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Playwright E2E Test Suite & Resilient Locator Scaffolding",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Uses accessible locators like getByRole and getByLabel instead of brittle CSS",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Leverages Playwright web-first auto-waiting assertions",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Avoids arbitrary sleep or waitForTimeout delays",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Configures multi-browser execution in playwright.config.ts",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    }
+  ]
+}
