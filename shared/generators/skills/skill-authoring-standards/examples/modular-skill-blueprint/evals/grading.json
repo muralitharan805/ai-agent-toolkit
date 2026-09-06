@@ -1,0 +1,50 @@
+{
+  "skill_name": "modular-skill-blueprint",
+  "evaluated_at": "2026-09-06T12:45:50Z",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "total_test_cases": 2,
+  "total_assertions": 4,
+  "passed_assertions": 4,
+  "failed_assertions": 0,
+  "test_cases": [
+    {
+      "id": 1,
+      "prompt": "Run a diagnostic environment check using the bundled runner script and confirm readiness.",
+      "passed": true,
+      "assertions_passed": 2,
+      "assertions_total": 2,
+      "assertions": [
+        {
+          "assertion": "Invokes bash scripts/sample-runner.sh --check",
+          "passed": true,
+          "evidence": "Executed command with exit code 0. Diagnostic output correctly logged to stderr."
+        },
+        {
+          "assertion": "Captures output matching output-schema.json",
+          "passed": true,
+          "evidence": "Stdout emitted: {\"status\": \"ready\", \"checks\": \"passed\"}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Process a payload file in dry-run mode and return structured response.",
+      "passed": true,
+      "assertions_passed": 2,
+      "assertions_total": 2,
+      "assertions": [
+        {
+          "assertion": "Passes --action dry-run flag",
+          "passed": true,
+          "evidence": "Command executed: bash scripts/sample-runner.sh --action dry-run --target sample.txt"
+        },
+        {
+          "assertion": "Stdout contains valid JSON payload",
+          "passed": true,
+          "evidence": "Stdout emitted valid parseable JSON: {\"status\": \"success\", \"action\": \"dry-run\", \"target\": \"sample.txt\"}"
+        }
+      ]
+    }
+  ]
+}

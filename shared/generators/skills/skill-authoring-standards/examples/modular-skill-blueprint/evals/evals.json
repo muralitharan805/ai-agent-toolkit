@@ -1,0 +1,25 @@
+{
+  "skill_name": "modular-skill-blueprint",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run a diagnostic environment check using the bundled runner script and confirm readiness.",
+      "expected_output": "Outputs JSON with status 'ready' and confirms dependencies are installed.",
+      "assertions": [
+        "Invokes bash scripts/sample-runner.sh --check",
+        "Captures output matching output-schema.json"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Process a payload file in dry-run mode and return structured response.",
+      "expected_output": "Executes dry-run action without mutating state and produces valid JSON report.",
+      "assertions": [
+        "Passes --action dry-run flag",
+        "Stdout contains valid JSON payload"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,37 +1,83 @@
 ---
 name: skill-authoring-standards
-description: "Authoring guidelines, deduplication logic, YAML frontmatter compatibility, and quality standards for creating or updating production-ready skills, rules, and workflows in the agent-toolkit repository."
+description: Comprehensive authoring standards for creating or updating enterprise Agent Skills, Rules, and Workflows. Enforces 3-tier progressive disclosure, directory bundling (references, scripts, assets, evals), PEP 723 self-contained tooling, and official Antigravity IDE specifications.
 ---
-# Goal
-Guide the agent in structuring, formatting, deduplicating, and authoring world-class AI agent skills, rules, and workflows that meet senior architect quality standards.
 
-# Instructions
-1. **Existing File Discovery & Upsert**: Before creating any file, check if a related skill, rule, or workflow already exists under `frameworks/`, `infra/`, `shared/`, or `.agents/`. If found, enhance and merge new data into the existing file instead of creating a duplicate.
-2. **Analyze Domain & Up-to-Date Patterns**: Identify the latest industry best practices and modern version standards for the target technology stack.
-3. **Standardize Location**:
-   - Framework specific → `frameworks/[framework]/[skills|rules|workflows]/`
-   - Infrastructure specific → `infra/[tool]/[skills|rules|workflows]/`
-   - Private Domain specific → `domains/[name]/[skills|rules|workflows]/`
-   - Cross-cutting / general → `shared/[topic]/[skills|rules|workflows]/`
-4. **Enforce Size & Character Limits**:
-   - Rules Files: Target 6,000–8,000 characters (optimal for token budget). Split into modular sub-rules if approaching 10,000 characters. Absolute hard ceiling is 12,000 characters (Antigravity IDE truncation limit).
-   - Workflow Files: MUST NOT exceed 12,000 characters per file (hard IDE limit).
-   - Skill Files: MUST NOT exceed 500 lines per `SKILL.md`. For extensive reference code, use subdirectories (`examples/`, `scripts/`, `resources/`, `references/`).
-5. **Enforce Strict Frontmatter GUI Compatibility**:
-   - Workflows: Use ONLY `description:` (strictly `<= 250 characters` with embedded triggers for IDE menu rendering) and `trigger: manual`. Embed all trigger phrases/shorthands directly inside `description:` (e.g. `Triggered by 'suite:', 'context:', or '/command'`). Never use `aliases:`.
-   - Skills: Include `name:` (kebab-case) and `description:` (third-person routing statement).
-   - Rules: Include an appropriate trigger (`model_decision` for specialized rules, `glob` with `globs: [...]` for file patterns, `always_on` for universal workspace constraints, or `manual`), plus a clear `description:`.
-6. **Draft High-Impact Content**:
-   - Write clear, step-by-step logic protocols in `skills/`.
-   - Write strict, unambiguous MUST / MUST NOT boundaries in `rules/`.
-   - Write sequential, action-verb execution steps in `workflows/`.
-7. **Include Non-Trivial Examples**: Provide real-world, production-ready code blocks for both correct and incorrect implementation patterns.
+# Agent Context Authoring Standards
 
-# Examples
-Input: Update NestJS authentication skill with refresh token rotation.
-Output: Target existing file `frameworks/nestjs/skills/jwt-authentication/SKILL.md` and append refresh token logic protocols and security constraints.
+This skill guides the creation and maintenance of world-class AI agent context (Skills, Rules, Workflows) adhering to the Agent Skills Open Standard and Google Antigravity IDE architecture.
 
-# Constraints
-- Do NOT use custom unparsed YAML frontmatter keys like `aliases:` in workflow files.
-- Do NOT create duplicate files for topics that already have an established skill, rule, or workflow.
-- Do NOT overwrite existing valuable instructions when updating a file; merge new enhancements cleanly.
+---
+
+## 1. The 4-Pillar Skill Architecture
+
+Every production-grade skill is organized as a directory bundle rather than a flat monolithic text file:
+
+```
+<skill-name>/
+├── SKILL.md                 # Required: Core instructions + progressive disclosure links (< 500 lines)
+├── references/              # Detailed technical documentation loaded on demand
+├── scripts/                 # Self-contained executable scripts (stdout JSON, stderr diagnostics)
+├── assets/ (or examples/)   # Schemas, templates, sample implementations
+└── evals/                   # Test cases & assertions (evals.json) for quality verification
+```
+
+---
+
+## 2. 3-Tier Progressive Disclosure Model
+
+Context is loaded in three stages to prevent prompt bloating:
+
+1. **Tier 1 (Startup ~100 tokens)**: `name` and `description` in YAML frontmatter. Must use imperative phrasing detailing *what* the skill achieves and *when* the agent should activate it.
+2. **Tier 2 (Activation < 500 lines)**: `SKILL.md` body containing high-level procedures, decision trees, Gotchas, and relative links to Tier 3.
+3. **Tier 3 (On-Demand)**: Granular files in `references/`, `scripts/`, or `assets/` loaded *only* when the agent encounters that specific task phase.
+
+---
+
+## 3. Sub-Documentation Routing Map
+
+When authoring or updating context, inspect the specialized reference guides in `references/` on demand:
+
+- **Format Specification & Frontmatter**: [references/agent-skills-spec.md](references/agent-skills-spec.md)
+  - Name regex constraints, 1024-char description rules, frontmatter fields, and directory structure.
+- **Best Practices & Gotchas Pattern**: [references/best-practices-and-gotchas.md](references/best-practices-and-gotchas.md)
+  - Context economy ("add what agent lacks, omit what it knows"), defaults over menus, and Gotchas design.
+- **Scripts & Tooling Design**: [references/script-and-tool-design.md](references/script-and-tool-design.md)
+  - PEP 723 Python scripts, Deno imports, stdout/stderr separation, and black-box `--help` testing.
+- **Skill Evaluations & Testing**: [references/evaluating-and-testing-skills.md](references/evaluating-and-testing-skills.md)
+  - Test suites (`evals/evals.json`), verifiable assertions, trigger evaluation queries, and zero production token bloat.
+- **Antigravity Customizations Guide**: [references/antigravity-customizations-guide.md](references/antigravity-customizations-guide.md)
+  - Rules triggers (`model_decision`, `glob`, `always_on`), 12k char limits, `hooks.json` events, `mcp_config.json`, and Workflows deprecation.
+
+---
+
+## 4. Bundled Automation Tools & Reference Blueprints
+
+- **Skill Validator Utility**:
+  Run the bundled self-contained validator script against any skill:
+  ```bash
+  python3 scripts/validate_skill.py <path-to-skill-dir>
+  ```
+  Supports `--help` for synopsis and `--strict` for zero-warning enforcement.
+- **Reference Implementation**:
+  Inspect [examples/modular-skill-blueprint/](examples/modular-skill-blueprint/) for an end-to-end working blueprint.
+
+---
+
+## 5. Gotchas
+
+- **Monolithic Trap**: Never dump comprehensive API references or entire schemas into `SKILL.md`. Always offload reference docs to `references/[topic].md` and link them.
+- **Name Directory Parity**: The `name` frontmatter field MUST exactly match the parent folder name (`^[a-z0-9]+(-[a-z0-9]+)*$`).
+- **Data on stdout, Diagnostics on stderr**: All helper scripts MUST emit structured data (JSON/CSV) to stdout so agents can parse it, and human logs/progress to stderr.
+- **Rule Character Ceilings**: Rule files MUST target 6,000–8,000 characters and strictly never exceed 12,000 characters (IDE truncation limit).
+
+---
+
+## 6. Pre-Commit Quality Gate Checklist
+
+Before committing or syncing any generated context:
+1. `SKILL.md` is under 500 lines and contains a `## Gotchas` section.
+2. Frontmatter `description` uses third-person imperative phrasing with explicit keywords.
+3. Complex technical reference material lives in `references/*.md`.
+4. Any bundled scripts support `--help` and separate stdout data from stderr diagnostics.
+5. An `evals/evals.json` test suite is provided with 2–3 realistic test prompts and verifiable assertions.
