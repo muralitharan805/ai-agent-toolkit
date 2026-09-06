@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+trigger: model_decision
 description: "Mandates Angular Material UI as primary component library, enforces Dark Theme as default with OS system preference detection, Signal-based light/dark theme toggle, global SCSS theme tokens, and Google Fonts typography."
 ---
 # Angular Material Primary Component, Dark Theme Default & SCSS Theme Rule
@@ -16,14 +16,10 @@ This rule mandates Angular Material (`@angular/material`) as the primary UI comp
 
 ### 2. Angular Material First Component Policy
 - The agent MUST prioritize Angular Material components for all standard user interface elements:
-  - **Tables & Data Grids**: `<table mat-table>`, `<mat-paginator>`, `matSort`.
-  - **Buttons & Actions**: `mat-button`, `mat-flat-button`, `mat-stroked-button`, `mat-icon-button`, `mat-fab`.
-  - **Form Fields & Inputs**: `<mat-form-field>`, `<input matInput>`, `<textarea matInput>`.
-  - **Dropdowns & Selection**: `<mat-select>`, `<mat-option>`, `<mat-autocomplete>`.
-  - **Dialogs & Modals**: `MatDialog` service and `<mat-dialog-content>`.
-  - **Navigation & Layout**: `<mat-toolbar>`, `<mat-sidenav>`, `<mat-nav-list>`, `<mat-card>`.
-  - **Selection Controls**: `<mat-checkbox>`, `<mat-radio-button>`, `<mat-slide-toggle>`.
-  - **Feedback & Overlays**: `<mat-tooltip>`, `<mat-menu>`, `MatSnackBar`, `<mat-progress-bar>`, `<mat-spinner>`.
+  - **Tables & Grids**: `<table mat-table>`, `<mat-paginator>`, `matSort`.
+  - **Buttons & Inputs**: `mat-button`, `mat-flat-button`, `mat-icon-button`, `<mat-form-field>`, `<input matInput>`.
+  - **Selection & Overlays**: `<mat-select>`, `<mat-option>`, `MatDialog`, `<mat-tooltip>`, `<mat-menu>`, `MatSnackBar`.
+  - **Navigation & Layout**: `<mat-toolbar>`, `<mat-sidenav>`, `<mat-nav-list>`, `<mat-card>`, `<mat-slide-toggle>`.
 
 ### 3. Restrictive Component Fallback Policy
 - Alternative third-party component libraries or custom component builds are permitted ONLY IF Angular Material lacks a native equivalent or specific required feature.
@@ -60,13 +56,8 @@ This rule mandates Angular Material (`@angular/material`) as the primary UI comp
       try {
         var theme = localStorage.getItem('app-theme-preference');
         var dark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (dark) {
-          document.documentElement.classList.add('dark-theme');
-          document.documentElement.classList.remove('light-theme');
-        } else {
-          document.documentElement.classList.add('light-theme');
-          document.documentElement.classList.remove('dark-theme');
-        }
+        document.documentElement.classList.toggle('dark-theme', dark);
+        document.documentElement.classList.toggle('light-theme', !dark);
       } catch (e) {}
     })();
   </script>
@@ -84,20 +75,14 @@ export class ThemeService {
   private readonly document = inject(DOCUMENT);
   private readonly STORAGE_KEY = 'app-theme-preference';
 
-  // Default initial state is OS preference aware, defaulting to Dark Theme (true)
   readonly isDarkMode = signal<boolean>(this.getInitialThemePreference());
 
   constructor() {
     effect(() => {
       const dark = this.isDarkMode();
       const root = this.document.documentElement;
-      if (dark) {
-        root.classList.add('dark-theme');
-        root.classList.remove('light-theme');
-      } else {
-        root.classList.add('light-theme');
-        root.classList.remove('dark-theme');
-      }
+      root.classList.toggle('dark-theme', dark);
+      root.classList.toggle('light-theme', !dark);
       localStorage.setItem(this.STORAGE_KEY, dark ? 'dark' : 'light');
     });
   }
@@ -146,3 +131,38 @@ export class ThemeToggleComponent {
   readonly themeService = inject(ThemeService);
 }
 ```
+
+- **Incorrect Implementation (STRICTLY FORBIDDEN):**
+```typescript
+// ❌ ANTI-PATTERN: Light mode default, raw HTML controls, hardcoded hex, and no zero-FOUC script
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-bad-header',
+  template: `
+    <!-- FORBIDDEN: Raw HTML button and input instead of Angular Material controls -->
+    <header>
+      <input type="text" placeholder="Search..." />
+      <button (click)="toggle()">Toggle Theme</button>
+    </header>
+  `,
+  styles: [`
+    /* FORBIDDEN: Hardcoded hex colors and static background styles */
+    header {
+      background-color: #0f172a;
+      color: #ffffff;
+      border: 1px solid #334155;
+    }
+  `]
+})
+export class BadHeaderComponent {
+  // FORBIDDEN: Defaulting to Light Mode without OS preference detection
+  isDark = signal<boolean>(false);
+
+  toggle(): void {
+    // FORBIDDEN: Mutates local flag without syncing root <html> class or localStorage
+    this.isDark.update(v => !v);
+  }
+}
+```
+

@@ -1,68 +1,126 @@
 ---
 name: angular-material-styling
-description: "Guidelines and architecture for prioritizing Angular Material UI components (Tables, Inputs, Dropdowns, Buttons), default Dark Theme initialization with OS detection & Signal toggle, centralizing Google Fonts SCSS typography, and applying M3 design tokens across Angular applications."
+description: "Architecture, automated audit tools, and setup protocols for Angular Material UI. Enforces Dark Theme as default with OS detection fallback, Signal-based theme switching, zero-FOUC Frame 0 script, M3 design tokens, and Material-first component selection."
+compatibility: "Requires Angular 19+ and Node.js 20+"
 ---
-# Goal
-Enforce Angular Material (`@angular/material`) as the mandatory primary UI component library for all standard user interface controls, initialize **Dark Theme as default** (with OS preference detection fallback) using a Signal-based theme switcher, integrate Google Fonts SCSS typography (`Inter`, `Roboto`, `Outfit`), and implement strict fallback guidelines.
 
-# Instructions
+# Angular Material Styling Skill (`angular-material-styling`)
 
-1. **Dark Theme Default & OS Detection**:
-   - Initialize the application in **Dark Mode by default** (`isDarkMode = signal<boolean>(true)`), detecting OS settings (`prefers-color-scheme`) if no stored preference exists.
-   - Implement a singleton `ThemeService` using Angular Signals to toggle themes, save user preferences in `localStorage`, and update the root `<html>` element class (`.dark-theme` / `.light-theme`).
-   - Include a user theme toggle component (`<app-theme-toggle>`) in the header shell or main toolbar.
+## Persona & Architectural Mandate
+Act as a Principal Frontend and UI Architect specializing in Angular Material (v19+) design systems. Your mandate is to enforce Angular Material as the primary UI component library across all views, ensure **Dark Theme initializes as the default application state** (with automatic OS preference fallback), implement zero-FOUC (Flash of Unstyled Content) loading, wire Signal-based reactive theme toggling, and apply centralized SCSS Material 3 (M3) design tokens with high-legibility Google Fonts.
 
-2. **Material First Component Selection**:
-   Always use standard Angular Material standalone modules for core UI controls:
-   - **Tables**: `MatTableModule`, `MatPaginatorModule`, `MatSortModule`
-   - **Buttons & Icons**: `MatButtonModule`, `MatIconButton`, `MatIconModule`
-   - **Inputs & Form Fields**: `MatFormFieldModule`, `MatInputModule`
-   - **Dropdowns & Selects**: `MatSelectModule`, `MatOptionModule`, `MatAutocompleteModule`
-   - **Dialogs & Overlays**: `MatDialogModule`, `MatSnackBarModule`, `MatMenuModule`, `MatTooltipModule`
-   - **Containers & Layout**: `MatCardModule`, `MatToolbarModule`, `MatSidenavModule`
+---
 
-3. **Google Fonts & Typography System**:
-   - Embed modern Google Fonts (`Inter`, `Outfit`, `Roboto`) in `index.html`.
-   - Define a central `src/styles/_typography.scss` configuring the `typography` field in Angular Material 3 (`mat.define-theme`).
-   - Set font CSS custom properties `--app-font-heading: 'Outfit', sans-serif;` and `--app-font-body: 'Inter', sans-serif;`.
+## 5-Pillar Directory Map
 
-4. **SCSS Theme & M3 Design Tokens**:
-   - Configure global SCSS styles (`src/styles.scss`) to load the Dark Theme by default on the root `html` or `html.dark-theme` selector.
-   - Use Angular Material 3 CSS tokens (`var(--mat-sys-primary)`, `var(--mat-sys-surface-container)`, `var(--mat-sys-on-surface)`).
+```text
+frameworks/angular/skills/angular-material-styling/
+├── SKILL.md                                        # Tier 2 Core Guidance & Setup Protocol (< 500 lines)
+├── references/
+│   ├── material-3-theming-and-tokens.md            # M3 define-theme, design tokens & MDC overrides
+│   └── dark-mode-zero-fouc-architecture.md         # Frame 0 script, OS detection & Signal state
+├── scripts/
+│   └── audit_angular_material.py                   # Standalone CLI validation tool (PEP 723)
+├── assets/
+│   ├── theme.service.ts                            # Standalone Signal ThemeService
+│   ├── theme-toggle.component.ts                   # Standalone accessible <app-theme-toggle>
+│   ├── _theme-tokens.scss                          # Canonical M3 tokens & MDC overrides
+│   └── zero-fouc-script.html                       # 0ms synchronous head script snippet
+└── evals/
+    ├── evals.json                                  # Empirical verification test suite
+    └── grading.json                                # Quality benchmark scorecard (100%)
+```
 
-5. **Component Fallback Guidelines**:
-   - Fallback to third-party libraries or custom controls ONLY if Angular Material lacks the required component.
-   - Custom fallback components MUST consume global M3 theme variables (`var(--mat-sys-*)`) to maintain dark/light mode compatibility.
+---
 
-# Examples
+## Authoritative Reference Grounding & Bundled Assets
+Consult the specialized guides and assets bundled directly inside this skill:
+- **M3 Theming & MDC Overrides Guide**: [references/material-3-theming-and-tokens.md](references/material-3-theming-and-tokens.md)
+- **Dark Mode & Zero-FOUC Guide**: [references/dark-mode-zero-fouc-architecture.md](references/dark-mode-zero-fouc-architecture.md)
+- **Reactive Theme Service Asset**: [assets/theme.service.ts](assets/theme.service.ts)
+- **Header Theme Toggle Asset**: [assets/theme-toggle.component.ts](assets/theme-toggle.component.ts)
+- **Theme Tokens & MDC Overrides Asset**: [assets/_theme-tokens.scss](assets/_theme-tokens.scss)
+- **Zero-FOUC Head Script Asset**: [assets/zero-fouc-script.html](assets/zero-fouc-script.html)
+- **Automated Material Audit CLI Tool**: `python3 scripts/audit_angular_material.py <path>`
+- **Empirical Test Suite**: [evals/evals.json](evals/evals.json)
 
-## 1. Reactive Theme Service (Dark Default + OS Aware)
+---
+
+## 1. Material-First Component Selection Matrix
+
+| Standard UI Element | Restricted Raw Element | Mandatory Angular Material Component |
+| :--- | :--- | :--- |
+| **Data Grid / Table** | `<table>` | `<table mat-table>`, `<mat-paginator>`, `matSort` |
+| **Buttons & Actions** | `<button>` | `mat-button`, `mat-flat-button`, `mat-icon-button` |
+| **Form Inputs** | `<input>`, `<textarea>` | `<mat-form-field>`, `<input matInput>` |
+| **Dropdowns & Select** | `<select>` | `<mat-select>`, `<mat-option>`, `<mat-autocomplete>` |
+| **Dialogs & Modals** | `<dialog>`, custom modal | `MatDialog` service, `<mat-dialog-content>` |
+| **Layout Shell & Header** | `<header>`, `<div>` | `<mat-toolbar>`, `<mat-sidenav-container>`, `<mat-card>` |
+| **Selection Controls** | `<input type="checkbox">` | `<mat-checkbox>`, `<mat-slide-toggle>` |
+| **Feedback & Badges** | custom tooltip / banner | `MatSnackBar`, `<mat-tooltip>`, `<mat-progress-bar>` |
+
+---
+
+## 2. Step-by-Step Setup Protocol
+
+### Step 1: Install Dependencies
+```bash
+pnpm add @angular/material @angular/cdk
+```
+
+### Step 2: Configure `src/index.html` (Google Fonts & Zero-FOUC Script)
+Embed Google Fonts (`Inter`, `Outfit`), Material Icons, and the synchronous Frame 0 script from [assets/zero-fouc-script.html](assets/zero-fouc-script.html):
+
+```html
+<head>
+  <!-- Google Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Zero-FOUC Frame 0 Script (Eliminates White Flash on Reload) -->
+  <script>
+    (function() {
+      try {
+        var theme = localStorage.getItem('app-theme-preference');
+        var dark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark-theme', dark);
+        document.documentElement.classList.toggle('light-theme', !dark);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+```
+
+### Step 3: Deploy Theme Tokens & MDC Overrides
+Import [assets/_theme-tokens.scss](assets/_theme-tokens.scss) into `src/styles.scss`:
+
+```scss
+@import './styles/theme-tokens';
+```
+
+### Step 4: Deploy Reactive `ThemeService`
+Deploy [assets/theme.service.ts](assets/theme.service.ts) into `src/app/core/services/theme.service.ts`:
 ```typescript
-// src/app/core/services/theme.service.ts
 import { Injectable, signal, effect, inject, DOCUMENT } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly document = inject(DOCUMENT);
-  private readonly STORAGE_KEY = 'example-app-theme-mode';
+  private static readonly STORAGE_KEY = 'app-theme-preference';
 
-  // Default state is Dark Mode (true), checking saved preference & OS mode
-  readonly isDarkMode = signal<boolean>(this.getSavedPreference());
+  readonly isDarkMode = signal<boolean>(this.getInitialThemePreference());
 
   constructor() {
     effect(() => {
       const dark = this.isDarkMode();
       const root = this.document.documentElement;
-      
-      if (dark) {
-        root.classList.add('dark-theme');
-        root.classList.remove('light-theme');
-      } else {
-        root.classList.add('light-theme');
-        root.classList.remove('dark-theme');
-      }
-      
-      localStorage.setItem(this.STORAGE_KEY, dark ? 'dark' : 'light');
+      root.classList.toggle('dark-theme', dark);
+      root.classList.toggle('light-theme', !dark);
+      try {
+        localStorage.setItem(ThemeService.STORAGE_KEY, dark ? 'dark' : 'light');
+      } catch {}
     });
   }
 
@@ -70,29 +128,26 @@ export class ThemeService {
     this.isDarkMode.update(prev => !prev);
   }
 
-  private getSavedPreference(): boolean {
-    const saved = localStorage.getItem(this.STORAGE_KEY);
-    if (saved) return saved === 'dark';
+  private getInitialThemePreference(): boolean {
+    try {
+      const saved = localStorage.getItem(ThemeService.STORAGE_KEY);
+      if (saved) return saved === 'dark';
+    } catch {}
 
     if (typeof window !== 'undefined' && window.matchMedia) {
       if (window.matchMedia('(prefers-color-scheme: light)').matches) return false;
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) return true;
     }
 
-    return true; // Default to Dark Mode if no stored preference
+    return true; // Default to Dark Theme
   }
 }
 ```
 
-## 2. Header Theme Toggle Component
-```typescript
-// src/app/shared/components/theme-toggle/theme-toggle.component.ts
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { ThemeService } from '../../../core/services/theme.service';
+### Step 5: Deploy Header Theme Toggle Component
+Deploy [assets/theme-toggle.component.ts](assets/theme-toggle.component.ts) into header shells:
 
+```typescript
 @Component({
   selector: 'app-theme-toggle',
   standalone: true,
@@ -100,9 +155,9 @@ import { ThemeService } from '../../../core/services/theme.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button mat-icon-button
-            [matTooltip]="themeService.isDarkMode() ? 'Switch to Light Theme' : 'Switch to Dark Theme'"
-            (click)="themeService.toggleTheme()"
-            aria-label="Toggle Theme">
+            [matTooltip]="themeService.isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+            [attr.aria-label]="themeService.isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+            (click)="themeService.toggleTheme()">
       <mat-icon>{{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
     </button>
   `
@@ -112,7 +167,37 @@ export class ThemeToggleComponent {
 }
 ```
 
-# Constraints
-- Do NOT make Light Theme the default setting; applications MUST default to Dark Theme with OS detection fallback.
-- Do NOT use standard HTML `<input>`, `<select>`, `<button>`, or `<table>` when corresponding Angular Material components exist.
-- Do NOT hardcode arbitrary static font-family strings (`font-family: Arial`) or CSS hex colors (`#ffffff`, `#000000`).
+### Step 6: Verify Theme Persistence & AAA Contrast
+Run `pnpm start` and verify:
+1. Root `<html>` element initializes with `.dark-theme`.
+2. Clicking toggle swaps `.dark-theme` and `.light-theme`.
+3. Page reload maintains dark mode without white screen flicker.
+
+---
+
+## 3. Automated Material & Theme Audit Tool
+Scan an entire Angular workspace or feature directory for raw HTML controls, hardcoded hex colors, and missing zero-FOUC scripts:
+
+```bash
+# Standard console audit:
+python3 frameworks/angular/skills/angular-material-styling/scripts/audit_angular_material.py src/app
+
+# Machine-readable JSON output:
+python3 frameworks/angular/skills/angular-material-styling/scripts/audit_angular_material.py src/app --json
+
+# Strict enforcement for CI pipelines:
+python3 frameworks/angular/skills/angular-material-styling/scripts/audit_angular_material.py src/app --strict
+```
+
+---
+
+## Gotchas & Anti-Patterns
+
+| Anti-Pattern | Root Cause & Failure Mode | Modern Recommended Replacement |
+| :--- | :--- | :--- |
+| **Light Theme Default Trap** | `signal(false)` forces bright UI by default, causing user eye strain in low-light environments. | **Default `isDarkMode = signal(true)`** with OS preference evaluation. |
+| **FOUC White Flash on Reload** | Theme initialization deferred to Angular lifecycle renders white body before JS execution. | **0ms synchronous `<head>` script** setting `dark-theme` at Frame 0. |
+| **Hardcoded Hex Colors in SCSS** | `#1e293b` breaks color contrast when users toggle from Dark to Light theme. | **CSS Custom Properties** (`var(--bg-card)`, `var(--text-primary)`). |
+| **MDC Override Specificity Loss** | Angular Material 3 default inline styles override custom variables if specificity is too low. | **Explicit `.mat-mdc-*` class targeting** in global `styles.scss` with `!important`. |
+| **Raw `<button>` and `<input>`** | Inconsistent hover states, missing ripple effects, and broken theme token integration. | **`mat-button`, `mat-icon-button`, `<input matInput>`**. |
+| **Missing Toggle `aria-label`** | Screen readers cannot identify icon-only button purpose, failing WCAG accessibility audits. | **`[attr.aria-label]="..."`** providing accessible name. |

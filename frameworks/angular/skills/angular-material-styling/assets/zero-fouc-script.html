@@ -1,0 +1,11 @@
+<!-- Place synchronously inside <head> before stylesheets to eliminate theme flash -->
+<script>
+  (function() {
+    try {
+      var theme = localStorage.getItem('app-theme-preference');
+      var dark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.classList.toggle('dark-theme', dark);
+      document.documentElement.classList.toggle('light-theme', !dark);
+    } catch (e) {}
+  })();
+</script>
