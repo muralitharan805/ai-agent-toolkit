@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "b2b-problem-discovery",
+  "evaluated_at": "2026-09-06T16:27:43.559140+00:00",
+  "evaluator": "eval-skill-runner v1.0.0",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "benchmark": {
+    "baseline_pass_rate_percent": 50,
+    "equipped_pass_rate_percent": 100,
+    "delta_improvement_percent": 50
+  },
+  "summary": {
+    "total_test_cases": 3,
+    "passed_test_cases": 3,
+    "total_assertions": 12,
+    "passed_assertions": 12
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Validated B2B Problem Discovery & 35-Point Scoring",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Deconstructs workflow using 14-node forensic mapping",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Identifies active Willingness to Pay (WTP) economic signals",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Computes 35-point evidence score exceeding 28 points",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Scopes 3-tier production tech stack prototype",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Commercial Already-Solved Stop Check Trigger",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Executes commercial alternative search query",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Detects existing affordable SaaS solutions under $50 per month",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Triggers Stop Check #3 for commercial alternative fits well",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Parks or archives candidate without writing code",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "No-Problem Fallback Rejection on Superficial Complaint",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Classifies friction as complaint or inconvenience",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Calculates 35-point score below 15 points",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Outputs mandatory no-problem fallback message",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Rejects premature solution prototyping",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    }
+  ]
+}

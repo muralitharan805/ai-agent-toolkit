@@ -1,0 +1,44 @@
+{
+  "skill_name": "b2b-problem-discovery",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Validated B2B Problem Discovery & 35-Point Scoring",
+      "prompt": "Execute evidence-driven problem discovery on commercial lease CAM reconciliation with 40-tab spreadsheets, $150/mo Zapier spend, and 5 property manager interviews.",
+      "expected_output": "Extracts Level 1 evidence, maps 14-node workflow, scores candidate >= 29 PTS (Strong Validation Candidate), verifies commercial pre-scoring guard, and scopes 3-tier production build.",
+      "assertions": [
+        "Deconstructs workflow using 14-node forensic mapping",
+        "Identifies active Willingness to Pay (WTP) economic signals",
+        "Computes 35-point evidence score exceeding 28 points",
+        "Scopes 3-tier production tech stack prototype"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Commercial Already-Solved Stop Check Trigger",
+      "prompt": "Evaluate a problem discovery candidate proposing a basic PDF invoice OCR generator for freelancers.",
+      "expected_output": "Executes commercial pre-scoring scan, identifies >= 3 modern SaaS under $50/mo, triggers Stop Check #3, and parks/archives candidate.",
+      "assertions": [
+        "Executes commercial alternative search query",
+        "Detects existing affordable SaaS solutions under $50 per month",
+        "Triggers Stop Check #3 for commercial alternative fits well",
+        "Parks or archives candidate without writing code"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "No-Problem Fallback Rejection on Superficial Complaint",
+      "prompt": "Evaluate user feedback stating that a SaaS application button color is annoying without any operational consequence or workaround.",
+      "expected_output": "Classifies friction as low-consequence complaint, scores candidate < 15 PTS, and outputs mandatory No-Problem fallback.",
+      "assertions": [
+        "Classifies friction as complaint or inconvenience",
+        "Calculates 35-point score below 15 points",
+        "Outputs mandatory no-problem fallback message",
+        "Rejects premature solution prototyping"
+      ],
+      "files": []
+    }
+  ]
+}
