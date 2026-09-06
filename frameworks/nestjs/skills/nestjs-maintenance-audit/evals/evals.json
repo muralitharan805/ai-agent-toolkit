@@ -1,0 +1,44 @@
+{
+  "skill_name": "nestjs-maintenance-audit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Circular Dependency & Module Decoupling Audit",
+      "prompt": "Audit a legacy NestJS codebase with circular dependencies between UserModule and AuthModule using forwardRef().",
+      "expected_output": "Identifies circular module coupling, recommends extracting a shared submodule or domain event emitter, and removes forwardRef().",
+      "assertions": [
+        "Detects forwardRef circular dependency anti-pattern",
+        "Recommends domain event decoupling or shared submodule extraction",
+        "Eliminates bidirectional module import cycles",
+        "Validates module compilation using pnpm build"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Request Validation & Error Handling Hardening",
+      "prompt": "Audit controller and bootstrap files for missing global ValidationPipe, unvalidated any payloads, and missing exception filters.",
+      "expected_output": "Flags untyped @Body() payloads, configures global ValidationPipe with whitelist: true, and registers a global HttpExceptionFilter.",
+      "assertions": [
+        "Enforces global ValidationPipe with whitelist and forbidNonWhitelisted in main.ts",
+        "Replaces unvalidated any body payloads with class-validator DTOs",
+        "Standardizes error envelopes via global HttpExceptionFilter",
+        "Enforces zero explicit any types across audited files"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Resource Lifecycle & Graceful Shutdown Audit",
+      "prompt": "Audit a NestJS service interacting with Prisma and Redis for memory leaks and missing graceful shutdown hooks.",
+      "expected_output": "Ensures app.enableShutdownHooks() is registered in main.ts and verifies OnModuleDestroy disconnects Prisma and Redis clients.",
+      "assertions": [
+        "Verifies presence of app.enableShutdownHooks() in main.ts",
+        "Implements OnModuleDestroy lifecycle hook for Prisma connection pool cleanup",
+        "Closes Redis and background worker queues on application shutdown",
+        "Prevents dangling interval timers and unsubscribed Observables"
+      ],
+      "files": []
+    }
+  ]
+}

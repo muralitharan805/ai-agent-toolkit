@@ -1,50 +1,104 @@
 ---
 name: nestjs-maintenance-audit
-description: "Audits existing NestJS backend repositories for architectural anti-patterns, circular dependencies, memory leaks, unvalidated inputs, missing error handling, and performance bottlenecks."
+description: "Audits and refactors NestJS backend codebases for circular dependencies, memory leaks, unvalidated inputs, missing shutdown hooks, and architectural anti-patterns."
 ---
-# Goal
-Execute a comprehensive technical audit of a NestJS backend codebase to detect tech debt, security vulnerabilities, circular module dependencies, memory leaks, missing DTO validations, and architectural anti-patterns, providing actionable remediation steps for long-term code health.
 
-# Instructions
-1. **Module & Circular Dependency Audit**:
-   - Inspect module imports across `app.module.ts` and feature modules.
-   - Scan for explicit `forwardRef()` usages, which indicate tight coupling or invalid domain boundaries.
-   - Recommend extracting shared entities into a separate sub-module or using domain events (`@nestjs/event-emitter`) to decouple cyclic relationships.
-2. **Type Safety & Payload Validation Audit**:
-   - Verify that `main.ts` configures global `ValidationPipe` with `whitelist: true` and `forbidNonWhitelisted: true`.
-   - Grep for `any`, `Record<string, any>`, or direct `@Req()` / `@Res()` access without type interfaces in controllers.
-   - Audit all DTO classes to ensure every property has a `class-validator` decorator.
-3. **Error Handling & Resiliency Audit**:
-   - Verify existence of a global `@Catch()` exception filter intercepting unhandled rejections and standardizing API error responses.
-   - Check if database errors (e.g. Prisma `P2002`, TypeORM `QueryFailedError`) are translated to appropriate HTTP status codes (e.g. 409 Conflict, 400 Bad Request).
-   - Audit `main.ts` shutdown hooks (`app.enableShutdownHooks()`) for graceful container termination in K8s / Docker environments.
-4. **Database & Resource Management Audit**:
-   - Audit database access patterns in service classes for N+1 query problems.
-   - Check ORM connection pooling and transaction lifecycle handling. Ensure connections are closed or released in `onModuleDestroy()`.
-   - Scan for unhandled RxJS subscriptions or un-closed event listeners causing memory leaks.
-5. **Configuration & Security Audit**:
-   - Confirm `ConfigModule` validates schema using `Joi` or `Zod` on startup.
-   - Verify implementation of security middleware (`helmet`, `cors` rate limiting with `@nestjs/throttler`).
-   - Ensure secrets, API keys, and database URIs are never hardcoded in repository files.
+# NestJS Codebase Maintenance & Architectural Audit
 
-# Examples
-Input: Run maintenance audit on legacy NestJS repository.
-Output Audit Findings Report:
-```markdown
-# NestJS Maintainability Audit Findings
+Audits and refactors existing NestJS backend codebases to detect and eliminate technical debt, circular module references (`forwardRef`), memory leaks, unvalidated payloads, missing graceful shutdown hooks, and architectural anti-patterns.
 
-## Critical Issues
-1. **Unvalidated DTO Payload**: `OrderController` accepts untyped `@Body() payload: any` without `ValidationPipe` enforcement.
-2. **Circular Dependency**: `UserModule` <-> `AuthModule` using `forwardRef()`. Refactor authentication lookup to `AuthService`.
-3. **Missing Shutdown Hooks**: `main.ts` lacks `app.enableShutdownHooks()`, leading to dangling database pool connections during deployment restarts.
+---
 
-## Remediation Plan
-- Add `ValidationPipe` globally in `main.ts`.
-- Refactor `forwardRef()` by creating a shared `UserAuthModule`.
-- Enable shutdown hooks in `main.ts`.
+## 5-Pillar Architecture Directory Layout
+
+```text
+frameworks/nestjs/skills/nestjs-maintenance-audit/
+├── SKILL.md                                                # Core procedural audit instructions (< 500 lines)
+├── references/                                             # Authoritative deep-dive runbooks
+│   ├── circular-dependencies-and-module-refactoring.md     # Decoupling cycles with events and shared modules
+│   └── memory-leaks-and-lifecycle-cleanup.md              # Lifecycle hooks, connection pools, and shutdown
+├── scripts/                                                # Standalone automation tools
+│   └── audit_nestjs_codebase.py                           # CLI health and compliance scanner
+├── assets/                                                 # Reusable reporting assets
+│   ├── audit-report-template.md                           # Standardized findings markdown report
+│   └── remediation-checklist.json                         # 10-point automated inspection schema
+└── evals/                                                  # Verifiable test cases and grading
+    ├── evals.json
+    └── grading.json
 ```
 
-# Constraints
-- Do NOT auto-delete code without validating test suite coverage.
-- Do NOT replace standard HTTP exceptions with generic internal server errors (500).
-- Always verify NestJS framework version compatibility before introducing new core decorators or modules.
+---
+
+## Procedural Audit & Refactoring Phases
+
+Follow this 6-phase sequence to audit and remediate a NestJS repository:
+
+### Phase 1: Automated Health Scan
+Run the bundled CLI audit tool to inspect the codebase for immediate violations:
+```bash
+python3 scripts/audit_nestjs_codebase.py --target-dir . --strict
+```
+For machine-readable output in CI/CD pipelines:
+```bash
+python3 scripts/audit_nestjs_codebase.py --target-dir . --json
+```
+
+### Phase 2: Topology & Circular Dependency Remediation
+1. Scan for bidirectional module imports and `forwardRef()` usages:
+   ```bash
+   grep -rn "forwardRef" src/
+   ```
+2. If `forwardRef()` connects modules:
+   - **Data retrieval cycle**: Extract shared entities or lookup queries into a dedicated `SharedModule` (see `references/circular-dependencies-and-module-refactoring.md`).
+   - **Cross-module notification**: Decouple using `@nestjs/event-emitter` (`this.eventEmitter.emit('event.name', payload)`).
+
+### Phase 3: Request Validation & DTO Hardening
+1. Inspect `src/main.ts` for global `ValidationPipe`:
+   ```typescript
+   app.useGlobalPipes(
+     new ValidationPipe({
+       whitelist: true,
+       forbidNonWhitelisted: true,
+       transform: true,
+     }),
+   );
+   ```
+2. Scan controllers for untyped `@Body()` payloads or `any` parameters. Replace with strongly-typed DTOs decorated with `class-validator` and `@ApiProperty()` annotations.
+
+### Phase 4: Error Handling & Security Headers
+1. Ensure `main.ts` registers Helmet security headers and CORS:
+   ```typescript
+   import helmet from 'helmet';
+   app.use(helmet());
+   app.enableCors({ origin: process.env.ALLOWED_ORIGINS?.split(',') });
+   ```
+2. Verify a global exception filter intercepts unhandled exceptions and standardizes API responses to `{ success: false, statusCode, message, timestamp, path }`.
+
+### Phase 5: Resource Management & Graceful Shutdown
+1. Verify `app.enableShutdownHooks()` is called in `main.ts`:
+   ```typescript
+   app.enableShutdownHooks();
+   ```
+2. Check database and cache service classes (Prisma, TypeORM, Redis) implement `OnModuleDestroy` to close connections cleanly (see `references/memory-leaks-and-lifecycle-cleanup.md`).
+3. Audit long-lived services for unsubscribed RxJS observables or dangling interval timers.
+
+### Phase 6: Build Verification & Remediation Report
+1. Execute compile check and automated tests:
+   ```bash
+   pnpm build
+   pnpm test
+   ```
+2. Document all findings, diffs, and verification steps using `assets/audit-report-template.md`.
+
+---
+
+## Gotchas & Architectural Pitfalls
+
+| Legacy / Anti-Pattern | Modern Enterprise Replacement | Why It Matters |
+|---|---|---|
+| Relying on `forwardRef()` to bridge circular modules | Shared submodules or domain events (`@nestjs/event-emitter`) | `forwardRef()` breaks DI initialization determinism, leaks boundaries, and complicates isolated unit testing. |
+| Missing `app.enableShutdownHooks()` in `main.ts` | Explicit `app.enableShutdownHooks()` before `app.listen()` | Kubernetes `SIGTERM` forcibly kills pods, leaving dangling Postgres connection pools and unfinished HTTP requests. |
+| `@Body() payload: any` in controllers | Validated DTO classes with `class-validator` annotations | Allows injection of unvalidated properties and potential parameter tampering vulnerabilities. |
+| Direct `process.env.VAR` in services | `ConfigService.getOrThrow<string>('VAR')` | Direct `process.env` bypasses startup schema validation, leading to runtime undefined crashes. |
+| Raw `console.log()` for debug statements | Structured `Logger` or `Pino` logging service | Console logs leak sensitive PII, lack correlation IDs, and cannot be parsed by log aggregators. |
+| Hanging Redis or Prisma client instances | Implementing `OnModuleDestroy` with `$disconnect()` or `quit()` | Prevents container graceful shutdown, exhausting database connection pools during autoscaling. |

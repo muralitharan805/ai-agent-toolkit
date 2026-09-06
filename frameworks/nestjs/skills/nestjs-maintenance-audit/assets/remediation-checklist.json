@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NestJSRemediationChecklist",
+  "description": "Comprehensive checklist of maintainability, architecture, and resilience checks for NestJS backend repositories.",
+  "categories": [
+    {
+      "name": "Bootstrap & Resilience",
+      "checks": [
+        {
+          "id": "CHK-01",
+          "rule": "Enable Shutdown Hooks",
+          "target": "src/main.ts",
+          "requirement": "app.enableShutdownHooks() must be invoked before app.listen().",
+          "severity": "HIGH"
+        },
+        {
+          "id": "CHK-02",
+          "rule": "Global ValidationPipe",
+          "target": "src/main.ts",
+          "requirement": "app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }))",
+          "severity": "HIGH"
+        },
+        {
+          "id": "CHK-03",
+          "rule": "Security Middleware",
+          "target": "src/main.ts",
+          "requirement": "Helmet middleware must be registered via app.use(helmet()).",
+          "severity": "MEDIUM"
+        }
+      ]
+    },
+    {
+      "name": "Architecture & Coupling",
+      "checks": [
+        {
+          "id": "CHK-04",
+          "rule": "Zero Circular forwardRef() Dependencies",
+          "target": "src/**/*.ts",
+          "requirement": "Modules and services must not depend on forwardRef(); use domain events or shared sub-modules.",
+          "severity": "HIGH"
+        },
+        {
+          "id": "CHK-05",
+          "rule": "Repository Layer Inversion",
+          "target": "src/modules/**/services/*.ts",
+          "requirement": "Services must inject repositories via abstract interface Symbol tokens, never directly importing ORM models into controllers.",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "name": "Type Safety & Clean Code",
+      "checks": [
+        {
+          "id": "CHK-06",
+          "rule": "Zero Explicit Any Types",
+          "target": "src/**/*.ts",
+          "requirement": "No explicit 'any' annotations; use typed DTOs, generics, or unknown with narrowing.",
+          "severity": "MEDIUM"
+        },
+        {
+          "id": "CHK-07",
+          "rule": "No Raw Console Logging",
+          "target": "src/**/*.ts",
+          "requirement": "Use NestJS Logger service instead of console.log, console.error, or console.warn.",
+          "severity": "LOW"
+        },
+        {
+          "id": "CHK-08",
+          "rule": "ConfigService Invariant",
+          "target": "src/**/*.ts",
+          "requirement": "No direct process.env access in service or controller classes; inject ConfigService.",
+          "severity": "MEDIUM"
+        }
+      ]
+    },
+    {
+      "name": "Resource Lifecycle",
+      "checks": [
+        {
+          "id": "CHK-09",
+          "rule": "Database Pool Teardown",
+          "target": "src/prisma/prisma.service.ts",
+          "requirement": "PrismaService or TypeORM DataSource must implement OnModuleDestroy and disconnect pools.",
+          "severity": "HIGH"
+        },
+        {
+          "id": "CHK-10",
+          "rule": "Redis Client Teardown",
+          "target": "src/redis/redis.service.ts",
+          "requirement": "Redis client must call quit() or disconnect() in OnModuleDestroy handler.",
+          "severity": "HIGH"
+        }
+      ]
+    }
+  ]
+}
