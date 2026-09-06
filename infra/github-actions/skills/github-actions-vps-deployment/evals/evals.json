@@ -1,0 +1,44 @@
+{
+  "skill_name": "github-actions-vps-deployment",
+  "evals": [
+    {
+      "id": 1,
+      "name": "GitHub Actions SSH Deployment Workflow Scaffolding",
+      "prompt": "Scaffold a GitHub Actions deployment workflow using appleboy/ssh-action to deploy Docker Compose services to a remote VPS.",
+      "expected_output": "Creates deploy.yml referencing official SSH action, binding mandatory repository secrets, and pulling latest branch commits.",
+      "assertions": [
+        "Configures workflow triggered on push to main or master branch",
+        "Uses official appleboy/ssh-action@v1 action for SSH connectivity",
+        "Interpolates secrets for SERVER_HOST, USERNAME, SSH_KEY, PORT, and PROJECT_PATH",
+        "Executes git pull to synchronize deployment scripts and configurations"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Zero-VPS Compilation Enforcement & Image Pulling",
+      "prompt": "Configure remote VPS deployment commands to pull pre-built container registry images rather than compiling code on the server.",
+      "expected_output": "Executes docker compose with --pull always and existing-infra / repo layers without triggering server-side builds.",
+      "assertions": [
+        "Uses docker compose up -d with --pull always flag",
+        "Combines docker-compose.existing-infra.yml and docker-compose.repo.yml layers",
+        "Avoids executing docker compose --build on the target VPS server",
+        "Attaches application container to existing shared database networks"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Secrets Checklist & Post-Deploy Pruning",
+      "prompt": "Provide instructions for adding repository secrets and ensure the deployment workflow cleans up dangling image layers.",
+      "expected_output": "Generates a structured checklist of required secrets and appends docker image prune -f to the deployment script.",
+      "assertions": [
+        "Documents required secrets (SERVER_HOST, SERVER_USERNAME, SERVER_SSH_KEY, SERVER_PORT, PROJECT_PATH)",
+        "Appends docker image prune -f cleanup command to script block",
+        "Instructs user on generating dedicated deployment SSH key pairs",
+        "Enforces non-root deployer user recommendations"
+      ],
+      "files": []
+    }
+  ]
+}

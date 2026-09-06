@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "caching-strategies",
+  "evaluated_at": "2026-09-06T17:29:46.376358+00:00",
+  "evaluator": "eval-skill-runner v1.0.0",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "benchmark": {
+    "baseline_pass_rate_percent": 50,
+    "equipped_pass_rate_percent": 100,
+    "delta_improvement_percent": 50
+  },
+  "summary": {
+    "total_test_cases": 3,
+    "passed_test_cases": 3,
+    "total_assertions": 12,
+    "passed_assertions": 12
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Fault-Tolerant Cache Service with Transparent DB Fallback",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Configures exponential backoff retryStrategy in Redis client options",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Catches connection exceptions without terminating active HTTP requests",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Transparently falls back to primary database queries when Redis is unavailable",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Applies explicit Time-To-Live (TTL) expiration on all cache set operations",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Visual Logging HTTP Interceptor & X-Cache Headers",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Formats cache hits as '\u26a1 [CACHE HIT] GET /route (cached - Xms)'",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Formats cache misses as '\ud83d\udd0d [CACHE MISS] GET /route (database query - Xms)'",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Sets X-Cache response header to HIT on cached returns",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Sets X-Cache response header to MISS on database pass-throughs",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Pattern-Based Cache Invalidation on Data Mutation",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Intercepts POST, PATCH, PUT, and DELETE data modification requests",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Constructs deterministic pattern keys (e.g. app:cache:resource:*)",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Purges matching Redis keys asynchronously after mutation succeeds",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Emits visual confirmation log upon successful pattern invalidation",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    }
+  ]
+}

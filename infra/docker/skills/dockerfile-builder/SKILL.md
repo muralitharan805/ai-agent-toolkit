@@ -1,75 +1,68 @@
 ---
 name: dockerfile-builder
-description: "Expert skill for generating, refactoring, and optimizing standalone Dockerfile configurations following enterprise standards."
+description: "Expert skill for authoring, refactoring, and optimizing production multi-stage Dockerfiles across runtimes with non-root security and layer caching."
 ---
 
-# Dockerfile Builder Skill
+# Dockerfile Builder & Multi-Stage Optimization Skill
 
-## Metadata
-* **Name:** dockerfile_generation
-* **Description:** Expert skill for generating, refactoring, and optimizing standalone Dockerfile configurations following enterprise standards.
-* **Target OS Runtimes:** Alpine Linux, Ubuntu (LTS), Debian Slim
-* **Scope:** Building highly optimized, secure, OCI-compliant, and cached multi-stage Docker images.
+## Purpose
+Establishes production-grade Dockerfile authoring standards, multi-stage compilation architectures, BuildKit package caching, non-root user privilege drops, and deterministic base image pinning across Node.js, Python, Go, and Java runtimes.
 
-## Core Mandates & Rules
+## Architecture & Tooling Matrix
+- **Multi-Stage Build Guide**: [references/multi-stage-build-patterns.md](references/multi-stage-build-patterns.md)
+- **Layer Caching & Security Guide**: [references/layer-caching-and-security-hardening.md](references/layer-caching-and-security-hardening.md)
+- **Automated CLI Validator**: [scripts/audit_dockerfile.py](scripts/audit_dockerfile.py)
+- **Starter Templates**:
+  - Node/NestJS Dockerfile: [assets/dockerfile-node-template.dockerfile](assets/dockerfile-node-template.dockerfile)
+  - Production Dockerignore: [assets/dockerignore-template.dockerignore](assets/dockerignore-template.dockerignore)
+- **Verification Suite**: [evals/evals.json](evals/evals.json)
 
-### 1. Mandatory Multi-Stage Builds
-Every production Dockerfile must utilize a multi-stage architecture. This separates the build environment (compiling dependencies, installing devPackages) from the minimal execution layer, keeping production images tiny and minimizing vulnerabilities.
-* **Stage 1 (Builder):** Install build-essential, clang, git, etc. Compile assets.
-* **Stage 2 (Runtime):** Copy *only* runtime files and compiled binaries from the builder. Do not carry over compilers, source code control files, or temporary build dependencies.
+---
 
-### 2. Optimize Build Caching & Layer Minimization
-* **Layer Minimization:** Combine logical commands using `&& \` within `RUN` instructions.
-* **Dependency Sequencing:** Place instructions that change least frequently (like base image definition, package installation, runtime user setup) at the top of the file. Place instructions that change frequently (like source code `COPY` or compile stages) at the bottom.
-* **Deterministic Versioning:** Never use the `latest` tag. Always pin exact semantic versions or specific image digests to ensure deterministic builds (e.g., `postgis/postgis:16-3.5-alpine`).
+## Execution Workflow
 
-### 3. Non-Root USER Execution
-By default, the container must run as a non-privileged user. Never leave the final stage running as `root`.
-* For standard runtimes, use the runtime's unprivileged user (e.g., `USER node` for Node, `USER postgres` for PostgreSQL (UID 70/GID 70), or create a custom service user).
-* Always pre-create directories and assign correct permissions (using `chown` and `chmod`) before switching the user.
+### Phase 1: Runtime Stack & Dependency Manifest Inspection
+1. Inspect project root to detect runtime and package manager (`package.json`, `requirements.txt`, `go.mod`).
+2. Pin the exact semantic base image version (`node:22-alpine`, `python:3.11-slim`, `golang:1.22-alpine`). Avoid `:latest` tags.
+3. Determine internal application port (`PORT=3000`) and entrypoint commands.
 
-### 4. Build-Time Metadata (OCI Conformity)
-Always include OCI (Open Container Initiative) compliant labels in the final runtime stage:
-```dockerfile
-LABEL org.opencontainers.image.title="Image Title" \
-      org.opencontainers.image.description="Short description" \
-      org.opencontainers.image.version="1.0.0" \
-      org.opencontainers.image.vendor="Vendor Name" \
-      org.opencontainers.image.licenses="MIT"
-```
+### Phase 2: Layer Caching & Dependency Isolation
+1. Define an initial dependency caching stage (`FROM <base> AS deps`).
+2. Copy manifest files (`package.json`, `pnpm-lock.yaml`) *before* copying application source code.
+3. Leverage BuildKit cache mounts (`RUN --mount=type=cache,target=/root/.cache/pnpm pnpm install --frozen-lockfile`) for sub-second rebuilds.
 
-## Reference Template (Alpine-based C Extension compilation)
-```dockerfile
-# STAGE 1: BUILD ENVIRONMENT (builder)
-FROM postgis/postgis:16-3.5-alpine AS builder
+### Phase 3: Compilation & Asset Pruning
+1. In the compilation stage (`FROM <base> AS builder`), copy dependencies from the `deps` stage.
+2. Compile application source code (`pnpm build`).
+3. Prune development dependencies (`pnpm prune --prod`) so only production runtime modules remain.
 
-# Install build dependencies utilizing cache mount for speed
-RUN --mount=type=cache,target=/var/cache/apk \
-    apk add --no-cache git build-base clang llvm-dev
+### Phase 4: Production Runner Hardening & Non-Root Execution
+1. Create a minimal production execution stage (`FROM <base> AS runner`).
+2. Copy only compiled binaries/artifacts and pruned runtime dependencies from the `builder` stage.
+3. Switch execution to an unprivileged user (`USER node` or `USER 10001`).
+4. Set explicit file ownership using `COPY --chown=node:node ...`.
+5. Embed a native `HEALTHCHECK` directive verifying application HTTP responsiveness.
 
-WORKDIR /tmp/my-extension
-ARG EXTENSION_VERSION=v0.1.0
+### Phase 5: Build Context Hygiene & Automated CLI Audit
+1. Verify `.dockerignore` excludes `node_modules`, `.env`, `.git`, and local test coverage directories.
+2. Execute the automated CLI audit tool:
+   ```bash
+   python3 infra/docker/skills/dockerfile-builder/scripts/audit_dockerfile.py --path . --strict
+   ```
+3. Test container image compilation:
+   ```bash
+   docker build --target runner -t my-app:test .
+   ```
 
-# Clone and compile without JIT if clang/llvm JIT mismatch exists
-RUN git clone --depth 1 --branch ${EXTENSION_VERSION} https://github.com/example/ext.git . \
-    && make with_llvm=no \
-    && make install with_llvm=no
+---
 
-# STAGE 2: RUNTIME ENVIRONMENT
-FROM postgis/postgis:16-3.5-alpine
-LABEL org.opencontainers.image.title="PostgreSQL Extension Image" \
-      org.opencontainers.image.version="16-alpine"
+## Gotchas & Common Pitfalls
 
-# Copy compiled binaries from builder
-COPY --from=builder /usr/local/lib/postgresql/ext.so /usr/local/lib/postgresql/
-COPY --from=builder /usr/local/share/postgresql/extension/ext* /usr/local/share/postgresql/extension/
-
-# Harden runtime directories and switch to default postgres non-root UID 70
-RUN mkdir -p /var/lib/postgresql/data /var/run/postgresql \
-    && chown -R postgres:postgres /var/lib/postgresql/data /var/run/postgresql \
-    && chmod 700 /var/lib/postgresql/data \
-    && chmod 775 /var/run/postgresql
-
-USER postgres
-EXPOSE 5432
-```
+| Faulty / Anti-Pattern | Production Replacement | Why it Matters |
+| :--- | :--- | :--- |
+| **Missing `USER` in Runner Stage** | Explicit `USER node` or `USER appuser` | Defaults to `root`, allowing compromised processes full container breakout privileges. |
+| **Copying Source Code Before Manifests** (`COPY . .` before `install`) | `COPY package*.json ./` then `install`, then `COPY . .` | Invalidates dependency cache on every single source code edit, bloating build times. |
+| **Using `:latest` Base Images** (`FROM node:latest`) | Exact semantic pinning (`FROM node:22-alpine`) | Upstream base image updates introduce unexpected breaking changes and non-deterministic builds. |
+| **Missing `.dockerignore`** | Scaffolding comprehensive `.dockerignore` | Injects host `node_modules` and local `.env` secrets into the build context, risking severe credential leaks. |
+| **Shipping Compilers in Final Image** | Multi-stage build discarding compilers in Stage 2 | Leaves compilers and build toolchains in production, drastically increasing CVE attack surface. |
+| **Static `EXPOSE 3000` without Env Var** | `ENV PORT=3000` and `EXPOSE ${PORT}` | Breaks flexible runtime port configuration on custom cloud platforms. |

@@ -1,0 +1,7 @@
+# ==============================================================================
+# Remote Registry Image Overrides (Zero VPS Compilation)
+# ==============================================================================
+services:
+  app:
+    image: ${REGISTRY_IMAGE:-<username>/<repository>:latest}
+    build: !reset null

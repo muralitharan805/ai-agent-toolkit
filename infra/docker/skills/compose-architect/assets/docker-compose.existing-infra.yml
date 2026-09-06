@@ -1,0 +1,13 @@
+# ==============================================================================
+# Cost-Saver Shared VPS Mode: Connect to Existing External Container Network
+# ==============================================================================
+services:
+  app:
+    networks:
+      - default
+      - existing_db_network
+
+networks:
+  existing_db_network:
+    name: ${EXTERNAL_DB_NETWORK:-db_network}
+    external: true

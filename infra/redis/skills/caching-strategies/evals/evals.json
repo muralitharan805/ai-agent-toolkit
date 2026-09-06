@@ -1,0 +1,44 @@
+{
+  "skill_name": "caching-strategies",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Fault-Tolerant Cache Service with Transparent DB Fallback",
+      "prompt": "Implement a resilient Redis cache service that reconnects with exponential backoff and transparently falls back to database queries during network outages.",
+      "expected_output": "Configures ioredis with retryStrategy and wraps cache operations in non-throwing try/catch guard blocks.",
+      "assertions": [
+        "Configures exponential backoff retryStrategy in Redis client options",
+        "Catches connection exceptions without terminating active HTTP requests",
+        "Transparently falls back to primary database queries when Redis is unavailable",
+        "Applies explicit Time-To-Live (TTL) expiration on all cache set operations"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Visual Logging HTTP Interceptor & X-Cache Headers",
+      "prompt": "Author a NestJS HTTP cache interceptor that logs visual emoji indicators and injects X-Cache response headers.",
+      "expected_output": "Intercepts GET requests, computes MD5 cache keys, emits visual logs, and injects X-Cache: HIT/MISS headers.",
+      "assertions": [
+        "Formats cache hits as '⚡ [CACHE HIT] GET /route (cached - Xms)'",
+        "Formats cache misses as '🔍 [CACHE MISS] GET /route (database query - Xms)'",
+        "Sets X-Cache response header to HIT on cached returns",
+        "Sets X-Cache response header to MISS on database pass-throughs"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Pattern-Based Cache Invalidation on Data Mutation",
+      "prompt": "Implement automatic cache invalidation for data mutation requests (POST, PATCH, DELETE) targeting related resource patterns.",
+      "expected_output": "Purges cached keys matching resource patterns upon successful write or mutation operations.",
+      "assertions": [
+        "Intercepts POST, PATCH, PUT, and DELETE data modification requests",
+        "Constructs deterministic pattern keys (e.g. app:cache:resource:*)",
+        "Purges matching Redis keys asynchronously after mutation succeeds",
+        "Emits visual confirmation log upon successful pattern invalidation"
+      ],
+      "files": []
+    }
+  ]
+}

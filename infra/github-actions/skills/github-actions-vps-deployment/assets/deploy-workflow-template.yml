@@ -1,0 +1,29 @@
+name: Deploy to VPS via SSH
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Execute Remote VPS Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connect and Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+            cd ${{ secrets.PROJECT_PATH }}
+            git pull origin main
+
+            # Execute Zero-VPS Compilation deployment using pre-built image
+            docker compose -f docker-compose.existing-infra.yml -f docker-compose.repo.yml up -d --pull always
+
+            # Clean up dangling image layers to preserve disk space
+            docker image prune -f

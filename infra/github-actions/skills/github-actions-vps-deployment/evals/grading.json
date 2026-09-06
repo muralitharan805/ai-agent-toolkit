@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "github-actions-vps-deployment",
+  "evaluated_at": "2026-09-06T17:31:12.674064+00:00",
+  "evaluator": "eval-skill-runner v1.0.0",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "benchmark": {
+    "baseline_pass_rate_percent": 50,
+    "equipped_pass_rate_percent": 100,
+    "delta_improvement_percent": 50
+  },
+  "summary": {
+    "total_test_cases": 3,
+    "passed_test_cases": 3,
+    "total_assertions": 12,
+    "passed_assertions": 12
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "GitHub Actions SSH Deployment Workflow Scaffolding",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Configures workflow triggered on push to main or master branch",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Uses official appleboy/ssh-action@v1 action for SSH connectivity",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Interpolates secrets for SERVER_HOST, USERNAME, SSH_KEY, PORT, and PROJECT_PATH",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Executes git pull to synchronize deployment scripts and configurations",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Zero-VPS Compilation Enforcement & Image Pulling",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Uses docker compose up -d with --pull always flag",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Combines docker-compose.existing-infra.yml and docker-compose.repo.yml layers",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Avoids executing docker compose --build on the target VPS server",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Attaches application container to existing shared database networks",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Secrets Checklist & Post-Deploy Pruning",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Documents required secrets (SERVER_HOST, SERVER_USERNAME, SERVER_SSH_KEY, SERVER_PORT, PROJECT_PATH)",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Appends docker image prune -f cleanup command to script block",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Instructs user on generating dedicated deployment SSH key pairs",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Enforces non-root deployer user recommendations",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    }
+  ]
+}
