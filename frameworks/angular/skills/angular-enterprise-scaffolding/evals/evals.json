@@ -1,0 +1,45 @@
+{
+  "skill_name": "angular-enterprise-scaffolding",
+  "evals": [
+    {
+      "id": 1,
+      "name": "14-Point Directory & Core Infrastructure Scaffolding",
+      "prompt": "Scaffold a new enterprise Angular 19+ application directory layout following the 14-point specification with core singletons, shared UI layouts, and domain features.",
+      "expected_output": "Generates the complete 14-point directory tree under src/app including core/ (guards, interceptors, services, strategies, handlers), shared/ (components, layouts, directives, pipes, validators), and features/.",
+      "assertions": [
+        "Establishes clean core, shared, and features layer separation",
+        "Configures generic ApiService with typed HTTP verb methods",
+        "Implements AppTitleStrategy for route document title synchronization",
+        "Configures provideExperimentalZonelessChangeDetection in app.config.ts",
+        "Generates layout shells with MainLayoutComponent and Header/Sidebar"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Functional Guards, Interceptors & Routing",
+      "prompt": "Implement functional authentication guards, Bearer token HTTP interceptors, and modular lazy-loaded feature routes with component input binding.",
+      "expected_output": "Creates functional CanActivateFn guards using inject(), pure HttpInterceptorFn interceptors with request cloning, and modular route definitions using loadComponent and withComponentInputBinding().",
+      "assertions": [
+        "Implements authGuard as functional CanActivateFn using inject()",
+        "Implements authInterceptor as pure HttpInterceptorFn with request cloning",
+        "Leverages withComponentInputBinding() for route parameter injection",
+        "Enforces 100% Standalone architecture with zero NgModule declarations"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Automated Scaffolding Compliance Audit",
+      "prompt": "Audit an Angular codebase using audit_enterprise_scaffolding.py to verify compliance with the 14-Point Enterprise Scaffolding Specification.",
+      "expected_output": "Executes scripts/audit_enterprise_scaffolding.py against the workspace, returning structured diagnostics or JSON compliance score verifying all 14 checkpoints.",
+      "assertions": [
+        "References scripts/audit_enterprise_scaffolding.py CLI validation tool",
+        "Verifies presence of core services, guards, and app.config.ts",
+        "Verifies absence of legacy NgModule declarations across source files",
+        "Outputs structured compliance score and checkpoint results"
+      ],
+      "files": []
+    }
+  ]
+}

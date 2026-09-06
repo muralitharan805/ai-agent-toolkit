@@ -40,7 +40,13 @@ def parse_arguments() -> argparse.Namespace:
 def get_topic_cluster_key(name: str) -> str:
     """Extract primary semantic cluster key from a skill or rule name."""
     clean = name.lower().replace(".md", "")
+    for suffix in ["-rules", "-rule", "-standards"]:
+        if clean.endswith(suffix):
+            clean = clean[:-len(suffix)]
+            break
     parts = clean.split("-")
+    if len(parts) >= 3 and parts[1] in {"enterprise", "cloud", "core"}:
+        return f"{parts[0]}-{parts[1]}-{parts[2]}"
     if len(parts) >= 2:
         return f"{parts[0]}-{parts[1]}"
     return parts[0]
