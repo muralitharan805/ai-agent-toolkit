@@ -19,7 +19,6 @@ TARGET_DIR="./"
 IS_GLOBAL=false
 SYNC_ALL=false
 SELECTORS=()
-GLOBAL_RULES_BUFFER=""
 START_TAG="<!-- AGENT_TOOLKIT_START -->"
 END_TAG="<!-- AGENT_TOOLKIT_END -->"
 
@@ -59,7 +58,7 @@ Universal Path Routing (Zero Hardcoding):
   1. Category Level:       $(basename "$0") shared -w /path/to/project
   2. Module Level:         $(basename "$0") frameworks/angular -w /path/to/project
   3. Single Skill:         $(basename "$0") frameworks/angular/skills/angular-enterprise-scaffolding -w /path/to/project
-  4. Single Rule:          $(basename "$0") shared/code-quality/rules/no-any-type.md -w /path/to/project
+  4. Single Rule:          $(basename "$0") shared/code-quality/rules/clean-code-standards.md -w /path/to/project
   5. Single Workflow:      $(basename "$0") shared/git/workflows/github-feature-workflow.md -w /path/to/project
   6. Global Rules Sync:    $(basename "$0") shared/code-quality shared/communication --global
 
@@ -179,9 +178,6 @@ setup_scope_paths() {
     mkdir -p "$(dirname "$GLOBAL_GEMINI_MD")"
     touch "$GLOBAL_GEMINI_MD"
 
-    GLOBAL_RULES_BUFFER="$(mktemp)"
-    trap 'rm -f "$GLOBAL_RULES_BUFFER"' EXIT
-
     mkdir -p "${TARGET_SKILLS_DIR}" "${TARGET_CONFIG_SKILLS_DIR}" "${TARGET_WORKFLOWS_DIR}" "${TARGET_GLOBAL_WORKFLOWS_DIR}" "${TARGET_PLUGINS_DIR}"
   else
     if [[ ! -d "$TARGET_DIR" ]]; then
@@ -280,11 +276,9 @@ sync_single_rule() {
   validate_item "$rule_file" "rules"
 
   if [[ "$IS_GLOBAL" == true ]]; then
-    echo "  [Rule] 📦 Staging ${file_name} for GEMINI.md..."
-    if [[ -s "$GLOBAL_RULES_BUFFER" ]]; then
-      echo "" >> "$GLOBAL_RULES_BUFFER"
-    fi
-    strip_yaml_frontmatter "$rule_file" >> "$GLOBAL_RULES_BUFFER"
+    # In Global mode, rules for GEMINI.md are strictly managed by DEFAULT_GLOBAL_RULE_DIRS
+    # and never blindly aggregated from CLI selectors (shared, frameworks, domains).
+    return 0
   else
     local dest_file="${TARGET_RULES_DIR}/${file_name}"
     if [[ -f "$dest_file" ]]; then
@@ -493,16 +487,50 @@ sync_all_dynamically() {
 # Global GEMINI.md Tagged Block Updater
 # ------------------------------------------------------------------------------
 update_global_gemini_md() {
-  if [[ "$IS_GLOBAL" != true || ! -s "$GLOBAL_RULES_BUFFER" ]]; then
+  if [[ "$IS_GLOBAL" != true ]]; then
     return 0
   fi
 
-  echo "🌐 Refreshing ~/.gemini/GEMINI.md with tagged toolkit block..."
+  echo "🌐 Updating ~/.gemini/GEMINI.md strictly from DEFAULT_GLOBAL_RULE_DIRS..."
+
+  # Collect rules strictly from DEFAULT_GLOBAL_RULE_DIRS
+  local curated_buffer=""
+  for rule_dir in "${DEFAULT_GLOBAL_RULE_DIRS[@]}"; do
+    # Skip empty lines or commented empty entries
+    [[ -z "${rule_dir// }" ]] && continue
+
+    local full_path="${TOOLKIT_ROOT}/${rule_dir}"
+    if [[ -d "${full_path}/rules" ]]; then
+      for rf in "${full_path}/rules"/*.md; do
+        if [[ -f "$rf" ]]; then
+          echo "  [Global Rule] 📦 Staging $(basename "$rf") from ${rule_dir}..."
+          local stripped
+          stripped="$(strip_yaml_frontmatter "$rf")"
+          if [[ -n "$curated_buffer" ]]; then
+            curated_buffer+=$'\n\n'
+          fi
+          curated_buffer+="$stripped"
+        fi
+      done
+    elif [[ -f "$full_path" ]]; then
+      echo "  [Global Rule] 📦 Staging $(basename "$full_path")..."
+      local stripped
+      stripped="$(strip_yaml_frontmatter "$full_path")"
+      if [[ -n "$curated_buffer" ]]; then
+        curated_buffer+=$'\n\n'
+      fi
+      curated_buffer+="$stripped"
+    fi
+  done
 
   # Safety backup if existing file has content
   if [[ -s "$GLOBAL_GEMINI_MD" ]]; then
     cp "$GLOBAL_GEMINI_MD" "${GLOBAL_GEMINI_MD}.bak"
   fi
+
+  local temp_buf
+  temp_buf="$(mktemp)"
+  echo "$curated_buffer" > "$temp_buf"
 
   python3 -c "
 import sys
@@ -515,7 +543,10 @@ end_tag = sys.argv[4]
 with open(buffer_path, 'r', encoding='utf-8') as f:
     toolkit_rules = f.read().strip()
 
-replacement_block = f'{start_tag}\n\n{toolkit_rules}\n\n{end_tag}'
+if toolkit_rules:
+    replacement_block = f'{start_tag}\n\n{toolkit_rules}\n\n{end_tag}'
+else:
+    replacement_block = f'{start_tag}\n{end_tag}'
 
 try:
     with open(gemini_path, 'r', encoding='utf-8') as f:
@@ -538,9 +569,15 @@ else:
 
 with open(gemini_path, 'w', encoding='utf-8') as f:
     f.write(updated)
-" "$GLOBAL_GEMINI_MD" "$GLOBAL_RULES_BUFFER" "$START_TAG" "$END_TAG"
+" "$GLOBAL_GEMINI_MD" "$temp_buf" "$START_TAG" "$END_TAG"
 
-  echo "  [Global] ✅ Toolkit rules block refreshed inside ~/.gemini/GEMINI.md (backup: ~/.gemini/GEMINI.md.bak)"
+  rm -f "$temp_buf"
+
+  if [[ -n "$curated_buffer" ]]; then
+    echo "  [Global] ✅ Curated rules block refreshed inside ~/.gemini/GEMINI.md (backup: ~/.gemini/GEMINI.md.bak)"
+  else
+    echo "  [Global] ℹ️ DEFAULT_GLOBAL_RULE_DIRS is empty. Zero rules written into ~/.gemini/GEMINI.md."
+  fi
 }
 
 # ------------------------------------------------------------------------------

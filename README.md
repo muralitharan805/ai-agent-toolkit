@@ -150,7 +150,7 @@ Sync a specific module sub-directory:
 Sync a single specific rule, skill, or workflow directly:
 ```bash
 # Single Rule only:
-./bin/sync-context.sh shared/code-quality/rules/no-any-type.md -w /path/to/my-project
+./bin/sync-context.sh shared/code-quality/rules/clean-code-standards.md -w /path/to/my-project
 
 # Single Skill directory only:
 ./bin/sync-context.sh frameworks/angular/skills/angular-signal-state-management -w /path/to/my-app
