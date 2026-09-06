@@ -1,0 +1,44 @@
+{
+  "skill_name": "angular-spa-google-suite",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Title Synchronization, SEO Meta & Canonical URL Stripping",
+      "prompt": "Configure SeoService and AppTitleStrategy in an Angular SPA to dynamically manage page titles, Open Graph tags, and canonical links stripped of tracking query parameters.",
+      "expected_output": "Implements AppTitleStrategy extending TitleStrategy with centralized title formatting, and SeoService with setMetaTags() and setCanonicalUrl() stripping query parameters from canonical tags.",
+      "assertions": [
+        "Implements AppTitleStrategy extending TitleStrategy with centralized title template",
+        "Implements SeoService with setMetaTags for description, OG tags, and Twitter cards",
+        "Strips tracking query parameters from canonical URL links in setCanonicalUrl",
+        "Uses inject(DOCUMENT) and inject(Meta) with strict typing"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "GA4 Route Navigation Telemetry & AdSense CLS Protection",
+      "prompt": "Implement GA4 client route tracking on NavigationEnd events and an AdSense component preventing Cumulative Layout Shift (CLS).",
+      "expected_output": "Creates AnalyticsService listening to Router NavigationEnd events with gtag('config'), and standalone AdsenseComponent reserving min-height: 250px container.",
+      "assertions": [
+        "Subscribes to Router.events filtering NavigationEnd to send page_view via gtag",
+        "Guards window and gtag execution with isPlatformBrowser(platformId)",
+        "Reserves min-height: 250px container in AdsenseComponent to eliminate CLS penalties",
+        "Enforces strict TypeScript typing with zero explicit any annotations"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Cloudflare Pages Fallback, ads.txt & Standalone Legal Policies",
+      "prompt": "Setup Cloudflare Pages SPA client-side fallback routing (_redirects), Google AdSense authorization (ads.txt), and standalone Privacy Policy and Terms of Service components.",
+      "expected_output": "Provides public/_redirects with '/* /index.html 200', public/ads.txt with publisher ID, and standalone PrivacyPolicyComponent and TermsOfServiceComponent for AdSense compliance.",
+      "assertions": [
+        "Deploys _redirects with SPA fallback rule '/* /index.html 200'",
+        "Deploys public/ads.txt with authorized publisher ID",
+        "Implements standalone PrivacyPolicyComponent disclosing GA4 and AdSense DART cookies",
+        "Registers keyword-rich titles for /privacy and /terms routes"
+      ],
+      "files": []
+    }
+  ]
+}
