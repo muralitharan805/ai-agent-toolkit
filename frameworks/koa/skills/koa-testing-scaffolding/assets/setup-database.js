@@ -1,7 +1,8 @@
 /**
  * @file setup-database.js
  * @description Centralized database test lifecycle harness for Sequelize + MySQL in JavaScript.
- * Provides connection pooling, schema synchronization, and deterministic table truncation.
+ * Provides connection pooling, schema synchronization, deterministic table truncation,
+ * schema introspection (hasTable), and dynamic seed discovery for brownfield databases.
  */
 
 const { Sequelize } = require('sequelize');
@@ -27,6 +28,11 @@ const testSequelize = new Sequelize(
   }
 );
 
+const state = {
+  availableTables: new Set(),
+  discoveredSeeds: {},
+};
+
 /**
  * Connects and synchronizes test database schema before test execution.
  * @returns {Promise<void>}
@@ -34,6 +40,47 @@ const testSequelize = new Sequelize(
 async function initializeTestDatabase() {
   await testSequelize.authenticate();
   await testSequelize.sync({ force: false });
+
+  // Introspect available tables in test DB
+  try {
+    const [tables] = await testSequelize.query('SHOW TABLES');
+    state.availableTables = new Set(
+      tables.map((t) => Object.values(t)[0].toLowerCase())
+    );
+  } catch (err) {
+    process.stderr.write(`[SETUP] Warning: Failed to introspect tables: ${err.message}\n`);
+  }
+}
+
+/**
+ * Checks if a table exists in the test database.
+ * @param {string} tableName - Name of table
+ * @returns {boolean}
+ */
+function hasTable(tableName) {
+  return state.availableTables.has(tableName.toLowerCase());
+}
+
+/**
+ * Dynamically discovers active identifiers from a given table to prevent hardcoded ID failures.
+ * @param {string} tableName - Table to sample
+ * @param {string} [idColumn='id'] - Identifier column name
+ * @returns {Promise<string|number|null>} Discovered ID or null
+ */
+async function discoverSeedId(tableName, idColumn = 'id') {
+  if (!hasTable(tableName)) return null;
+
+  try {
+    const [rows] = await testSequelize.query(
+      `SELECT \`${idColumn}\` FROM \`${tableName}\` LIMIT 1`
+    );
+    if (rows && rows.length > 0) {
+      return rows[0][idColumn];
+    }
+  } catch (_) {
+    return null;
+  }
+  return null;
 }
 
 /**
@@ -63,4 +110,7 @@ module.exports = {
   initializeTestDatabase,
   truncateTestDatabase,
   closeTestDatabase,
+  hasTable,
+  discoverSeedId,
+  state,
 };

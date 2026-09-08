@@ -17,6 +17,7 @@ Consult the bundled guides, automation tools, and boilerplates in this skill:
 - **Test Prioritization Matrix**: [references/test-prioritization-matrix.md](references/test-prioritization-matrix.md) (P0–P3 operational risk classification framework).
 - **Architecture Matrix**: [references/testing-architecture-matrix.md](references/testing-architecture-matrix.md) (Layer distribution, Unit vs Integration vs API, naming standards).
 - **Database Isolation & Transactions**: [references/database-integration-and-transactions.md](references/database-integration-and-transactions.md) (MySQL test db, managed rollback patterns, truncation).
+- **Dynamic Seed Discovery**: [references/dynamic-seed-discovery-guide.md](references/dynamic-seed-discovery-guide.md) (Introspect MySQL tables and discover active identifiers dynamically).
 - **Security & IDOR Testing**: [references/security-and-auth-testing-guide.md](references/security-and-auth-testing-guide.md) (AuthN edge cases, RBAC matrices, IDOR regression prevention).
 - **Automation CLI Tool**: [scripts/scaffold_koa_test_suite.py](scripts/scaffold_koa_test_suite.py) (Idempotent directory & file scaffolding).
 - **Vitest Configuration Asset**: [assets/vitest.config.js](assets/vitest.config.js) (V8 coverage provider, aliases, setup paths).

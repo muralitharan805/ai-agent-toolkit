@@ -21,6 +21,8 @@ Consult the bundled runbooks, automation tools, and boilerplates in this skill:
 - **Standard k6 Load Suite Asset**: [assets/k6-load-test-suite.js](assets/k6-load-test-suite.js) (5 to 50 VU ramp, custom metrics).
 - **Timing Tracer Middleware**: [assets/timing-tracer-middleware.js](assets/timing-tracer-middleware.js) (High-resolution hrtime tracer).
 - **Sequelize Profiler Hook**: [assets/sequelize-profiler-hook.js](assets/sequelize-profiler-hook.js) (Slow query warning logger).
+- **Vitest Benchmark Scorecard**: [assets/benchmark-reporter.js](assets/benchmark-reporter.js) (In-suite latency scorecard generator).
+- **Parallel Concurrency Stress Spec**: [assets/concurrency-stress-spec.js](assets/concurrency-stress-spec.js) (In-suite Promise.all parallel stress spec template).
 - **20-Point Audit Report Template**: [assets/performance-audit-report-template.md](assets/performance-audit-report-template.md) (Client-ready final report template).
 - **Empirical Verification Suite**: [evals/evals.json](evals/evals.json) (Objective skill assertions).
 
