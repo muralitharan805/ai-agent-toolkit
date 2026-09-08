@@ -1,0 +1,16 @@
+services:
+  mysql-test:
+    image: mysql:8.0
+    container_name: koa_mysql_test
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: koa_app_test
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+    ports:
+      - "3307:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    tmpfs:
+      # Mount data in tmpfs memory for lightning-fast test execution
+      - /var/lib/mysql
