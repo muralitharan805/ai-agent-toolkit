@@ -8,15 +8,15 @@
 const { Sequelize } = require('sequelize');
 
 /**
- * Global test Sequelize instance targeting the isolated test database.
+ * Sequelize instance targeting the local project database with transaction rollback protection.
  */
 const testSequelize = new Sequelize(
-  process.env.TEST_DB_NAME || 'koa_app_test',
-  process.env.TEST_DB_USER || 'root',
-  process.env.TEST_DB_PASSWORD || 'secret',
+  process.env.TEST_DB_NAME || process.env.DB_NAME || 'koa_app_test',
+  process.env.TEST_DB_USER || process.env.DB_USER || 'root',
+  process.env.TEST_DB_PASSWORD !== undefined ? process.env.TEST_DB_PASSWORD : (process.env.DB_PASSWORD || ''),
   {
-    host: process.env.TEST_DB_HOST || '127.0.0.1',
-    port: Number(process.env.TEST_DB_PORT) || 3306,
+    host: process.env.TEST_DB_HOST || process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.TEST_DB_PORT || process.env.DB_PORT) || 3306,
     dialect: 'mysql',
     logging: false, // Suppress standard query output during tests
     pool: {

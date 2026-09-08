@@ -27,6 +27,8 @@ export default defineConfig({
     testTimeout: 10000,
     hookTimeout: 10000,
     isolate: true,
+    // Run test files sequentially to prevent database connection pool exhaustion and table locks during integration tests
+    fileParallelism: false,
   },
   resolve: {
     alias: {

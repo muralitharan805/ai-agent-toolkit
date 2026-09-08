@@ -1,16 +1,36 @@
 services:
-  mysql-test:
-    image: mysql:8.0
-    container_name: koa_mysql_test
-    restart: unless-stopped
+  k6-smoke:
+    image: grafana/k6:0.55.0
+    container_name: koa_k6_smoke
+    network_mode: host
+    volumes:
+      - ../:/app
+    working_dir: /app
     environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: koa_app_test
-      MYSQL_USER: test_user
-      MYSQL_PASSWORD: test_password
-    ports:
-      - "3307:3306"
-    command: --default-authentication-plugin=mysql_native_password
-    tmpfs:
-      # Mount data in tmpfs memory for lightning-fast test execution
-      - /var/lib/mysql
+      - API_BASE_URL=${API_BASE_URL:-http://localhost:3000}
+      - TEST_MODE=smoke
+    command: run tests/performance/k6-multi-scenario-suite.js --summary-export=k6-smoke-summary.json
+
+  k6-load:
+    image: grafana/k6:0.55.0
+    container_name: koa_k6_load
+    network_mode: host
+    volumes:
+      - ../:/app
+    working_dir: /app
+    environment:
+      - API_BASE_URL=${API_BASE_URL:-http://localhost:3000}
+      - TEST_MODE=load
+    command: run tests/performance/k6-multi-scenario-suite.js --summary-export=k6-load-summary.json
+
+  k6-stress:
+    image: grafana/k6:0.55.0
+    container_name: koa_k6_stress
+    network_mode: host
+    volumes:
+      - ../:/app
+    working_dir: /app
+    environment:
+      - API_BASE_URL=${API_BASE_URL:-http://localhost:3000}
+      - TEST_MODE=stress
+    command: run tests/performance/k6-multi-scenario-suite.js --summary-export=k6-stress-summary.json

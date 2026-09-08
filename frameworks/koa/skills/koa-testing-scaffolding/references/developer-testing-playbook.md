@@ -86,9 +86,6 @@ Add convenient automation scripts to your `package.json`:
 ```json
 {
   "scripts": {
-    "db:test:local": "node tests/setup/setup-local-db.js",
-    "db:test:docker": "docker compose -f tests/docker-compose.test.yml up -d",
-    "db:test:docker:down": "docker compose -f tests/docker-compose.test.yml down",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -96,8 +93,10 @@ Add convenient automation scripts to your `package.json`:
     "test:integration": "vitest run tests/integration",
     "test:api": "vitest run tests/api",
     "test:ui": "vitest --ui",
-    "benchmark": "k6 run tests/performance/k6-load-suite.js",
-    "benchmark:verify": "python3 tests/performance/run_performance_benchmarks.py --summary-json k6-summary.json --max-p95 500"
+    "test:k6:smoke": "docker compose -f tests/docker-compose.test.yml run --rm k6-smoke",
+    "test:k6:load": "docker compose -f tests/docker-compose.test.yml run --rm k6-load",
+    "test:k6:stress": "docker compose -f tests/docker-compose.test.yml run --rm k6-stress",
+    "benchmark:verify": "python3 tests/performance/run_performance_benchmarks.py --summary-json k6-load-summary.json --max-p95 500"
   }
 }
 ```
@@ -355,11 +354,17 @@ Opens an in-browser interface (`http://localhost:51204/__vitest__/`) that provid
 
 ## Step 10: Generating Performance Benchmark Reports (k6)
 
-Run the load test suite to benchmark your API endpoints under concurrent traffic:
+Run the load test suite to benchmark your API endpoints under concurrent traffic without needing any host k6 installation:
 
 ```bash
-pnpm benchmark
-# or: k6 run tests/performance/k6-load-suite.js
+# Run quick smoke test via Docker Compose (5 VUs, 30s)
+pnpm test:k6:smoke
+
+# Run full baseline & peak load test (25 VUs, 2m)
+pnpm test:k6:load
+
+# Run stress test to find breaking points (50 VUs)
+pnpm test:k6:stress
 ```
 
 ### Output Reports Generated:
