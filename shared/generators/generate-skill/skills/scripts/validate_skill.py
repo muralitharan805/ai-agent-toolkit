@@ -115,6 +115,22 @@ def validate_skill(skill_dir: str):
         if len(desc_str) < 15:
             warnings.append("Field 'description' is very short. Ensure it includes what the skill does and when to use it.")
 
+    # Deep Context Grounding Metadata Checks
+    metadata_obj = fm.get("metadata", {})
+    if not isinstance(metadata_obj, dict):
+        issues.append("Field 'metadata' must be a key-value mapping.")
+        metadata_obj = {}
+        
+    if "dependencies" in metadata_obj:
+        if not isinstance(metadata_obj["dependencies"], str):
+            issues.append("Field 'metadata.dependencies' must be a string (comma-separated list).")
+    
+    if "framework_version" not in metadata_obj:
+        warnings.append("Missing recommended metadata field: 'metadata.framework_version'. Prevents context drift.")
+        
+    if "last_verified_date" not in metadata_obj:
+        warnings.append("Missing recommended metadata field: 'metadata.last_verified_date'. Helps alert on stale context.")
+
     # Validate relative markdown links (exclude code fences)
     content_no_code = re.sub(r"`{3,}[\s\S]*?`{3,}", "", content)
     link_pattern = re.compile(r"\[.*?\]\((?!https?:\/\/)(.*?)\)")

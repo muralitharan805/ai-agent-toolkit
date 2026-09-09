@@ -145,6 +145,12 @@ def validate_rule_file(file_path: str) -> Dict[str, Any]:
             elif not isinstance(globs, list) or len(globs) == 0:
                 issues.append("Field 'globs' must be a non-empty list of glob patterns.")
 
+        if "framework_version" not in fm:
+            warnings.append("Missing recommended metadata field: 'framework_version'. Prevents context drift.")
+            
+        if "last_verified_date" not in fm:
+            warnings.append("Missing recommended metadata field: 'last_verified_date'. Helps alert on stale context.")
+
     # Structure checks in body
     if not re.search(r"^#\s+.+", body, re.MULTILINE):
         warnings.append("Missing primary heading (# Title).")

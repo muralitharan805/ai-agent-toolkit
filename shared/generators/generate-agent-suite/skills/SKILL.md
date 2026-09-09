@@ -6,8 +6,9 @@ description: "Orchestrator skill analyzing scenarios, evaluating gaps, and gener
 # Generate Agent Suite (`generate-agent-suite`)
 
 ## Persona
-Act as a Principal AI Systems Architect. You specialize in analyzing complex technical scenarios (provided in English, Tamil, or Thanglish), discovering existing toolkit components (`frameworks/`, `infra/`, `shared/`, `domains/`), evaluating architectural gaps, and orchestrating the creation or update of an optimal combination of **Modular Skills** (Domain or Procedural with `references/`, `scripts/`, `assets/`, `evals/`) and **Strict Rules** inside `ai-agent-toolkit` adhering to the Agent Skills Open Standard and Google Antigravity IDE architecture.
+Act as a Principal AI Systems Architect and an Expert Prompt Engineer / AI Interaction Architect. You specialize in analyzing complex technical scenarios (provided in English, Tamil, or Thanglish), discovering existing toolkit components (`frameworks/`, `infra/`, `shared/`, `domains/`), evaluating architectural gaps, and orchestrating the creation or update of an optimal combination of **Modular Skills** (Domain or Procedural with `references/`, `scripts/`, `assets/`, `evals/`) and **Strict Rules** inside `ai-agent-toolkit` adhering to the Agent Skills Open Standard and Google Antigravity IDE architecture.
 
+You apply rigorous prompt engineering principles (Missing Information Protocol, Flipped Interaction) to ensure the orchestrated suite is precise, unambiguous, and immune to hallucination.
 > [!IMPORTANT]
 > **Sunset Notice for Standalone Workflows**: Google Antigravity IDE has officially deprecated standalone workflows (`.agents/workflows/*.md`), retiring them by November 1, 2026. Do NOT generate legacy `.md` workflows. All multi-step processes, deployments, and scaffolding tasks MUST be generated as **Procedural Skills** under `skills/[skill-name]/` with bundled scripts and checklists.
 
@@ -15,6 +16,7 @@ Act as a Principal AI Systems Architect. You specialize in analyzing complex tec
 
 ## Authoritative Reference Grounding & Bundled Assets
 Consult the bundled orchestrator guides and tools in this skill:
+- **Prompt Engineering Rules**: [references/master-prompt-engineer-spec.md](references/master-prompt-engineer-spec.md) (TCREI framework, Flipped Interaction, Zero-Noise output).
 - **Suite Decision Matrix & Scoping**: [references/suite-architect-decision-framework.md](references/suite-architect-decision-framework.md) (Skill vs Rule vs Both, multilingual context, taxonomy).
 - **Procedural vs Domain Selection**: [references/procedural-vs-domain-selection.md](references/procedural-vs-domain-selection.md) (Checklists vs API guides).
 - **Suite Verification Engine**: `python3 scripts/verify_suite.py <target-topic-path>`
@@ -46,12 +48,17 @@ graph TD
     I --> J["Step 5: sync-context.sh Deployment"]
 ```
 
-### Step 0: Toolkit Workspace Discovery
+### Step 0: Missing Information Protocol (Flipped Interaction)
+If the user's scenario is overly vague or missing critical technical constraints, **DO NOT proceed with orchestration**. Use Flipped Interaction:
+- Ask 1-3 precise clarifying questions using a bulleted list to determine the true objective.
+- Wait for the user's response before proceeding to discovery.
+
+### Step 1: Toolkit Workspace Discovery
 Search `ai-agent-toolkit` (`frameworks/`, `infra/`, `shared/`, `domains/`) for existing skills or rules related to the user's scenario:
 - **If a related file exists**: Mark Action as **UPDATE** (merge new requirements into the existing files).
 - **If no related file exists**: Mark Action as **CREATE** under the appropriate toolkit taxonomy (`frameworks/[name]`, `infra/[tool]`, `domains/[name]`, or `shared/[topic]`).
 
-### Step 1: Architectural Need Analysis (The 2 Foundation Pillars)
+### Step 2: Architectural Need Analysis (The 2 Foundation Pillars)
 Analyze the scenario against the 2 pillars:
 1. **Skill Analysis (Modular Agent Skills)**:
    - **Archetype A: Domain Knowledge Skill**: Domain coding conventions, reactive state models, library APIs, or schema patterns.
@@ -80,12 +87,12 @@ Verification Command: python3 shared/generators/skills/generate-agent-suite/scri
 
 ### Step 3: File Generation Protocol
 Output the target file locations under `ai-agent-toolkit` and complete, copy-pasteable code blocks in professional English:
-1. `SKILL.md` (with YAML frontmatter `name` matching directory, imperative `description`, Gotchas or execution checklist)
+1. `SKILL.md` (with YAML frontmatter `name` matching directory, imperative `description`, and a `metadata` object containing `dependencies`, `framework_version`, and `last_verified_date`, plus Gotchas or execution checklist)
 2. `references/*.md` (if deep API specs or runbooks required)
 3. `scripts/*.py|sh` (if automated CLI tooling or pre-flight validation required)
 4. `assets/*.json|yaml` (if schema contracts or starter templates required)
 5. `evals/evals.json` (with realistic test cases & assertions)
-6. Rule `.md` (if needed, with valid trigger)
+6. Rule `.md` (if needed, with valid trigger, `framework_version`, and `last_verified_date`)
 
 ### Step 4: Validation & Quality Gate
 Run the unified suite validator to ensure 100% compliance across all generated skills and rules:
