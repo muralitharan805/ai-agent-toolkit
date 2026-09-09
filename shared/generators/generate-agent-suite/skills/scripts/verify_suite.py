@@ -28,8 +28,14 @@ def find_generator_root() -> str:
 def verify_suite(target_path: str) -> Dict[str, Any]:
     """Inspect and validate all skills and rules in target path."""
     gen_root = find_generator_root()
-    validate_skill_script = os.path.join(gen_root, "skills", "generate-skill", "scripts", "validate_skill.py")
-    validate_rule_script = os.path.join(gen_root, "skills", "generate-rule", "scripts", "validate_rule.py")
+    # Check both shared/generators/<tool>/skills/scripts and legacy shared/generators/skills/<tool>/scripts
+    validate_skill_script = os.path.join(gen_root, "generate-skill", "skills", "scripts", "validate_skill.py")
+    if not os.path.exists(validate_skill_script):
+        validate_skill_script = os.path.join(gen_root, "skills", "generate-skill", "scripts", "validate_skill.py")
+
+    validate_rule_script = os.path.join(gen_root, "generate-rule", "skills", "scripts", "validate_rule.py")
+    if not os.path.exists(validate_rule_script):
+        validate_rule_script = os.path.join(gen_root, "skills", "generate-rule", "scripts", "validate_rule.py")
 
     results: Dict[str, Any] = {
         "target": target_path,
