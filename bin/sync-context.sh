@@ -254,9 +254,10 @@ validate_item() {
 # ------------------------------------------------------------------------------
 sync_single_skill() {
   local skill_dir="$1"
+  local custom_skill_name="$2"
   if [[ ! -d "$skill_dir" ]]; then return 0; fi
 
-  local skill_name="$(basename "$skill_dir")"
+  local skill_name="${custom_skill_name:-$(basename "$skill_dir")}"
   validate_item "$skill_dir" "skills"
 
   local dest_dir="${TARGET_SKILLS_DIR}/${skill_name}"
@@ -355,7 +356,9 @@ sync_module_dir() {
   echo "📦 Syncing Module: ${parent_name}/${module_name}"
 
   # 1. Sync Skills
-  if [[ -d "${module_dir}/skills" ]]; then
+  if [[ -f "${module_dir}/skills/SKILL.md" ]]; then
+    sync_single_skill "${module_dir}/skills" "$module_name"
+  elif [[ -d "${module_dir}/skills" ]]; then
     for s_dir in "${module_dir}/skills"/*; do
       if [[ -d "$s_dir" ]]; then sync_single_skill "$s_dir"; fi
     done
@@ -500,12 +503,14 @@ dispatch_path() {
 
     # It is a category or parent directory (e.g. shared, frameworks, or new category)
     local found_modules=0
-    for sub in "${path}"/*; do
-      if [[ -d "$sub" ]] && is_module_dir "$sub"; then
-        sync_module_dir "$sub"
+    
+    # Dynamically find any directory of any depth that contains skills, rules, workflows, or plugins
+    while IFS= read -r module_dir; do
+      if [[ -d "$module_dir" ]] && is_module_dir "$module_dir"; then
+        sync_module_dir "$module_dir"
         found_modules=1
       fi
-    done
+    done < <(find "$path" -type d \( -name ".agents" -o -name ".git" -o -name ".gemini" -o -name "node_modules" -o -name "test-sync" \) -prune -o -type d \( -name "skills" -o -name "rules" -o -name "workflows" -o -name "plugins" \) -print 2>/dev/null | sed 's|/[^/]*$||' | sort -u)
 
     if [[ "$found_modules" -eq 0 ]]; then
       echo "Warning: No modules containing skills/rules/workflows found under '${path}'."
