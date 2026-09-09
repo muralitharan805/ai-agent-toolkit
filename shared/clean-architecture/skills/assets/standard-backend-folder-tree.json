@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Standard Clean Architecture Backend Project Layout",
+  "description": "Language-agnostic production backend folder structure and boundary definitions.",
+  "root": "project-root",
+  "layers": [
+    {
+      "layer": "Adapters / Transport",
+      "ring": 1,
+      "direction": "Outer",
+      "purpose": "Protocol handling, HTTP controllers, gRPC, WebSockets, CLI commands",
+      "allowed_dependencies": ["Application / Use Cases", "Domain / Entities", "Contracts / DTOs"]
+    },
+    {
+      "layer": "Application / Use Cases",
+      "ring": 2,
+      "direction": "Inward",
+      "purpose": "Business use case orchestration, transactions, port invocation",
+      "allowed_dependencies": ["Domain / Entities", "Ports / Interfaces", "Contracts / DTOs"]
+    },
+    {
+      "layer": "Domain / Entities",
+      "ring": 3,
+      "direction": "Core Center",
+      "purpose": "Pure business models, entity invariants, domain events, domain exceptions",
+      "allowed_dependencies": []
+    },
+    {
+      "layer": "Infrastructure / Persistence",
+      "ring": 4,
+      "direction": "Outer Boundary",
+      "purpose": "Concrete database repositories, cache drivers, external API clients, message brokers",
+      "allowed_dependencies": ["Domain / Entities (via Port implementation)", "Contracts / DTOs"]
+    }
+  ],
+  "structure": {
+    "src": {
+      "modules": {
+        "description": "Feature domains organized by business capability (Domain-First packaging)",
+        "sample_feature_user": {
+          "user.controller": "Adapter layer — protocol handling only (HTTP/gRPC)",
+          "user.service": "Application layer — use case and business orchestration",
+          "user.repository": "Port abstraction — interface defining database contract",
+          "user.entity": "Core Domain — pure model with zero external dependencies",
+          "user.dto": "Contracts — request/response data transfer objects",
+          "user.test": "Co-located behavioral and unit test suite"
+        }
+      },
+      "common": {
+        "description": "Stateless cross-cutting concerns (zero business logic)",
+        "subdirectories": [
+          "decorators",
+          "filters",
+          "guards",
+          "interceptors",
+          "middlewares",
+          "pipes",
+          "utils"
+        ]
+      },
+      "config": "Central environment config service with fail-fast boot validation",
+      "database": {
+        "description": "Persistence migrations, seeders, and connection pool setup",
+        "subdirectories": ["migrations", "seeders", "connection"]
+      },
+      "observability": "Structured logger, OpenTelemetry tracer, and Prometheus metrics bootstrap",
+      "main": "Application entry point and server bootstrap"
+    },
+    "tests": {
+      "unit": "Cross-module isolated unit tests",
+      "integration": "Database and external service integration tests",
+      "performance": "Load testing scripts and benchmarks"
+    },
+    "docs": [
+      "architecture.md",
+      "development.md",
+      "testing.md",
+      "deployment.md",
+      "database.md",
+      "troubleshooting.md"
+    ],
+    "scripts": "Migration runners, seed scripts, pre-flight audit tools",
+    "docker": ["Dockerfile", "docker-compose.yml"],
+    "configuration": [
+      ".env.example",
+      ".env",
+      "CHANGELOG.md",
+      "README.md"
+    ]
+  }
+}
