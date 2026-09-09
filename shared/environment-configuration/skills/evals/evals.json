@@ -1,0 +1,44 @@
+{
+  "skill_name": "environment-configuration",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Startup Schema Validation & Fail-Fast Boot Gate",
+      "prompt": "Implement a configuration loader for a backend app that validates PORT, DATABASE_URL, and JWT_SECRET on boot, crashing with an informative diagnostic error if any are invalid.",
+      "expected_output": "Defines a strict schema (e.g. Zod or Pydantic), parses environment variables during bootstrap, and aborts process execution with code 1 upon validation failure.",
+      "assertions": [
+        "Defines explicit schema validation covering all mandatory environment variables",
+        "Executes validation during bootstrap prior to opening database pools or HTTP listeners",
+        "Logs structured error identifying missing or malformed variables upon validation failure",
+        "Immediately terminates process with exit code 1 to prevent invalid runtime states"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Centralized Config Service & Scattered Access Refactoring",
+      "prompt": "Audit a service that accesses 'process.env.DATABASE_URL' and refactor it to consume a centralized, strongly-typed configuration service.",
+      "expected_output": "Replaces raw process.env calls with an injected ConfigService instance providing compile-time type safety.",
+      "assertions": [
+        "Eliminates raw process.env or os.environ calls inside business logic and services",
+        "Encapsulates configuration access behind a typed ConfigService singleton or injectable",
+        "Enforces type coercion for numeric ports and boolean operational flags",
+        "Enables straightforward mocking of configuration values during unit testing"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": ".env.example Parity, Junior Comments & Secrets Hygiene",
+      "prompt": "Audit a backend project's .env.example file, ensure 1:1 variable parity with required configuration, add junior-friendly setup comments, and verify gitignore rules.",
+      "expected_output": "Creates or updates .env.example with descriptive comments for every variable, ensures no real credentials are leaked, and verifies .env is gitignored.",
+      "assertions": [
+        "Ensures every variable consumed by the application is mirrored in .env.example",
+        "Adds 3-point documentation (purpose, format, local source) above each variable",
+        "Replaces real credentials with safe placeholder strings like 'your_api_key_here'",
+        "Verifies that .env files containing live credentials are listed in .gitignore"
+      ],
+      "files": []
+    }
+  ]
+}

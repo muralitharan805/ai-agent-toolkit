@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "environment-configuration",
+  "evaluated_at": "2026-09-09T17:43:33.524736+00:00",
+  "evaluator": "eval-skill-runner v1.0.0",
+  "quality_score_percent": 100,
+  "verdict": "passed",
+  "benchmark": {
+    "baseline_pass_rate_percent": 50,
+    "equipped_pass_rate_percent": 100,
+    "delta_improvement_percent": 50
+  },
+  "summary": {
+    "total_test_cases": 3,
+    "passed_test_cases": 3,
+    "total_assertions": 12,
+    "passed_assertions": 12
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Startup Schema Validation & Fail-Fast Boot Gate",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Defines explicit schema validation covering all mandatory environment variables",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Executes validation during bootstrap prior to opening database pools or HTTP listeners",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Logs structured error identifying missing or malformed variables upon validation failure",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Immediately terminates process with exit code 1 to prevent invalid runtime states",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Centralized Config Service & Scattered Access Refactoring",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Eliminates raw process.env or os.environ calls inside business logic and services",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Encapsulates configuration access behind a typed ConfigService singleton or injectable",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Enforces type coercion for numeric ports and boolean operational flags",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Enables straightforward mocking of configuration values during unit testing",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": ".env.example Parity, Junior Comments & Secrets Hygiene",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Ensures every variable consumed by the application is mirrored in .env.example",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Adds 3-point documentation (purpose, format, local source) above each variable",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Replaces real credentials with safe placeholder strings like 'your_api_key_here'",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Verifies that .env files containing live credentials are listed in .gitignore",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    }
+  ]
+}
