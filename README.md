@@ -157,9 +157,9 @@ graph LR
 
 ---
 
-## 📂 Repository Directory Layout
+## 📂 Repository Directory Layout (Dynamic Deep Architecture)
 
-The toolkit is organized cleanly into 3 primary public directories and an automated synchronization utility:
+The toolkit uses an **infinite-depth dynamic discovery** model. Domains can be nested arbitrarily deep (`[Category] / [Sub-Category] / ... / [Topic] / [Sub-Topic]`). A "Domain Bundle" is dynamically recognized when the synchronization engine hits a `skills/` or `rules/` directory at the end of the tree.
 
 ```text
 ai-agent-toolkit/
