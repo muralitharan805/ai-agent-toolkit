@@ -559,8 +559,8 @@ update_global_gemini_md() {
     [[ -z "${rule_dir// }" ]] && continue
 
     local full_path="${TOOLKIT_ROOT}/${rule_dir}"
-    if [[ -d "${full_path}/rules" ]]; then
-      for rf in "${full_path}/rules"/*.md; do
+    if [[ -d "${full_path}" ]]; then
+      while IFS= read -r rf; do
         if [[ -f "$rf" ]]; then
           echo "  [Global Rule] 📦 Staging $(basename "$rf") from ${rule_dir}..."
           local stripped
@@ -570,7 +570,7 @@ update_global_gemini_md() {
           fi
           curated_buffer+="$stripped"
         fi
-      done
+      done < <(find "$full_path" -type f -path "*/rules/*.md" 2>/dev/null)
     elif [[ -f "$full_path" ]]; then
       echo "  [Global Rule] 📦 Staging $(basename "$full_path")..."
       local stripped
