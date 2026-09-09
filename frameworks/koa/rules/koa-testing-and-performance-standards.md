@@ -52,6 +52,18 @@ This rule enforces enterprise testing architecture, database transaction safety,
 - Standard read endpoints MUST maintain a 95th percentile latency ($p95$) of less than **500ms** under 25 concurrent users.
 - Complex search endpoints MUST maintain $p95 < 1000\text{ms}$. Regressions (> 20% increase in $p95$) MUST fail deployment quality gates.
 
+#### 8.1 Mandatory Pre-Flight Health & Token Warmup Gate
+- Load testing pipelines MUST execute a single-iteration pre-flight check (`k6-warmup-check.js`) before spawning concurrent Virtual Users (VUs).
+- If the pre-flight check fails with HTTP 401/403 (expired or malformed token) or unreachable host, the test suite MUST abort immediately without entering concurrent ramp stages.
+
+#### 8.2 Ephemeral Zero-Cache Container Execution Standard
+- Containerized k6 benchmarks MUST execute via ephemeral containers (`docker compose run --rm <service>`).
+- Using persistent `docker compose up` for test execution is strictly forbidden to eliminate environment variable caching from stopped containers and prevent leftover container clutter.
+- All telemetry summary exports MUST be routed into a centralized `log/` directory (`log/k6-performance-summary.json`).
+- Aggressive k6 stress/spike tests MUST NEVER run directly against production environments.
+- Standard read endpoints MUST maintain a 95th percentile latency ($p95$) of less than **500ms** under 25 concurrent users.
+- Complex search endpoints MUST maintain $p95 < 1000\text{ms}$. Regressions (> 20% increase in $p95$) MUST fail deployment quality gates.
+
 ### 9. Constrained Resource Optimization (2-Core / 2GB VMs)
 - PM2 single worker vs cluster mode (2 workers) MUST be benchmarked before production deployment to prevent memory thrashing.
 - MySQL connection pool size MUST NOT exceed 10 connections per Node process on 2GB hosts.

@@ -8,7 +8,7 @@
 run_performance_benchmarks.py
 CLI benchmark automation tool for Koa.js applications. Runs or parses k6 load test results,
 verifies SLA percentiles (p50, p95, p99), and detects latency regressions.
-Emits structured JSON to stdout and diagnostics to stderr.
+Auto-detects log/k6-performance-summary.json before fallback.
 """
 
 import os
@@ -78,8 +78,13 @@ def main() -> None:
     args = parser.parse_args()
 
     if not args.summary_json and not args.script:
-        sys.stderr.write("Error: Must provide either --summary-json or --script.\n")
-        sys.exit(1)
+        if os.path.exists("log/k6-performance-summary.json"):
+            args.summary_json = "log/k6-performance-summary.json"
+        elif os.path.exists("k6-performance-summary.json"):
+            args.summary_json = "k6-performance-summary.json"
+        else:
+            sys.stderr.write("Error: Must provide either --summary-json or --script.\n")
+            sys.exit(1)
 
     summary_data = {}
 
@@ -112,7 +117,6 @@ def main() -> None:
 
     evaluation = evaluate_metrics(summary_data, args.max_p95, args.max_error_rate)
 
-    # Diagnostic output on stderr
     if evaluation["pass"]:
         sys.stderr.write("✅ Performance Benchmark Passed SLA Gates!\n")
     else:
@@ -121,7 +125,6 @@ def main() -> None:
             if v:
                 sys.stderr.write(f"  - {v}\n")
 
-    # Structured JSON report on stdout
     print(json.dumps(evaluation, indent=2))
     sys.exit(0 if evaluation["pass"] else 1)
 
