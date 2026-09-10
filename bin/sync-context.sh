@@ -24,22 +24,24 @@ END_TAG="<!-- AGENT_TOOLKIT_END -->"
 
 # Default curated rules for global sync into ~/.gemini/GEMINI.md
 DEFAULT_GLOBAL_RULE_DIRS=(
-  "shared/code-quality"
-  "shared/communication"
-  "shared/logging"
-  "shared/package-management"
-  "shared/security"
-  "shared/git"
+  "shared/clean-code-and-maintainability"
+  "shared/thanglish-mentor-persona"
+  "shared/observability-and-telemetry"
+  "shared/pnpm-package-management"
+  "shared/security-auditing-and-pen-testing"
+  "shared/security-baseline"
+  "shared/github-issue-pr-automation"
 )
 
 # Default curated modules synced when --global is invoked without arguments
 DEFAULT_GLOBAL_MODULES=(
-  "shared/code-quality"
-  "shared/communication"
-  "shared/logging"
-  "shared/package-management"
-  "shared/security"
-  "shared/git"
+  "shared/clean-code-and-maintainability"
+  "shared/thanglish-mentor-persona"
+  "shared/observability-and-telemetry"
+  "shared/pnpm-package-management"
+  "shared/security-auditing-and-pen-testing"
+  "shared/security-baseline"
+  "shared/github-issue-pr-automation"
   "shared/generators"
 )
 

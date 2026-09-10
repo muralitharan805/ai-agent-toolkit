@@ -86,8 +86,15 @@ This skill establishes the production engineering standards for the **Testing Py
 ## Authoritative References & Assets
 
 - **Deep Architectural Reference**: Read [references/testing-pyramid-and-testcontainers.md](references/testing-pyramid-and-testcontainers.md) for Testcontainers lifecycle, transaction rollback mechanics, smoke test scripts, and k6 SLA definitions.
-- **Production Asset**: Inspect [assets/testcontainers-integration-bootstrap.template.ts](assets/testcontainers-integration-bootstrap.template.ts) for container management and rollback wrappers.
-- **CLI Auditor Tool**: Run [scripts/audit_testing_pyramid.py](scripts/audit_testing_pyramid.py) to audit coverage gates, test distribution, and non-deterministic patterns.
+- **Vitest & Jest Mocking**: Consult [references/vitest-and-jest-mocking-patterns.md](references/vitest-and-jest-mocking-patterns.md) for test doubles, spied mock boundaries, and timer fakes.
+- **Playwright E2E Best Practices**: Review [references/playwright-e2e-best-practices.md](references/playwright-e2e-best-practices.md) for locator resilience, network interception, and parallel browser execution.
+- **Production Assets & Configurations**:
+  - [assets/testcontainers-integration-bootstrap.template.ts](assets/testcontainers-integration-bootstrap.template.ts) for container management and rollback wrappers.
+  - [assets/vitest.config.ts](assets/vitest.config.ts) and [assets/playwright.config.ts](assets/playwright.config.ts) for unit and E2E runner setups.
+  - [assets/service.spec.template.ts](assets/service.spec.template.ts) for unit test starter templates.
+- **CLI Auditor Tools**:
+  - Run [scripts/audit_testing_pyramid.py](scripts/audit_testing_pyramid.py) to audit pyramid ratios, coverage gates, and non-deterministic patterns.
+  - Run [scripts/verify_test_coverage.py](scripts/verify_test_coverage.py) to parse coverage reports and verify line and branch thresholds.
 - **Evaluation Suite**: Review [evals/evals.json](evals/evals.json) for quality verification test cases.
 
 ---

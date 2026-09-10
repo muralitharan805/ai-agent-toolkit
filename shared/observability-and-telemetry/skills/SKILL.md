@@ -84,8 +84,13 @@ This skill establishes the production engineering protocol for implementing the 
 ## Authoritative References & Assets
 
 - **Deep Architecture Guide**: Read [Three Pillars of Observability](references/three-pillars-of-observability.md) for Prometheus percentile formulas, W3C specification details, and log aggregation topologies.
-- **Production Template**: Review [prometheus-red-metrics.template.ts](assets/prometheus-red-metrics.template.ts) for production-grade TypeScript logger, RED middleware, and OTel helper implementations.
-- **CLI Auditor**: Execute [audit_observability_pipeline.py](scripts/audit_observability_pipeline.py) to automatically detect compliance regressions.
+- **PII Sanitization Runbook**: Consult [PII Sanitization & Compliance](references/pii-sanitization-and-compliance.md) for recursive key masking patterns and GDPR/PCI-DSS standards.
+- **Structured JSON Logging & Tracing**: Refer to [Structured JSON Logging & Tracing](references/structured-json-logging-and-tracing.md) for log levels, correlation IDs, and Pino configurations.
+- **Production Asset**: Review [prometheus-red-metrics.template.ts](assets/prometheus-red-metrics.template.ts) for production-grade TypeScript logger, RED middleware, and OTel helper implementations.
+- **Log Schemas & Catalogs**: Inspect [structured-log-schema.json](assets/structured-log-schema.json) and [sensitive-keys-catalog.json](assets/sensitive-keys-catalog.json) for log validation schemas and redacted key catalogs.
+- **CLI Auditors**:
+  - Run [audit_observability_pipeline.py](scripts/audit_observability_pipeline.py) to detect logging, metric, and tracing compliance.
+  - Run [audit_log_hygiene.py](scripts/audit_log_hygiene.py) for deep AST scanning of raw console.log statements and correlation ID propagation.
 
 ---
 

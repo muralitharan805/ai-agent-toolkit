@@ -1,6 +1,9 @@
 ---
 name: github-issue-pr-automation
 description: "Automates the GitHub feature lifecycle: issue creation, normalized branch management, conventional commits, pull requests with auto-closing, and branch pruning."
+metadata:
+  framework_version: "Language-Agnostic"
+  last_verified_date: "2026-09-10"
 ---
 
 # GitHub Issue & PR Automation Architecture
@@ -12,19 +15,37 @@ Provides structured standards and procedural automation for managing the feature
 ## 5-Pillar Architecture Directory Layout
 
 ```text
-shared/git/skills/github-issue-pr-automation/
-├── SKILL.md                                           # Core procedural lifecycle guidance (< 500 lines)
-├── references/                                        # Authoritative deep-dive runbooks
-│   └── branching-and-pr-automation-guide.md          # Branch patterns, PR directives, and cleanup
-├── scripts/                                           # Standalone automation tools
-│   └── manage_git_feature_lifecycle.py               # CLI lifecycle validation & hygiene checker
-├── assets/                                            # Reusable templates and starters
-│   ├── issue-template.json                           # Structured junior-friendly issue template
-│   └── pr-template.md                                # Pull request template with Closes directive
-└── evals/                                             # Verifiable test cases and grading
-    ├── evals.json
-    └── grading.json
+shared/github-issue-pr-automation/
+├── rules/
+│   └── github-pr-issue-workflow.md
+└── skills/
+    ├── SKILL.md                                           # Core procedural lifecycle guidance (< 500 lines)
+    ├── references/                                        # Authoritative deep-dive runbooks
+    │   ├── branching-and-pr-automation-guide.md          # Branch patterns, PR directives, and cleanup
+    │   └── conventional-commits-specification.md         # Conventional Commits format specification
+    ├── scripts/                                           # Standalone automation tools
+    │   ├── manage_git_feature_lifecycle.py               # CLI lifecycle validation & hygiene checker
+    │   └── validate_commit_message.py                    # Commit message syntax validator
+    ├── assets/                                            # Reusable templates and starters
+    │   ├── issue-template.json                           # Structured junior-friendly issue template
+    │   ├── pr-template.md                                # Pull request template with Closes directive
+    │   └── commit-template.txt                           # Conventional commit text template
+    └── evals/                                             # Verifiable test cases and grading
+        ├── evals.json
+        └── grading.json
 ```
+
+---
+
+## Authoritative References & Assets
+
+- **Branching & PR Automation**: Read [branching-and-pr-automation-guide.md](references/branching-and-pr-automation-guide.md) for branch patterns, PR directives, and cleanup runbooks.
+- **Conventional Commits**: Consult [conventional-commits-specification.md](references/conventional-commits-specification.md) for commit type definitions and semantic release formats.
+- **CLI Automation Tools**:
+  - Run [manage_git_feature_lifecycle.py](scripts/manage_git_feature_lifecycle.py) for branch hygiene and issue linking verification.
+  - Run [validate_commit_message.py](scripts/validate_commit_message.py) to validate commit message format.
+- **Assets & Templates**: Review [issue-template.json](assets/issue-template.json), [pr-template.md](assets/pr-template.md), and [commit-template.txt](assets/commit-template.txt).
+- **Evaluation Suite**: Review [evals/evals.json](evals/evals.json) for quality verification test cases.
 
 ---
 
