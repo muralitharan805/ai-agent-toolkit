@@ -1,0 +1,122 @@
+{
+  "skill_name": "google-suite",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Publisher ID & Script Placement",
+      "prompt": "Embed Google AdSense publisher script in document head with async execution and configure a responsive ad unit with client ID.",
+      "expected_output": "Injects official adsbygoogle.js script tag with ca-pub-XXXXXXXXXXXXXXXX syntax and responsive ins container.",
+      "assertions": [
+        "Loads adsbygoogle.js asynchronously in document head",
+        "Includes crossorigin='anonymous' attribute on script tag",
+        "Validates 16-digit publisher account syntax (ca-pub-XXXXXXXXXXXXXXXX)",
+        "Configures responsive ad unit with data-ad-client and data-ad-slot"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Cumulative Layout Shift (CLS) Prevention",
+      "prompt": "Design CSS layout wrapper for an AdSense banner to reserve height dynamically and prevent Core Web Vitals CLS layout shifts.",
+      "expected_output": "Reserves container space using CSS min-height to eliminate content displacement when asynchronous ads render.",
+      "assertions": [
+        "Declares explicit CSS min-height reservation on ad wrapper containers",
+        "Wraps ins.adsbygoogle in responsive container element",
+        "Prevents unreserved 0px starting heights during asynchronous rendering",
+        "Supports responsive leaderboard and mobile banner dimensions"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "ads.txt Authorization & Mandatory Legal Disclosures",
+      "prompt": "Configure root ads.txt with Google canonical TAG ID and establish required Privacy Policy disclosures for third-party cookie usage.",
+      "expected_output": "Deploys compliant ads.txt file and publishes Privacy Policy disclosing Google AdSense, cookies, and opt-out mechanisms.",
+      "assertions": [
+        "Deploys root ads.txt with format 'google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0'",
+        "Discloses Google third-party vendor advertising in Privacy Policy",
+        "Explains DART cookie usage for personalized ad targeting",
+        "Provides direct user opt-out links to Google Ads Settings"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Measurement ID & Subdomain Data Stream Isolation",
+      "prompt": "Configure GA4 for a multi-service platform where app, tools, and marketing sites reside on separate subdomains without cross-traffic pollution.",
+      "expected_output": "Configures isolated Web Data Streams with dedicated G-XXXXXXXXXX IDs and loads gtag.js asynchronously.",
+      "assertions": [
+        "Loads gtag.js asynchronously via official googletagmanager.com URL",
+        "Configures dedicated Measurement ID per subdomain without cross-stream pollution",
+        "Initializes global dataLayer array and gtag helper function safely",
+        "Uses valid GA4 Measurement ID syntax matching G-[A-Z0-9]+"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "SPA Route Tracking & Duplicate Pageview Prevention",
+      "prompt": "Integrate GA4 in an Angular Single Page Application, preventing duplicate initial pageviews and capturing client-side route transitions.",
+      "expected_output": "Disables automatic page_view in initial config and dispatches page_view events on router navigation completion.",
+      "assertions": [
+        "Configures send_page_view: false in initial gtag config call",
+        "Subscribes to router navigation events to track SPA view transitions",
+        "Dispatches explicit page_view event with page_path and page_title",
+        "Guards analytics service against server-side rendering execution"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "Custom Event Taxonomy & PII Redaction",
+      "prompt": "Implement custom event tracking for user actions while enforcing snake_case naming conventions and strictly preventing PII transmission.",
+      "expected_output": "Emits valid custom events adhering to length and naming constraints while redacting passwords, emails, and sensitive tokens.",
+      "assertions": [
+        "Enforces snake_case event names within 40-character length boundary",
+        "Avoids reserved Google prefixes (_/ga_/google_/firebase_)",
+        "Strips passwords, auth tokens, and plaintext emails from event parameters",
+        "Wraps gtag calls with defensive runtime existence checks"
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "Canonical Link Tag & URL Normalization",
+      "prompt": "Implement canonical link tag strategy for apex domain vs subdomain routing, preventing duplicate content penalties in Google Search Console.",
+      "expected_output": "Injects link rel=canonical with absolute canonical URL, strips tracking query parameters, and ensures self-referencing subdomains.",
+      "assertions": [
+        "Renders explicit <link rel='canonical' href='...'> in document head",
+        "Enforces single apex domain vs www hostname consistency",
+        "Configures self-referencing canonical URL on subdomains",
+        "Strips dynamic UTM and tracking query parameters from canonical URL"
+      ],
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "XML Sitemap & Robots.txt Directives",
+      "prompt": "Generate a compliant sitemap.xml with prioritized URLs and configure robots.txt referencing the public sitemap endpoint.",
+      "expected_output": "Creates valid XML sitemap with lastmod, changefreq, and priority tags, and exposes Sitemap directive in robots.txt.",
+      "assertions": [
+        "Defines valid XML sitemap structure conforming to sitemaps.org schema",
+        "Assigns priority tiers (1.0 for home, 0.8 for tools, 0.3 for legal)",
+        "Configures robots.txt referencing absolute sitemap URL",
+        "Disallows crawler indexing of private administrative and API routes"
+      ],
+      "files": []
+    },
+    {
+      "id": 9,
+      "name": "JSON-LD WebApplication Schema Rich Snippet",
+      "prompt": "Embed structured Schema.org JSON-LD structured data into the HTML head for a WebApplication entity with licensing and author metadata.",
+      "expected_output": "Injects application/ld+json script tag with valid Schema.org WebApplication or SoftwareApplication structure.",
+      "assertions": [
+        "Embeds script type='application/ld+json' in document head",
+        "Declares Schema.org context and WebApplication or SoftwareApplication type",
+        "Provides application name, url, description, and operatingSystem properties",
+        "Includes author or creator entity metadata"
+      ],
+      "files": []
+    }
+  ]
+}
