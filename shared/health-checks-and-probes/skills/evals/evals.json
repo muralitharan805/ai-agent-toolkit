@@ -1,0 +1,44 @@
+{
+  "skill_name": "health-checks-and-probes",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Strict Liveness vs. Readiness Probe Separation",
+      "prompt": "Review an Express application where a developer put database queries inside the /live liveness check and refactor it into dedicated /live and /ready endpoints to avoid Kubernetes cascading restart loops.",
+      "expected_output": "Separates /live to purely check event loop responsiveness without external I/O, moving database health checks into /ready.",
+      "assertions": [
+        "Ensures /live liveness probe performs zero external I/O (no DB, Redis, or network calls)",
+        "Returns immediate HTTP 200 OK from /live if the process event loop is active",
+        "Places upstream backing dependency checks exclusively inside /ready",
+        "Eliminates cascading container restart risks in Kubernetes or container orchestrators"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Readiness Probe Backing Dependency Health & 503 Handling",
+      "prompt": "Implement a readiness probe at /ready that executes database and cache pings with strict 1000ms timeouts and returns HTTP 503 Service Unavailable when any dependency fails or during server draining.",
+      "expected_output": "Implements /ready returning 200 when all dependencies pass, and 503 when degraded or draining, with timeout bounds.",
+      "assertions": [
+        "Checks critical backing dependencies (database, cache) in parallel with bounded timeouts",
+        "Returns HTTP 503 Service Unavailable immediately when a critical dependency fails or times out",
+        "Returns HTTP 503 when the server process is in a connection draining or terminating state",
+        "Provides structured JSON indicating which specific dependency is down"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Diagnostic Telemetry Security & Startup Probe Protection",
+      "prompt": "Design a protected /health/details endpoint exposing latency breakdown, version, and uptime, and configure a /startup probe to prevent premature liveness kills during cold boot.",
+      "expected_output": "Provides a structured detailed health diagnostic response restricted from public access and implements /startup for heavy warmup routines.",
+      "assertions": [
+        "Emits comprehensive diagnostic telemetry including uptime, version, and per-check latency in ms",
+        "Restricts /health/details access from the public internet via network rules or IP whitelisting",
+        "Implements /startup probe returning 200 only after warmup routines complete",
+        "Prevents orchestrator cold-start liveness termination stampedes"
+      ],
+      "files": []
+    }
+  ]
+}

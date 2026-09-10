@@ -1,0 +1,44 @@
+{
+  "skill_name": "observability-and-telemetry",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Structured JSON Logging & Recursive PII Redaction",
+      "prompt": "Configure an enterprise logging system for an order processing service that outputs single-line structured JSON logs with correlationId and automatically redacts passwords, tokens, and credit card numbers.",
+      "expected_output": "Configures a structured JSON logger emitting mandatory fields (timestamp, level, service, correlationId, message) and recursive PII redaction without raw console.log.",
+      "assertions": [
+        "Replaces raw console.log with a dedicated structured JSON logger",
+        "Includes mandatory baseline fields: timestamp (ISO 8601 UTC), level, service, correlationId, and message",
+        "Applies recursive sanitization replacing passwords, bearer tokens, and PANs with [REDACTED]",
+        "Emits single-line JSON logs to stdout for high-throughput stream ingestion"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Prometheus RED Metrics Instrumentation & Cardinality Protection",
+      "prompt": "Implement Prometheus RED metrics middleware for an API gateway that records http_requests_total, errors_total, and http_request_duration_seconds at /metrics while preventing metric cardinality explosion.",
+      "expected_output": "Instruments Rate, Errors, and Duration metrics in Prometheus format using parameterized route templates to prevent cardinality explosion.",
+      "assertions": [
+        "Instruments Rate (http_requests_total) counter partitioned by method, route, and status",
+        "Instruments Duration (http_request_duration_seconds) histogram with standard latency buckets for p50/p90/p99",
+        "Strictly uses parameterized route templates (:id) rather than raw URLs to prevent cardinality explosion",
+        "Exposes standard Prometheus scrape endpoint at /metrics"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Distributed Tracing via OpenTelemetry & W3C Propagation",
+      "prompt": "Set up OpenTelemetry distributed tracing in a microservice handling payment transactions, ensuring outbound HTTP calls propagate W3C traceparent headers and database queries are wrapped in active child spans.",
+      "expected_output": "Initializes OpenTelemetry NodeSDK, instruments child spans for critical operations, and propagates W3C traceparent headers across boundaries.",
+      "assertions": [
+        "Initializes OpenTelemetry tracer with appropriate service identification and exporter",
+        "Wraps database operations or downstream calls in named active child spans with startActiveSpan",
+        "Propagates or extracts W3C traceparent context headers across network boundaries",
+        "Records exception telemetry and sets span status to ERROR upon unhandled failure"
+      ],
+      "files": []
+    }
+  ]
+}

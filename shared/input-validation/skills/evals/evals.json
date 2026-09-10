@@ -1,0 +1,44 @@
+{
+  "skill_name": "input-validation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Zero-Trust DTO Schema Validation & Whitelist Stripping",
+      "prompt": "Create an input validation schema for a user update endpoint that strips unexpected fields like 'role' or 'isAdmin' to prevent Mass Assignment attacks.",
+      "expected_output": "Defines a strict DTO schema (e.g. Zod .strict() or Pydantic extra='forbid') and asserts that undeclared fields are rejected with HTTP 400 or dropped.",
+      "assertions": [
+        "Defines explicit schema validation for allowed request body fields",
+        "Enforces strict whitelisting to prevent Mass Assignment privilege escalation",
+        "Rejects or strips undeclared parameters like 'role', 'isVerified', or 'balance'",
+        "Validates standard formats including E.164 phone numbers and RFC-5322 emails"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Field-Level Error Aggregation in Standard Error Envelope",
+      "prompt": "Implement a validation pipe that inspects a multi-field request and aggregates all field validation failures into a structured details array rather than aborting on the first error.",
+      "expected_output": "Emits a VALIDATION_ERROR (400) containing an array of all field errors with field paths and localized messages.",
+      "assertions": [
+        "Aggregates all schema validation failures across all submitted fields",
+        "Avoids early abort on the first encountered field failure",
+        "Returns standard { success: false, error: { code: 'VALIDATION_ERROR', details: [...] } } payload",
+        "Identifies precise field path and clear error description for each failed property"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Multi-Layer Validation Boundary Separation",
+      "prompt": "Review an endpoint where database uniqueness checks were embedded into a DTO schema validator and refactor it according to the 3-layer validation model.",
+      "expected_output": "Separates Layer 1 shape/type validation in the pipe from Layer 2 business invariant checks in the application service.",
+      "assertions": [
+        "Isolates transport Layer 1 schema validation from business domain rules",
+        "Ensures transport validation pipes remain pure and fast without database I/O calls",
+        "Delegates business state assertions (e.g. checking user existence) to the application service",
+        "Preserves clean architectural boundaries between controllers and domain services"
+      ],
+      "files": []
+    }
+  ]
+}

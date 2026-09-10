@@ -1,0 +1,44 @@
+{
+  "skill_name": "testing-pyramid-baseline",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Unit Test Isolation and Coverage Threshold Configuration",
+      "prompt": "Configure a test runner (Jest or Vitest) with strict CI coverage thresholds (80% lines, 75% branches), and write a pure unit test with mocked dependencies and sub-millisecond execution.",
+      "expected_output": "Configures coverage threshold in test runner config and implements an isolated unit test using mock dependencies and fake timers.",
+      "assertions": [
+        "Configures test runner thresholds for minimum 80% line coverage and 75% branch coverage",
+        "Ensures unit tests execute with zero external network or database I/O using mocks",
+        "Maintains deterministic test execution without unseeded random values or unmocked timers",
+        "Focuses individual unit tests on a single logical assertion or behavior"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Testcontainers Integration Test with Transaction Rollback Isolation",
+      "prompt": "Implement an integration test harness using Testcontainers for PostgreSQL, running database migrations before tests and wrapping each test in an isolated transaction that rolls back.",
+      "expected_output": "Builds singleton Testcontainers manager for PostgreSQL, executes migrations pre-suite, and wraps tests with withRollbackTransaction helper.",
+      "assertions": [
+        "Launches ephemeral PostgreSQL container using Testcontainers singleton lifecycle",
+        "Executes database schema migrations prior to running the integration test suite",
+        "Executes each test inside a dedicated transaction that unconditionally rolls back upon completion",
+        "Guarantees test isolation and prevents mutated state pollution across test runs"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Post-Deployment Smoke Testing & k6 Performance SLA Verification",
+      "prompt": "Author an automated post-deployment smoke test script and a k6 load test script with strict latency SLA thresholds (p50 < 50ms, p95 < 200ms, p99 < 500ms, error rate < 0.1%).",
+      "expected_output": "Creates deployment smoke script verifying /health/ready and 401 error envelope, plus k6 script asserting p50/p95/p99 and error rate thresholds.",
+      "assertions": [
+        "Verifies readiness probe (/health/ready) returns HTTP 200 after deployment rollout",
+        "Validates security error contracts on unauthenticated API requests in smoke test",
+        "Defines k6 performance stages for concurrency ramp-up and steady state load",
+        "Enforces strict SLA thresholds on p50 (<50ms), p95 (<200ms), p99 (<500ms), and error rate (<0.1%)"
+      ],
+      "files": []
+    }
+  ]
+}

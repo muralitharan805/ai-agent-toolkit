@@ -1,0 +1,44 @@
+{
+  "skill_name": "global-error-handling",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Domain Error Hierarchy & HTTP Status Mapping",
+      "prompt": "Implement a domain service that throws explicit typed errors (NotFoundError, ConflictError) and verify they map cleanly to 404 and 409 status codes.",
+      "expected_output": "Defines typed errors extending BaseAppError and asserts that the global error handler resolves them with correct HTTP status codes.",
+      "assertions": [
+        "Defines BaseAppError base class with code, httpStatus, and isOperational fields",
+        "Implements domain subclasses (NotFoundError, ConflictError, ValidationError)",
+        "Ensures domain services throw typed subclasses instead of raw generic Error",
+        "Maps NotFoundError to 404 and ConflictError to 409 in the global filter"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Operational vs Programmer Error Triage & Alerting Hook",
+      "prompt": "Implement a global error handler that logs operational 4xx errors as WARN without alerting, but logs unexpected 500 errors as ERROR with an on-call alert dispatch.",
+      "expected_output": "Differentiates errors by isOperational flag, routes 4xx to WARN logs, and routes 500s to ERROR logs with on-call alert invocation.",
+      "assertions": [
+        "Classifies errors into Operational (isOperational: true) and Programmer (isOperational: false)",
+        "Logs operational business errors at WARN severity with correlationId",
+        "Logs unexpected programmer errors at ERROR severity with complete stack trace",
+        "Dispatches an automated on-call incident alert hook on 500 errors"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Detection & Remediation of Swallowed Exceptions",
+      "prompt": "Audit a codebase containing empty catch blocks 'catch (e) {}' and refactor them to log the exception context or properly rethrow.",
+      "expected_output": "Identifies empty catch blocks and replaces them with structured warning logs or rethrows a typed DomainError.",
+      "assertions": [
+        "Detects empty catch blocks that silently swallow exceptions",
+        "Prohibits silent exception suppression without logging or rethrowing",
+        "Enforces logging of error context if an exception is intentionally non-fatal",
+        "Preserves complete error stack traces for upstream debugging"
+      ],
+      "files": []
+    }
+  ]
+}

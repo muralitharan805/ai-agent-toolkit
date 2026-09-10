@@ -1,0 +1,44 @@
+{
+  "skill_name": "security-baseline",
+  "evals": [
+    {
+      "id": 1,
+      "name": "HTTP Security Headers & Helmet Hardening",
+      "prompt": "Configure HTTP security headers using Helmet for an enterprise backend API, ensuring Content-Security-Policy, HSTS (1 year), X-Frame-Options: DENY, and nosniff are enforced.",
+      "expected_output": "Configures Helmet middleware with strict CSP, HSTS with preload, frameguard DENY, and nosniff.",
+      "assertions": [
+        "Configures Content-Security-Policy with strict default-src 'self' directive",
+        "Configures Strict-Transport-Security (HSTS) with minimum 1-year maxAge (31536000)",
+        "Sets X-Frame-Options to DENY to eliminate clickjacking iframe attacks",
+        "Sets X-Content-Type-Options to nosniff to prevent MIME-type confusion exploits"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "CORS Whitelist Lockdown & Zero Credentialed Wildcards",
+      "prompt": "Implement a CORS middleware that enforces an explicit whitelist of allowed frontend origins, supports cookies with credentials: true, and caches preflight responses for 10 minutes.",
+      "expected_output": "Constructs CORS validator using explicit origin whitelist and forbids wildcard origin with credentials: true.",
+      "assertions": [
+        "Enforces explicit origin validation against a whitelist of trusted production domains",
+        "Strictly forbids wildcard origin (*) when credentials: true is enabled",
+        "Restricts allowed HTTP methods to standard REST operations",
+        "Configures preflight maxAge caching to 600 seconds to minimize preflight round-trips"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Multi-Tier Rate Limiting Matrix & Inbound Payload Limits",
+      "prompt": "Configure rate limiting and body parser limits for an Express application, enforcing 5 req/min on login, 1000 req/min on authenticated routes, and a 1MB ceiling on JSON request bodies.",
+      "expected_output": "Configures differentiated rate limit tiers and caps JSON request body parsing at 1MB to prevent DoS.",
+      "assertions": [
+        "Enforces strict rate limiting on auth login (5 requests per minute per IP)",
+        "Enforces differentiated higher throughput for authenticated API users (e.g. 1000 req/min)",
+        "Enforces 1MB limit on JSON request body parsing to mitigate memory exhaustion DoS",
+        "Returns HTTP 429 Too Many Requests when rate limits are exceeded"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "skill_name": "caching-and-in-memory-store",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Multi-Tier Caching & Bounded Memory Leak Prevention",
+      "prompt": "Implement an in-memory L1 cache service for frequently accessed user permissions, ensuring process memory is strictly bounded with maximum item count and TTL eviction to prevent OOM leaks.",
+      "expected_output": "Configures an L1 cache with explicit max items and TTL bounds instead of an unbounded map, preventing Node.js process crashes.",
+      "assertions": [
+        "Defines bounded L1 cache with maximum item capacity constraint",
+        "Enforces automatic TTL expiration on all cached entries",
+        "Eliminates unbounded Map/object memory leaks in the application process",
+        "Provides clear separation between in-process memory and distributed cache storage"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Hierarchical Cache Key Namespacing & Mandatory TTLs",
+      "prompt": "Design a caching helper for an e-commerce catalog that formats keys according to standard hierarchical namespacing and guarantees every write includes an explicit TTL.",
+      "expected_output": "Formats keys using {service}:{entity}:{identifier}:{version} and writes to Redis using EX/PX flags, preventing zombie keys.",
+      "assertions": [
+        "Formats keys following {service}:{entity}:{identifier}:{version} convention",
+        "Applies version tag to support instant schema invalidation without global flush",
+        "Guarantees all write operations supply explicit TTL duration",
+        "Prevents creation of un-expiring zombie keys in Redis"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Cache Stampede Mitigation & Graceful Database Fallback",
+      "prompt": "Implement a cache-aside loader that uses distributed mutex locking (SET NX EX) to prevent thundering herds on hot key expiration, and falls back to the database if Redis is unreachable.",
+      "expected_output": "Uses distributed lock to serialize database queries during cache misses and catches Redis exceptions to fall back to the primary DB.",
+      "assertions": [
+        "Implements distributed mutex locking (NX option) to serialize database reads on cache miss",
+        "Prevents concurrent requests from hitting primary database simultaneously during hot key expiration",
+        "Catches Redis client network errors and transparently degrades to database queries",
+        "Releases distributed mutex lock in a finally block to avoid deadlocks"
+      ],
+      "files": []
+    }
+  ]
+}
