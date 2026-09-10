@@ -1,6 +1,6 @@
 ---
 name: code-quality-and-devex
-description: "Enforces automated linting (ESLint strict), zero-debate formatting (Prettier), strict type safety (no any), pre-commit hooks (Husky/lint-staged), secret scanning (GitLeaks), and Conventional Commits. Triggered by 'devex:', 'lint:', 'prettier:', 'commitlint:', 'pre-commit:', or '/code-quality-and-devex'."
+description: "Focuses strictly on tooling and automation (ESLint, Prettier, Husky pre-commit hooks, commitlint, GitLeaks). Not for software design patterns. Triggered by 'devex:', 'lint:', 'prettier:', 'commitlint:', 'pre-commit:', or '/code-quality-and-devex'."
 metadata:
   framework_version: "Language-Agnostic"
   last_verified_date: "2026-09-10"

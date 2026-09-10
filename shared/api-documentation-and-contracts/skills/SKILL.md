@@ -1,6 +1,6 @@
 ---
 name: api-documentation-and-contracts
-description: "Implements and audits OpenAPI 3.x documentation, complete request/response schemas, consumer-driven contract testing via Pact, and production documentation route hardening. Triggered by 'openapi:', 'swagger:', 'api-docs:', 'contract-test:', or '/api-documentation-and-contracts'."
+description: "Focuses on OpenAPI/Swagger specs, consumer-driven contract testing (Pact), and developer portals. Not for runtime JSON payload structure. Triggered by 'openapi:', 'swagger:', 'api-docs:', 'contract-test:', or '/api-documentation-and-contracts'."
 metadata:
   framework_version: "Language-Agnostic"
   last_verified_date: "2026-09-10"

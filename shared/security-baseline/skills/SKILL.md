@@ -1,6 +1,6 @@
 ---
 name: security-baseline
-description: "Implements and audits runtime security baseline controls: HTTP security headers (CSP, HSTS, X-Frame-Options), strict CORS origin whitelisting, multi-tiered rate limiting, and request payload size limits. Triggered by 'security-baseline:', 'helmet:', 'cors:', 'rate-limit:', or '/security-baseline'."
+description: "Focuses strictly on runtime implementation controls (CSP/HSTS headers, CORS, rate limiting, and payload size bounds). Not for static vulnerability scanning. Triggered by 'security-baseline:', 'helmet:', 'cors:', 'rate-limit:', or '/security-baseline'."
 metadata:
   framework_version: "Language-Agnostic"
   last_verified_date: "2026-09-10"

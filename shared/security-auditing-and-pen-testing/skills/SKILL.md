@@ -1,6 +1,6 @@
 ---
 name: security-auditing-and-pen-testing
-description: "Audits codebases for OWASP Top 10 vulnerabilities, hardcoded secrets, SQL injection, insecure token storage, missing HTTP security headers, and supply-chain risks."
+description: "Focuses strictly on static code analysis, vulnerability scanning, OWASP Top 10 auditing, and finding hardcoded secrets. Not for configuring runtime headers/CORS."
 ---
 
 # Security Auditing & Penetration Testing

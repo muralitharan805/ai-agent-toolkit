@@ -1,0 +1,45 @@
+{
+  "skill_name": "file-upload-and-storage",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Pre-Signed URL Upload Architecture — File Bytes Bypass Backend",
+      "prompt": "Implement a secure file upload endpoint that prevents file bytes from being buffered by the application server.",
+      "expected_output": "Generates a pre-signed PUT URL from S3/GCS, returns it to the client, creates a pending file_uploads DB record, and requires a separate confirm endpoint — file bytes never touch the backend.",
+      "assertions": [
+        "Generates pre-signed PUT URL from object storage SDK (S3, GCS, Azure Blob)",
+        "Returns uploadUrl and fileKey to client — no file bytes in request body",
+        "Creates file_uploads DB record with status: 'pending' before returning URL",
+        "Provides a separate POST /files/confirm endpoint for upload acknowledgment",
+        "Pre-signed URL has expiry TTL (15 minutes or less)"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Magic Byte Validation Preventing Extension Spoofing",
+      "prompt": "Add file type validation that cannot be bypassed by renaming a malicious file with a safe extension.",
+      "expected_output": "Reads the first N bytes of the file and compares against known magic byte signatures, rejects EXE files (MZ header 4D 5A) regardless of extension, and returns 422 on mismatch.",
+      "assertions": [
+        "Reads first bytes of file content to determine actual file type",
+        "Validates file type against magic byte signatures, not extension or Content-Type header",
+        "Rejects files with EXE magic bytes (4D 5A MZ header) regardless of declared extension",
+        "Returns HTTP 422 Unprocessable Entity on magic byte mismatch"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Time-Limited Signed CDN URLs for Private Files",
+      "prompt": "Implement a file access endpoint for private user documents that prevents auth bypass via raw S3 URLs.",
+      "expected_output": "Generates a time-limited signed CDN URL per request, blocks access until virus_scan_status is 'clean', and never returns the raw S3 object URL.",
+      "assertions": [
+        "Generates a new signed URL per request — never returns raw S3/GCS object URL",
+        "Signed URL expires within 1 hour for view access or 24 hours for download",
+        "Blocks file access if virus_scan_status is not 'clean'",
+        "Returns 'file is processing' status when scan is still pending"
+      ],
+      "files": []
+    }
+  ]
+}

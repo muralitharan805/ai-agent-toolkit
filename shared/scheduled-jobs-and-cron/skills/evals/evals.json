@@ -1,0 +1,45 @@
+{
+  "skill_name": "scheduled-jobs-and-cron",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Distributed Lock Acquisition Preventing Duplicate Cron Execution",
+      "prompt": "Implement a scheduled job runner that prevents duplicate execution across multiple pods in a Kubernetes deployment.",
+      "expected_output": "Uses Redis SET NX EX atomic command to acquire a distributed lock before executing job logic, skips at DEBUG level if lock is denied, and always releases lock in finally block.",
+      "assertions": [
+        "Attempts Redis SET with NX and EX flags in a single atomic command before executing job",
+        "Skips job silently at DEBUG log level when lock acquisition is denied",
+        "Releases Redis lock via DEL in a finally block regardless of job success or failure",
+        "Stores instance ID (hostname or UUID) as the lock value for forensic debugging"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Structured Observability and last_run_at Tracking",
+      "prompt": "Add structured logging and database tracking to a cron job so missed job detection and health monitoring are possible.",
+      "expected_output": "Emits structured logs on start, completion, and failure with event names and durationMs, increments Prometheus counters, and updates last_run_at in the scheduled_jobs table on successful completion.",
+      "assertions": [
+        "Emits structured log with event: 'cron_job_started' before job execution",
+        "Emits structured log with event: 'cron_job_completed' and durationMs on success",
+        "Emits structured log with event: 'cron_job_failed' and error on failure",
+        "Updates last_run_at timestamp in DB on every successful completion",
+        "Increments cron_jobs_completed_total or cron_jobs_failed_total Prometheus counter"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "UTC Timezone Enforcement and Config-Driven Schedule",
+      "prompt": "Configure a daily cleanup cron job that runs at 02:00 UTC and loads its schedule expression from environment configuration.",
+      "expected_output": "Cron expression loaded from environment variable (not hardcoded), explicitly configured to run in UTC timezone, and documented with a descriptive comment in .env.example.",
+      "assertions": [
+        "Cron schedule expression loaded from environment variable or config service",
+        "Explicit UTC timezone configured in cron scheduler initialization",
+        "No hardcoded cron expression string literals present in source code",
+        ".env.example includes CRON_*_SCHEDULE variable with descriptive comment"
+      ],
+      "files": []
+    }
+  ]
+}

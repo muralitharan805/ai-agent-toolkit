@@ -75,15 +75,35 @@ project-root/
 └── README.md
 ```
 
+### Unit of Work & Transaction Boundaries
+In Clean Architecture, a single Use Case often needs to write across multiple repositories atomically (e.g., `orderRepository.create()` and `inventoryRepository.decrement()`).
+> **The Dependency Invariant**: Domain Use Cases must NEVER import or receive raw database transaction objects (e.g., `PrismaClient`, `EntityManager`, `Knex.Transaction`, `java.sql.Connection`). Doing so violates the dependency rule by leaking persistence implementation details into the domain core.
+
+```typescript
+// ✅ Clean Architecture Unit of Work abstraction (defined in Application/Domain layer)
+export interface TransactionalContext {
+  readonly orderRepo: OrderRepository;
+  readonly inventoryRepo: InventoryRepository;
+}
+
+export interface UnitOfWork {
+  executeInTransaction<T>(
+    work: (ctx: TransactionalContext) => Promise<T>
+  ): Promise<T>;
+}
+```
+
 ### Working Checklist
 - [ ] Strict dependency rule: outer → inner only (no domain importing infrastructure)
 - [ ] Pluggable abstractions: Interface/Trait/Protocol for DB, Cache, Mailers
+- [ ] Unit of Work abstraction for multi-repository atomic transactions (no ORM leaks into domain)
 - [ ] Core business logic zero coupling to framework internals
 - [ ] `common/` only for truly cross-cutting concerns
 
 ### Gotchas
 - ❌ Never: `controllers/`, `services/`, `repositories/` as top-level folders
 - ❌ Never: Mix domain model with ORM entity annotations directly
+- ❌ Never: Pass raw database/ORM transaction objects into Domain Use Cases
 - ✅ Co-locate tests with source — `user.service.test` next to `user.service`
 
 ---
@@ -156,16 +176,89 @@ JWT_REFRESH_EXPIRES_IN="7d"
 REDIS_URL="redis://localhost:6379"
 ```
 
+### Feature Flags & Dynamic Runtime Configuration
+
+Production backends require two distinct runtime configuration categories:
+
+#### 1. Static Boot Configuration (Fail-Fast)
+- Database credentials, port, log level, JWT secrets.
+- Validated strictly at boot time. Invalid → process crashes immediately with a clear error message.
+
+#### 2. Dynamic Runtime Flags & Kill-Switches (Zero-Downtime)
+> **Rule**: Never redeploy just to toggle an integration on/off. Use feature flags.
+
+**Flag Types:**
+```
+Boolean  → isNewCheckoutEnabled: true/false     (kill switch / feature toggle)
+String   → paymentGateway: "stripe"|"razorpay"  (provider switch without redeploy)
+Number   → maxUploadSizeMb: 10                  (config tuning without redeploy)
+JSON     → checkoutConfig: { timeout: 30 }      (complex config objects)
+```
+
+**Use Cases:**
+```
+Kill switch:       Disable broken 3rd-party integration instantly (no deploy)
+Gradual rollout:   10% → 25% → 50% → 100% user exposure (safe feature launch)
+A/B testing:       Route user cohorts to different implementations
+Manual override:   Force circuit breaker OPEN during a known incident
+Maintenance mode:  Show maintenance banner without code change
+Canary release:    Enable feature for internal @company.com users only first
+```
+
+**OpenFeature Integration (Vendor-Neutral Standard):**
+```
+// Bootstrap — once at startup
+featureClient = OpenFeature.getClient()
+featureClient.setProvider(
+  new UnleashProvider(config.unleashUrl, config.unleashApiKey)
+  // alternatives: LaunchDarklyProvider | FliptProvider | FlagsmithProvider
+)
+
+// Evaluation — microsecond latency (in-memory cached, background sync)
+isNewCheckoutEnabled = await featureClient.getBooleanValue(
+  'new-checkout-flow',         // flag key
+  false,                       // safe default if flag service unreachable
+  { userId, tenantId, email }  // targeting context
+)
+
+if isNewCheckoutEnabled:
+    return newCheckoutService.process(order)
+else:
+    return legacyCheckoutService.process(order)
+```
+
+**Targeting Rules (configured in UI — zero code change):**
+```
+→ Enable for emails ending in @company.com (internal dogfooding)
+→ Enable for 10% of userId hash (gradual percentage rollout)
+→ Enable for tenantId = 'enterprise-tier'
+→ Disable for country = 'EU' (GDPR compliance kill-switch)
+→ Enable for userId in [beta-tester-list]
+```
+
+**Tools:**
+```
+OpenFeature SDK  → openfeature.dev (vendor-neutral interface — avoids lock-in)
+Backends:
+  Unleash      → Open-source, self-hosted (recommended for cost control)
+  LaunchDarkly → Managed SaaS, enterprise-grade, paid
+  Flagsmith    → Open-source with managed option
+  Flipt        → Self-hosted, GitOps-friendly
+  Redis HSET   → DIY minimal flag store (simple booleans only)
+```
+
 ### Working Checklist
 - [ ] Schema validation on startup — all required vars present + correct type
 - [ ] Zero hardcoding: ports, URLs, timeouts, retry counts — all config-driven
 - [ ] Hierarchical config: defaults → env-specific → secrets injection
+- [ ] Static configuration strictly separated from dynamic runtime feature flags/kill-switches
 - [ ] Secret sanitization: passwords and API keys auto-mask (`***`) in logs
 - [ ] `.env` in `.gitignore` — verified in CI pipeline
 - [ ] `.env.example` has 1:1 parity with all required vars + descriptive comments
 
 ### Gotchas
 - ❌ Never scatter `process.env.DB_URL` / `os.environ['DB']` across business logic files
+- ❌ Never redeploy an application just to toggle an integration off (use dynamic kill-switch flags)
 - ❌ Never commit `.env` (add gitignore check to CI)
 - ✅ Production secrets via Secrets Manager — never `.env` file in prod
 
@@ -309,11 +402,13 @@ Request →
 }
 ```
 
-### Paginated List Response
+### Paginated List Response — Two Strategies
+
+#### Strategy 1: Offset-Based Pagination (Simple — use only for small datasets < 50K records)
 ```json
 {
   "success": true,
-  "data": [ ],
+  "data": [],
   "pagination": {
     "page": 1,
     "pageSize": 20,
@@ -327,6 +422,62 @@ Request →
     "timestamp": "2026-09-09T09:18:00Z"
   }
 }
+```
+```
+SQL: SELECT * FROM orders ORDER BY created_at DESC LIMIT 20 OFFSET 980
+
+Problems at scale:
+  ❌ OFFSET 980 → DB scans and discards 980 rows before returning 20 (O(n) cost)
+  ❌ Page drift: New records inserted during pagination → items appear on wrong page
+  ❌ Inconsistent results: Deleted item shifts all subsequent pages → records skipped
+  ✅ Use ONLY when: total records < 50K AND admin dashboards (jump-to-page UX needed)
+```
+
+#### Strategy 2: Cursor-Based Pagination (Production Standard — use for all large datasets)
+```json
+{
+  "success": true,
+  "data": [],
+  "pagination": {
+    "pageSize": 20,
+    "nextCursor": "eyJpZCI6Im9yZF94eXoiLCJjcmVhdGVkQXQiOiIyMDI2LTA5LTAxVDEwOjAwOjAwWiJ9",
+    "previousCursor": "eyJpZCI6Im9yZF9hYmMiLCJjcmVhdGVkQXQiOiIyMDI2LTA5LTAyVDEwOjAwOjAwWiJ9",
+    "hasNextPage": true,
+    "hasPreviousPage": true
+  },
+  "meta": {
+    "correlationId": "550e8400-e29b-41d4-a716-446655440000",
+    "timestamp": "2026-09-09T09:18:00Z"
+  }
+}
+```
+```
+Cursor = base64(JSON({ id: "ord_xyz", createdAt: "2026-09-01T10:00:00Z" }))
+
+SQL: SELECT * FROM orders
+     WHERE (created_at, id) < (:cursorCreatedAt, :cursorId)
+     ORDER BY created_at DESC, id DESC
+     LIMIT 20
+
+Advantages:
+  ✅ O(1) cost regardless of page depth — no scanning skipped rows
+  ✅ Stable results — inserts/deletes never shift pages mid-pagination
+  ✅ Infinite scroll / mobile feeds work perfectly
+  ✅ DB uses composite index efficiently (index on sort columns mandatory)
+
+Disadvantages:
+  ❌ Cannot jump to arbitrary page (no "go to page 50")
+  ❌ Approximate total count only (exact COUNT(*) expensive at scale)
+
+Required DB index:
+  CREATE INDEX idx_orders_cursor ON orders (created_at DESC, id DESC);
+```
+
+#### Pagination Strategy Decision Rule
+```
+Records < 50K  + Admin dashboard  → Offset (jump-to-page UX)
+Records > 50K  + API / Feed       → Cursor (performance + stability)
+Infinite scroll / real-time feed  → Cursor ONLY (never offset)
 ```
 
 ### Error Response
@@ -595,6 +746,90 @@ W3C Trace Context propagation headers:
 - [ ] OpenTelemetry SDK integrated — W3C `traceparent` propagated
 - [ ] Log aggregation: app → collector → Loki / Elasticsearch / CloudWatch
 
+### GDPR & Data Privacy Compliance
+
+#### PII Data Classification — Every Table Must Be Audited
+```
+Red (Sensitive PII):   password_hash, SSN, credit_card, biometric, medical_data
+Amber (PII):           email, phone, full_name, IP address, location, date_of_birth
+Green (Non-PII):       order_id, product_name, amounts, timestamps
+
+Rules per classification:
+  Red:   Encrypt at rest + in transit. NEVER log. Strict access control. Audit every read.
+  Amber: Log with redaction ([REDACTED]). Anonymize in non-prod. Enforce retention limit.
+  Green: Standard handling.
+```
+
+#### Right to Erasure (GDPR Article 17) — Implementation
+```
+User requests account deletion:
+
+Step 1: Soft delete → set deleted_at = NOW() (immediate access revoked)
+Step 2: Background job (executes within 30 days):
+  → Anonymize PII: email → "deleted_{hash}@anon.invalid"
+  → NULL out: phone, full_name, date_of_birth, address, IP history
+  → RETAIN: order/invoice records (financial legal obligation — 7 years)
+  → DELETE: session tokens, refresh tokens, activity logs with PII
+  → Notify: send confirmation email before anonymization begins
+
+NEVER physically delete financial/legal records — retain but anonymize the user link.
+```
+
+#### Data Retention Policy
+```
+Data Type                  Retention      Action After Expiry
+──────────────────────────────────────────────────────────────────
+User profiles (active)     Indefinite     N/A
+User profiles (deleted)    30 days        Anonymize PII fields
+Session tokens             7 days         Auto-expire (Redis TTL)
+Application logs           90 days        Auto-delete (log rotation)
+Security audit logs        2 years        Archive to cold storage
+Financial records          7 years        Legal retention — keep
+Support tickets            3 years        Anonymize after retention
+```
+
+#### Non-Production Data Masking (Critical)
+```
+❌ NEVER copy production database directly to staging/local (real PII exposed to devs)
+✅ ALWAYS run masking script before restoring to non-prod:
+  email   → user_{id}@example.com
+  phone   → +1555000{id}
+  name    → "Test User {id}"
+  SSN     → 000-00-{id}
+
+Tools: pg_anonymizer (Postgres), Faker (seed generation)
+```
+
+#### Audit Trail for Sensitive Operations
+```sql
+-- Append-only audit table (no UPDATE or DELETE ever)
+CREATE TABLE audit_log (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event       VARCHAR NOT NULL,   -- 'user.profile_viewed', 'user.deleted'
+  actor_id    UUID NOT NULL,      -- Who performed the action
+  subject_id  UUID NOT NULL,      -- Who was affected
+  ip_address  VARCHAR,
+  user_agent  VARCHAR,
+  metadata    JSONB,              -- Sanitized context (no raw PII values)
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Mandatory events to audit:
+--   Admin views user PII          → GDPR accountability
+--   User exports their data       → GDPR data portability (Article 20)
+--   Account deletion requested    → Record with expected anonymization date
+--   Failed login attempts         → Security audit trail
+```
+
+#### GDPR Checklist
+- [ ] PII data inventory documented (Red/Amber/Green classification per table)
+- [ ] Right to erasure endpoint implemented (`DELETE /api/v1/users/me`)
+- [ ] Anonymization background job (completes within 30 days)
+- [ ] Data retention cron job (auto-purge expired data per policy)
+- [ ] Non-prod data masking script committed to repo
+- [ ] Audit log table (append-only, immutable) for sensitive operations
+- [ ] Privacy policy accessible (link in API docs)
+
 ---
 
 ## 9. Health Checks & Probes
@@ -643,12 +878,12 @@ GET /health/details  → Full diagnostic (internal only, IP-restricted)
 
 ## 10. Database Foundation
 
-### Connection Pool Configuration
+### Connection Pool Configuration & Multi-Pod Budgeting
 ```
 SETTING              VALUE      REASON
 ──────────────────────────────────────────────────────────────
 pool.min             2          Keep warm connections
-pool.max             10         Prevent DB overload
+pool.max             5 - 10     Prevent DB connection starvation
 pool.acquireTimeout  30s        Fail fast if pool exhausted
 pool.idleTimeout     10m        Release idle connections
 connectionTimeout    5s         Initial connect fail fast
@@ -656,14 +891,36 @@ queryTimeout         30s        Kill runaway queries
 ssl                  true       Always in production
 ```
 
-### Migration Strategy
+#### The Multi-Pod Connection Budget Formula
+In containerized architectures (Kubernetes / ECS), every replica runs its own pool:
 ```
-✅ Versioned migration files only (never auto-sync/auto-migrate in prod)
-✅ Forward (up) + rollback (down) migrations — both required
-✅ CI/CD runs migrations BEFORE deploying new app code
-✅ Idempotent migrations (IF NOT EXISTS guards)
-✅ Test on staging before running on production
-✅ Naming: YYYYMMDDHHMMSS_descriptive_name.sql
+Total Active Connections = (Max Replicas × pool.max)
+
+Invariant: Total Active Connections ≤ (Database max_connections × 0.8)
+```
+> **Enterprise Standard (PgBouncer / AWS RDS Proxy)**: When running > 10 pods, direct database connections cause CPU and memory thrashing on Postgres/MySQL. Place an external multiplexer (**PgBouncer** in `transaction` mode or **AWS RDS Proxy**) between the application and database. App pods keep small pools (`pool.max: 3–5`), allowing hundreds of pods to share a modest pool of 30–50 real database connections.
+
+### Zero-Downtime Migration Policy: Expand & Contract Pattern
+In continuous delivery with rolling deployments, **v1 (old) and v2 (new) pods run concurrently**. Running a destructive DDL migration will instantly crash v1 pods.
+
+```
+Phase 1: Expand      → Add new column/table (MUST be NULLABLE or have DEFAULT). Run migration.
+Phase 2: Dual-Write  → Deploy app code writing to both OLD and NEW columns, reading from OLD.
+Phase 3: Backfill    → Execute background worker/script to copy existing records to NEW column.
+Phase 4: Read-New    → Deploy app code reading from NEW column, writing to NEW.
+Phase 5: Contract    → Drop OLD column in a subsequent release after verifying stability.
+```
+
+#### DDL Lock Safety Rules
+```sql
+-- 1. Always set lock_timeout to prevent queueing behind long transactions
+SET lock_timeout = '2s';
+
+-- 2. Create indexes concurrently (never block table writes in production)
+-- Postgres example:
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email ON users (email);
+
+-- 3. Avoid adding columns with non-constant volatile defaults that require table rewrites
 ```
 
 ### Audit Columns — Every Table
@@ -698,14 +955,161 @@ prod-seed    → Reference data ONLY (countries, currencies, roles, enums)
                NEVER user/customer data in prod seeders
 ```
 
+### Transaction Isolation & Locking Strategies
+
+#### Isolation Levels
+```
+LEVEL                    DIRTY   NON-REPEATABLE  PHANTOM    PRODUCTION USE
+                         READS   READS           READS
+────────────────────────────────────────────────────────────────────────────
+READ UNCOMMITTED         ✅      ✅              ✅         Never use in production
+READ COMMITTED (default) ❌      ✅              ✅         Most OLTP operations
+REPEATABLE READ          ❌      ❌              ✅         Reports, aggregates
+SERIALIZABLE             ❌      ❌              ❌         Financial tx, inventory
+```
+
+> **Production Default**: `READ COMMITTED` (Postgres default) for most operations.
+> Elevate to `SERIALIZABLE` ONLY for critical financial or inventory transactions.
+
+#### Optimistic Locking — version column (prevents lost updates)
+```sql
+-- Schema: add version column
+ALTER TABLE orders ADD COLUMN version INTEGER NOT NULL DEFAULT 1;
+
+-- Read:
+SELECT id, total_amount, status, version FROM orders WHERE id = $1;
+
+-- Update (check version matches what we read — concurrent update detection):
+UPDATE orders
+SET status = 'shipped', version = version + 1, updated_at = NOW()
+WHERE id = $1
+  AND version = $2;   -- Only succeeds if nobody else modified it
+
+-- If rowsAffected = 0 → Concurrent modification → retry or throw ConflictError (409)
+```
+> **Use when**: Conflicts are RARE (< 5% of operations). E-commerce cart, profile edits.
+
+#### Pessimistic Locking — SELECT FOR UPDATE (prevents concurrent access)
+```sql
+BEGIN;
+
+-- Lock row exclusively. Other transactions wait until this commits/rolls back.
+SELECT * FROM orders WHERE id = $1 FOR UPDATE;
+-- FOR UPDATE NOWAIT    → fail immediately if row already locked
+-- FOR UPDATE SKIP LOCKED → skip locked rows (queue/job worker pattern)
+
+UPDATE orders SET status = 'processing' WHERE id = $1;
+
+COMMIT;
+```
+> **Use when**: Conflicts are FREQUENT (> 10% of operations). Payment processing, seat reservation.
+
+#### Deadlock Prevention Rules
+```
+Rule 1: Always acquire locks in the SAME ORDER across all transactions
+  → T1 locks order_items then inventory
+  → T2 MUST also lock order_items first — never reverse the order
+
+Rule 2: Keep transactions SHORT
+  → Never make external HTTP calls inside a DB transaction
+  → Never do slow computation inside a transaction
+  → Target: < 100ms per transaction
+
+Rule 3: Set statement_timeout in app DB config
+  → Prevents runaway transactions from holding locks indefinitely
+
+Rule 4: Use SKIP LOCKED for worker/job queue patterns
+  → Multiple workers pull jobs concurrently without blocking each other
+```
+
+#### SKIP LOCKED — Database-Backed Job Queue Pattern
+```sql
+-- Multiple workers safely pull the next available job without blocking each other
+SELECT * FROM scheduled_jobs
+WHERE status = 'pending'
+  AND scheduled_at <= NOW()
+ORDER BY priority DESC, scheduled_at ASC
+LIMIT 1
+FOR UPDATE SKIP LOCKED;
+```
+
+### Read Replica Routing
+
+#### Connection Strategy
+```
+Primary (Writer) — Route ALL writes here:
+  → INSERT, UPDATE, DELETE operations
+  → Transactions spanning multiple reads + writes
+  → Reads that must see the latest committed data immediately
+
+Read Replicas — Route read-heavy queries here:
+  → Heavy SELECT queries (analytics, reports, listing pages)
+  → Operations that tolerate 100–500ms replication lag
+  → NEVER: Auth operations (session lookup, token verification)
+  → NEVER: Reads immediately after writing the same record
+```
+
+#### Read-After-Write Consistency Problem
+```
+Problem:
+  User updates profile → Write routes to PRIMARY
+  Immediate GET /profile → Routes to REPLICA
+  Replica has 200ms replication lag → User sees OLD data
+  → "My change didn't save!" complaint
+
+Solutions:
+  Option 1: Route reads to PRIMARY for 2s after any write (per-user sticky routing)
+  Option 2: Always read profile/settings from PRIMARY — replica only for listings
+  Option 3: Wait for replica WAL LSN to catch up before routing read there
+```
+
+#### Replication Lag Monitoring
+```
+Metric: replication_lag_seconds (per replica)
+
+Alert thresholds:
+  WARNING:  lag > 10 seconds
+  CRITICAL: lag > 30 seconds → stop routing reads to that replica
+
+Automatic failover:
+  Primary fails → replica promoted → app reconnects automatically
+  Tools: RDS Multi-AZ (managed automatic), Patroni (self-managed Postgres HA)
+```
+
+#### Pool Configuration
+```
+primaryPool:
+  connectionString: process.env.DATABASE_URL           ← Read/Write
+  pool: { min: 2, max: 5 }
+
+replicaPool:
+  connectionString: process.env.DATABASE_REPLICA_URL   ← Read-Only
+  pool: { min: 2, max: 10 }   ← Larger pool, more read concurrency
+```
+
+#### Read Replica Checklist
+- [ ] Read replica routing configured (writes → primary, heavy reads → replica)
+- [ ] `DATABASE_REPLICA_URL` in `.env.example` with descriptive comment
+- [ ] Replication lag metric tracked — alert at 10s (WARN) and 30s (CRITICAL)
+- [ ] Profile/settings reads hardcoded to primary (avoid read-after-write bugs)
+- [ ] Replica removed from rotation automatically when lag threshold exceeded
+
 ### Working Checklist
-- [ ] Connection pooling configured with correct min/max/timeout values
-- [ ] Migration files versioned and committed to git
+- [ ] Connection pool sizing budgeted against total pod autoscale limit
+- [ ] External connection pooler (PgBouncer / RDS Proxy) configured for horizontal workloads
+- [ ] Migration files versioned, idempotent, and committed to git
+- [ ] Expand-and-Contract protocol enforced for all schema changes
+- [ ] DDL scripts set `lock_timeout = '2s'` and use `CREATE INDEX CONCURRENTLY`
 - [ ] Rollback migration for every forward migration
-- [ ] Audit columns on every table
+- [ ] Audit columns on every table (UUIDv7 recommended)
 - [ ] Slow query logging — queries > 200ms logged at WARN level
 - [ ] Foreign keys indexed
 - [ ] Soft delete pattern (never hard delete user data)
+
+### Gotchas
+- ❌ Never: Rename or drop a column in a single migration while older app pods are running
+- ❌ Never: Connect 50+ pods directly to Postgres without an intermediate pooler (PgBouncer/RDS Proxy)
+- ❌ Never: Run DDL without a short `lock_timeout` — table locks will queue incoming SELECT queries and crash the app
 
 ---
 
@@ -887,12 +1291,32 @@ Solution:
     2. If new → process + store response with key (TTL: 24h)
 ```
 
+### Pattern 5: Request Abort & Cancellation Propagation
+```
+Problem:
+A user navigates away, closes the tab, or the upstream API gateway (Cloudflare/ALB) times out at 15s.
+Default backend behavior: The server continues executing heavy SQL queries, parsing payloads, and calling downstream APIs for another 30 seconds.
+Result: Zombie execution burns database connection pool slots, thread pools, and CPU on dead sockets.
+
+Solution:
+Propagate the incoming HTTP request's cancellation signal down the entire call stack:
+  - Node.js: Pass `req.signal` (standard AbortSignal) directly to ORMs, DB drivers, and `fetch()`
+  - Go: Pass `r.Context()` to `db.QueryContext(ctx, ...)` and `http.NewRequestWithContext(ctx, ...)`
+  - Java / Spring: Utilize reactive cancellations (WebFlux) or async `DeferredResult.onTimeout()`
+  - .NET: Pass `HttpContext.RequestAborted` (`CancellationToken`) to EF Core and HttpClient
+```
+
 ### Working Checklist
 - [ ] Strict timeouts on every DB, cache, external HTTP, message broker call
 - [ ] Retry with exponential backoff + jitter for transient failures
 - [ ] Circuit breaker for all downstream service calls
 - [ ] Idempotency keys for all mutating (POST, PUT, DELETE) endpoints
+- [ ] Client cancellation signals (`AbortSignal` / `Context`) propagated to DB queries and HTTP calls
 - [ ] Fallback behavior defined for each dependency failure (degraded mode)
+
+### Gotchas
+- ❌ Never ignore client disconnects: uncancelled queries run as zombies and starve the database pool
+- ❌ Never retry non-idempotent operations without an idempotency key (risk of double charging/duplicate records)
 
 ---
 
@@ -1166,34 +1590,56 @@ SLA Targets (define BEFORE testing):
 
 ## 18. Graceful Shutdown
 
-### Shutdown Sequence
+### The Kubernetes SIGTERM Race Condition
+In Kubernetes and modern cloud orchestrators, **pod termination is asynchronous across control planes**:
+```
+Kubelet sends SIGTERM to Pod ──────────────┐ (Simultaneous)
+                                           ▼
+Endpoints controller updates iptables ─────┴─► Takes 2–5 seconds across cluster nodes!
+```
+> **The 502 Outage Pitfall**: If your app immediately stops accepting connections or closes sockets upon receiving `SIGTERM`, clients whose requests were routed by the load balancer during those 2–5 seconds will receive `502 Bad Gateway` or `ECONNRESET`.
+
+#### Zero-Downtime Termination Strategy
+1. **K8s `preStop` Hook**: Configure a container lifecycle `preStop` sleep (5–10 seconds) so Kube-proxy can drain iptables BEFORE the app receives SIGTERM:
+```yaml
+lifecycle:
+  preStop:
+    exec:
+      command: ["/bin/sh", "-c", "sleep 5"]
+```
+2. **Application Drain Window**: Maintain active HTTP listening for 5 seconds post-SIGTERM while marking `/ready` as 503, ensuring in-flight and newly arrived packets are cleanly serviced.
+
+### Shutdown Sequence (Zero-Downtime Budget)
 ```
 SIGTERM / SIGINT received:
-  1. Mark /ready → 503             (load balancer stops routing new traffic)
-  2. Stop accepting new connections
-  3. Wait for in-flight requests to complete (grace timeout: 30s)
-  4. Stop consuming from message queues
-  5. Flush pending metrics + traces
-  6. Flush log buffers
-  7. Close DB connection pool
-  8. Close Redis / cache connections
-  9. Close HTTP server
+  1. Mark /ready → 503             (Informs probes; keep HTTP listener OPEN)
+  2. Wait 5 seconds (drain delay)  (Allows Ingress / kube-proxy iptables to propagate)
+  3. Stop accepting new HTTP connections (server.close())
+  4. Wait for in-flight requests to complete (grace timeout: 20s)
+  5. Stop consuming from message queues (pause consumer groups)
+  6. Flush pending metrics, spans & traces to OpenTelemetry collector
+  7. Flush structured logger buffers
+  8. Close DB connection pool (drain active pool connections)
+  9. Close Redis / cache connections
   10. Log "Shutdown complete. Uptime: {N}s"
   11. process.exit(0)
 ```
+*Budget Check*: `preStop (5s) + Drain (5s) + In-flight (20s) = 30s ≤ terminationGracePeriodSeconds (35s)`.
 
 ### Working Checklist
-- [ ] SIGTERM + SIGINT both handled
-- [ ] Load balancer informed (mark ready → 503) before closing
-- [ ] In-flight requests given grace period (30s max)
-- [ ] All connections closed cleanly (DB, Redis, message broker)
-- [ ] Logs flushed before exit
-- [ ] Exit code 0 on clean shutdown, 1 on crash
+- [ ] SIGTERM + SIGINT both handled with non-zero exit handlers
+- [ ] Kubernetes `preStop` hook (`sleep 5`) configured in deployment manifest
+- [ ] 5-second drain window observed before closing HTTP listener
+- [ ] Load balancer informed (mark `/ready` → 503) immediately upon SIGTERM
+- [ ] In-flight requests given explicit grace period (≤ 20s)
+- [ ] All connections closed cleanly in order (Queues → HTTP → Traces/Logs → DB/Cache)
+- [ ] Logs and OpenTelemetry batches flushed before process termination
+- [ ] Exit code 0 on clean shutdown, 1 on uncaught crash
 
 ### Gotchas
-- ❌ Kubernetes SIGKILL after 30s — grace period must be < 30s
-- ❌ Not flushing logs → last seconds of logs lost
-- ✅ In-flight request timeout < grace period (avoid SIGKILL mid-request)
+- ❌ Immediately closing HTTP server on SIGTERM → causes intermittent 502 Bad Gateway errors during deploys
+- ❌ App grace period > K8s `terminationGracePeriodSeconds` → Kubelet will brutally SIGKILL the process mid-request
+- ❌ Not flushing logger and OpenTelemetry buffers before `process.exit(0)` → lose critical post-mortem crash logs
 
 ---
 
@@ -1363,6 +1809,669 @@ docs/
 
 ---
 
+## 22. Scheduled Jobs & Cron Tasks
+
+### Philosophy
+> Scheduled jobs are NOT the same as event-driven queue jobs. Cron fires on time. Queues fire on events. Confusing them leads to missed executions, duplicate runs, and timezone bugs.
+
+### Event-Driven vs Scheduled — Key Difference
+```
+Event-Driven Jobs (§12):
+  Trigger: Something happened (user registered, payment received)
+  Pattern: Enqueue → Worker processes → Done
+  Tools:   BullMQ, SQS, RabbitMQ, Kafka
+
+Scheduled / Cron Jobs:
+  Trigger: Time-based (every day at 2am, every 5 minutes)
+  Pattern: Cron expression → Leader acquires lock → Execute
+  Tools:   pg-boss, BullMQ cron, Quartz (Java), APScheduler (Python), Hangfire (.NET)
+```
+
+### Cron Expression Reference
+```
+┌──────────── Minute (0–59)
+│  ┌─────────── Hour (0–23)
+│  │  ┌────────── Day of Month (1–31)
+│  │  │  ┌───────── Month (1–12)
+│  │  │  │  ┌────── Day of Week (0–7, Sunday=0 or 7)
+│  │  │  │  │
+*  *  *  *  *
+
+Examples:
+  0 2 * * *     → Every day at 2:00 AM
+  */5 * * * *   → Every 5 minutes
+  0 9 * * 1-5  → 9:00 AM, Monday to Friday
+  0 0 1 * *    → First day of every month at midnight
+```
+
+### Critical Problem: Duplicate Execution Across Pods
+```
+Problem:
+  3 app pods running → ALL 3 trigger the same cron at 2:00 AM
+  → 3x subscription renewal emails to every user!
+  → 3x cleanup jobs running simultaneously → race condition + data corruption
+
+Solution — Distributed Lock (Leader Election per execution):
+  1. Before executing: acquire distributed lock (Redis SET NX EX)
+  2. Only ONE pod gets the lock → executes the job
+  3. Others get lock-denied → skip silently (log at DEBUG level)
+  4. Lock auto-expires (TTL = job max expected duration + 10s buffer)
+
+Never assume single-instance — always code for distributed execution.
+```
+
+### Distributed Cron Lock Pattern (Pseudocode)
+```
+function runScheduledJob(jobName, jobFn, maxExecutionMs):
+    lockKey = "cron-lock:{jobName}"
+    lockTtl = maxExecutionMs + 10_000   # 10s buffer
+
+    acquired = redis.SET(lockKey, instanceId, NX, EX, lockTtl / 1000)
+    if NOT acquired:
+        logger.debug({ jobName, event: 'cron_lock_skipped' })
+        return   # Another pod is already running this job
+
+    try:
+        logger.info({ jobName, event: 'cron_job_started' })
+        startTime = now()
+        await jobFn()
+        durationMs = now() - startTime
+        logger.info({ jobName, event: 'cron_job_completed', durationMs })
+        metrics.increment('cron_jobs_completed_total', { jobName })
+        db.updateLastRunAt(jobName, now())   # For missed job detection
+    catch error:
+        logger.error({ jobName, event: 'cron_job_failed', error })
+        metrics.increment('cron_jobs_failed_total', { jobName })
+        alertOnCallTeam(error, jobName)
+    finally:
+        redis.DEL(lockKey)   # Release lock early on completion
+```
+
+### Cron Job Health Monitoring
+```
+Track per job:
+  last_run_at            → Timestamp of last successful completion
+  last_duration_ms       → Execution time of last run
+  consecutive_failures   → Count of consecutive failures
+
+Alert conditions:
+  🚨 Job not run in > (2 × schedule interval) → MISSED JOB \u2014 page on-call
+  🚨 Duration > (3 × historical average)       → SLOW JOB \u2014 Slack alert
+  🚨 Consecutive failures > 3                  → CRITICAL \u2014 page on-call
+```
+
+### Missed Job Handling
+```
+Problem: App was down during scheduled execution → job never ran
+
+Strategy by criticality:
+  Low:    Accept the miss, wait for next schedule (e.g., analytics aggregation)
+  Medium: On startup, check last_run_at → if missed, run immediately (e.g., daily email)
+  High:   Use DB-backed scheduler (pg-boss) that persists schedule state
+          → Survives pod restarts. Guarantees at-least-once execution.
+```
+
+### Timezone Gotchas
+```
+❌ NEVER use system timezone (varies per host, changes with OS updates)
+✅ ALWAYS configure explicit timezone (UTC strongly recommended for cron)
+✅ Business-time jobs (e.g., "9am user's time") → store user timezone, convert at runtime
+✅ Test DST transitions \u2014 clocks "spring forward/fall back" can cause double-fire or skip
+```
+
+### Tools by Language
+```
+Node.js / TypeScript  → pg-boss (DB-backed, distributed), BullMQ cron, node-cron
+Python                → APScheduler, Celery beat, rq-scheduler
+Go                    → robfig/cron (v3), gocron
+Java                  → Quartz Scheduler + ShedLock, Spring @Scheduled
+.NET                  → Hangfire, Quartz.NET
+Infrastructure        → Kubernetes CronJob (for heavy standalone tasks)
+```
+
+### Working Checklist
+- [ ] Distributed lock (Redis NX) preventing duplicate cron execution across pods
+- [ ] Every cron job: structured log on start, completion, and failure (with duration)
+- [ ] `last_run_at` tracked in DB \u2014 enables missed job detection
+- [ ] Cron jobs registered in a central registry (not scattered across codebase)
+- [ ] Failed jobs trigger on-call alert after 3 consecutive failures
+- [ ] All cron expressions use explicit UTC timezone
+- [ ] Long-running cron tasks run as Kubernetes CronJob (not inside HTTP server process)
+- [ ] Config-driven schedule \u2014 cron expression from env var, not hardcoded
+
+### Gotchas
+- ❌ Never run heavy cron jobs inside the HTTP server process \u2014 blocks request handling
+- ❌ No distributed lock → duplicate execution across pods → duplicate emails / double charges
+- ❌ Hardcoded schedule string in code → can't override without redeploy
+- ❌ DST timezone bugs cause midnight cron to fire at 11pm or 1am in certain months
+
+---
+
+## 23. File Upload & Storage Architecture
+
+### Philosophy
+> The backend MUST NOT be the throughput bottleneck for file uploads. Clients upload directly to object storage. Backend only handles metadata validation and pre-signed authorization.
+
+### Architecture: Pre-Signed URL Pattern (Mandatory)
+```
+❌ WRONG — file bytes flow through your server:
+  Client → POST /upload → Backend (buffering file) → S3
+  Problem: Memory spike, bandwidth cost, throughput ceiling at your pod count
+
+✅ CORRECT — Pre-Signed URL (client uploads directly to S3):
+  Step 1: Client → POST /api/v1/files/upload-url { filename, mimeType, fileSize }
+  Step 2: Backend → Validate metadata → Generate pre-signed PUT URL → Return { uploadUrl, fileKey }
+  Step 3: Client → PUT {uploadUrl} directly to S3 (bypasses backend entirely)
+  Step 4: Client → POST /api/v1/files/confirm { fileKey } → Backend records metadata in DB
+  Step 5: S3 event → Lambda/webhook → Virus scan trigger
+```
+
+### File Metadata DB Schema
+```sql
+CREATE TABLE file_uploads (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  file_key        VARCHAR NOT NULL UNIQUE,     -- S3 object key
+  bucket          VARCHAR NOT NULL,
+  original_name   VARCHAR NOT NULL,
+  mime_type       VARCHAR NOT NULL,
+  file_size       BIGINT NOT NULL,             -- bytes
+  status          VARCHAR NOT NULL DEFAULT 'pending',
+                                               -- pending | confirmed | quarantined | deleted
+  uploaded_by     UUID NOT NULL REFERENCES users(id),
+  entity_type     VARCHAR,                     -- 'user_avatar' | 'invoice' | 'product_image'
+  entity_id       UUID,
+  cdn_url         VARCHAR,                     -- populated after CDN distribution
+  virus_scan_status VARCHAR DEFAULT 'pending', -- pending | clean | infected
+  created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
+  confirmed_at    TIMESTAMP,
+  deleted_at      TIMESTAMP
+);
+```
+
+### File Type Validation — Magic Bytes (Not Just Extension)
+```
+❌ WRONG: Check file extension only
+  Attacker renames malware.exe → photo.jpg → extension check passes → malware stored!
+
+✅ CORRECT: Validate magic bytes (file signature)
+  Read first N bytes of file content → compare against known signatures
+
+Common magic bytes:
+  JPEG:  FF D8 FF
+  PNG:   89 50 4E 47 0D 0A 1A 0A
+  PDF:   25 50 44 46 2D
+  GIF:   47 49 46 38
+  ZIP:   50 4B 03 04
+  EXE:   4D 5A (MZ header) → ALWAYS reject, regardless of extension
+
+Tools: file-type (Node.js), python-magic (Python), Apache Tika (Java)
+```
+
+### Virus Scanning Strategy
+```
+Scan AFTER upload to S3, BEFORE serving to any user.
+
+Options:
+  AWS Macie / GCS DLP   → Cloud-native managed, no ops overhead
+  ClamAV on Lambda      → Open-source, triggered by S3 event notification
+  VirusTotal API        → Multi-engine scan, rate-limited free tier
+
+Flow:
+  Upload confirms → S3 triggers Lambda → ClamAV scans
+    Clean:    UPDATE status = 'clean', generate CDN URL
+    Infected: UPDATE status = 'quarantined', delete from S3, alert security team
+    Pending:  User receives "file is processing" until scan completes
+```
+
+### CDN Serving Strategy
+```
+Private files (user documents, invoices, medical records):
+  ❌ NEVER expose direct S3 URL — auth check is bypassed entirely
+  ✅ Generate time-limited signed CDN URL per request
+     Expiry: 1 hour for view, 24 hours for download
+     Invalidate signed URL immediately on permission change
+
+Public files (product images, avatars, logos):
+  ✅ S3 + CloudFront / Cloudflare CDN (permanent public URL)
+  ✅ Cache-Control: public, max-age=31536000, immutable
+     (content-hash suffix in filename ensures cache busting on update)
+```
+
+### Upload Limits
+```
+Avatar images:    2MB max
+Documents:        20MB max
+Video:            500MB max (use S3 multipart API for > 5MB)
+Total per user:   Enforce quota in DB (prevent storage abuse)
+
+Multipart upload threshold: > 5MB → use S3 multipart API (resumable)
+```
+
+### Working Checklist
+- [ ] Pre-signed URL pattern \u2014 file bytes never pass through app server
+- [ ] File metadata stored in DB with `status: pending → confirmed` lifecycle
+- [ ] Magic byte validation before issuing pre-signed URL
+- [ ] Virus scan triggered on every upload (ClamAV / AWS Macie)
+- [ ] Users cannot access files until `virus_scan_status = 'clean'`
+- [ ] Private files served via time-limited signed CDN URLs (never raw S3 URLs)
+- [ ] Public files served via CDN with immutable cache headers
+- [ ] Per-user storage quota enforced at upload-url generation step
+- [ ] File size limits enforced at app level AND via S3 bucket policy
+- [ ] Orphaned file cleanup cron job (pending status > 24h → delete from S3)
+
+### Gotchas
+- ❌ Raw S3 URLs for private files = auth bypass \u2014 anyone with the URL can access
+- ❌ Extension-only validation = trivially bypassed by renaming malicious files
+- ❌ Uploading large files through the backend = memory exhaustion under concurrent load
+- ❌ No virus scan = malware stored in your infrastructure, served to other users
+
+---
+
+## 24. Alerting, SLO & On-Call Strategy
+
+### Philosophy
+> Metrics without alerts = a dashboard nobody watches. Alerts without runbooks = an on-call engineer guessing at 3am.
+
+### SLI / SLO / SLA — Definitions
+```
+SLI (Service Level Indicator):
+  A measurable metric reflecting service health.
+  Example: "HTTP 5xx error rate over 1-hour rolling window"
+
+SLO (Service Level Objective):
+  Internal target for an SLI. You own this, customers don't see it.
+  Example: "5xx error rate < 0.1% over any rolling 30-day window"
+
+SLA (Service Level Agreement):
+  Contractual commitment to customers. Always set BELOW SLO (buffer for recovery).
+  Example: "99.9% uptime" (SLA) when internal SLO = 99.95%
+
+Error Budget:
+  SLO = 99.9% → Error budget = 0.1% of time = 43.8 minutes/month
+  Budget consumed → freeze feature deploys → focus on reliability
+```
+
+### Minimum Alert Set (Every Service Must Have These)
+```
+SEVERITY   CONDITION                                    ACTION
+\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+CRITICAL   HTTP 5xx rate > 1% for 5 minutes             Page on-call immediately
+CRITICAL   0 healthy pods (service completely down)     Page on-call immediately
+CRITICAL   DB connection pool > 90% saturated           Page on-call immediately
+WARNING    HTTP p99 latency > 1000ms for 10 minutes     Slack alert (no page)
+WARNING    HTTP 5xx rate > 0.1% for 15 minutes          Slack alert
+WARNING    DLQ depth > 100 messages                     Slack alert
+WARNING    Cache hit rate < 60%                         Slack alert
+WARNING    Disk / memory usage > 80%                    Slack alert
+INFO       Cron job missed (not run in 2× interval)     Slack alert
+INFO       Error budget < 20% remaining this month      Slack \u2014 planning action
+```
+
+### Alert Quality Rules (Prevent Alert Fatigue)
+```
+1. Every alert MUST have a runbook link — no runbook = alert not ready to fire
+2. Every alert MUST be actionable — if no action needed, it's a metric, not an alert
+3. Use "for: 5m" minimum — never alert on single momentary spikes
+4. Severity levels: CRITICAL (wake up now) | WARNING (Slack) | INFO (email digest)
+5. Suppress child alerts when parent fires (DB down → suppress all query alerts)
+6. Quarterly alert audit — remove alerts nobody acts on (noise = ignored = useless)
+```
+
+### Alert Body Template
+```yaml
+alert: HTTP_5xx_SpikeHigh
+severity: CRITICAL
+summary: "5xx rate {{ $value | humanizePercentage }} on {{ $labels.service }}"
+description: |
+  Service {{ $labels.service }} is returning 5xx errors above threshold.
+  Current: {{ $value | humanizePercentage }} | Threshold: 1%
+runbook: https://wiki.company.com/runbooks/http-5xx-spike
+dashboard: https://grafana.company.com/d/service-overview
+for: 5m
+labels:
+  service: {{ $labels.service }}
+  environment: {{ $labels.env }}
+```
+
+### Runbook Template (Mandatory for Every CRITICAL Alert)
+```markdown
+# Runbook: HTTP 5xx Spike
+
+## Symptoms
+Alert fires when HTTP 5xx rate > 1% for 5 continuous minutes.
+
+## Immediate Checks (< 2 minutes)
+1. Was there a recent deploy? Check deployment timeline.
+2. Check pod logs: `kubectl logs -l app=my-service --tail=100 -f`
+3. Check DB health: `kubectl exec -it db-pod -- psql -c "SELECT count(*) FROM pg_stat_activity"`
+
+## Rollback (if deploy-related)
+`kubectl rollout undo deployment/my-service`
+
+## Escalation
+No resolution in 20 minutes → escalate to Tier 2 (team lead)
+```
+
+### Working Checklist
+- [ ] SLO defined per service (error rate target + latency p99 target)
+- [ ] Error budget tracked and reviewed monthly
+- [ ] Minimum alert set configured (5xx rate, p99 latency, DB pool, DLQ depth)
+- [ ] Every CRITICAL alert has a Severity + Runbook link + Dashboard link
+- [ ] CRITICAL alerts page on-call (PagerDuty / OpsGenie / Grafana OnCall)
+- [ ] WARNING alerts route to Slack (not paged)
+- [ ] Alert suppression for correlated child alerts
+- [ ] Quarterly alert audit scheduled (remove noise)
+- [ ] Runbook written for every CRITICAL alert before enabling it
+
+### Gotchas
+- ❌ Alerting on every p99 spike without "for: 5m" → alert fatigue → team ignores all alerts
+- ❌ Alert with no runbook → engineer spends 20 min guessing at 3am
+- ❌ No error budget tracking → deploys continue even when reliability is already degraded
+
+---
+
+## 25. Local Development Environment
+
+### Philosophy
+> A new engineer MUST run the full stack locally with ONE command. Every minute of setup friction costs productivity and breeds "works on my machine" bugs.
+
+### docker-compose.yml — Full Local Stack Template
+```yaml
+name: myapp-local
+
+services:
+  # ─────────────────────────────────────────────
+  # PostgreSQL \u2014 Primary database
+  # ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: myapp-postgres
+    environment:
+      POSTGRES_USER: myapp
+      POSTGRES_PASSWORD: localpassword
+      POSTGRES_DB: myapp_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myapp -d myapp_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─────────────────────────────────────────────
+  # Redis \u2014 Cache + Rate Limiting + Sessions
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: myapp-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─────────────────────────────────────────────
+  # RabbitMQ \u2014 Message queue (or swap for Redis Streams)
+  # ─────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: myapp-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: myapp
+      RABBITMQ_DEFAULT_PASS: localpassword
+    ports:
+      - "5672:5672"     # AMQP protocol
+      - "15672:15672"   # Management UI → http://localhost:15672
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ─────────────────────────────────────────────
+  # Mailhog \u2014 Local email catcher (no real emails sent)
+  # ─────────────────────────────────────────────
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: myapp-mailhog
+    ports:
+      - "1025:1025"   # SMTP \u2014 configure app to use this
+      - "8025:8025"   # Web UI → http://localhost:8025
+
+  # ─────────────────────────────────────────────
+  # Adminer \u2014 Lightweight DB browser UI
+  # ─────────────────────────────────────────────
+  adminer:
+    image: adminer:latest
+    container_name: myapp-adminer
+    ports:
+      - "8080:8080"   # → http://localhost:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+### Local Service Port Reference
+```
+Service       Port    URL / Access
+\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+App (dev)     3000    http://localhost:3000
+API Docs      3000    http://localhost:3000/docs
+PostgreSQL    5432    postgresql://myapp:localpassword@localhost:5432/myapp_dev
+Redis         6379    redis://localhost:6379
+RabbitMQ      5672    amqp://myapp:localpassword@localhost:5672
+RabbitMQ UI   15672   http://localhost:15672
+Mailhog SMTP  1025    smtp://localhost:1025
+Mailhog UI    8025    http://localhost:8025
+Adminer UI    8080    http://localhost:8080
+```
+
+### One-Command Setup Script (scripts/setup-local.sh)
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "🚀 Setting up local development environment..."
+
+# 1. Copy env if not exists
+if [ ! -f .env ]; then
+  cp .env.example .env
+  echo "✅ .env created from .env.example"
+fi
+
+# 2. Start all infrastructure services
+docker compose up -d --wait
+echo "✅ Infrastructure ready (DB, Redis, Queue, Mail)"
+
+# 3. Install dependencies
+pnpm install
+echo "✅ Dependencies installed"
+
+# 4. Run database migrations
+pnpm db:migrate
+echo "✅ Migrations applied"
+
+# 5. Seed development data
+pnpm db:seed:dev
+echo "✅ Dev seed data loaded"
+
+echo ""
+echo "✅ Setup complete! Run: pnpm dev"
+echo ""
+echo "📋 Local services:"
+echo "   App:      http://localhost:3000"
+echo "   API Docs: http://localhost:3000/docs"
+echo "   Mailhog:  http://localhost:8025"
+echo "   Adminer:  http://localhost:8080"
+echo "   RabbitMQ: http://localhost:15672"
+```
+
+### .env.example — Docker Compose Parity (Critical)
+```bash
+# Must match docker-compose.yml credentials exactly
+DATABASE_URL="postgresql://myapp:localpassword@localhost:5432/myapp_dev"
+DATABASE_REPLICA_URL="postgresql://myapp:localpassword@localhost:5432/myapp_dev"
+REDIS_URL="redis://localhost:6379"
+RABBITMQ_URL="amqp://myapp:localpassword@localhost:5672"
+
+# Email — local dev uses Mailhog SMTP (no real emails sent)
+SMTP_HOST=localhost
+SMTP_PORT=1025
+```
+
+### Hot Reload Configuration by Language
+```
+Node.js NestJS:   pnpm dev → tsx watch src/main.ts
+Node.js Express:  pnpm dev → nodemon with ts-node
+Python FastAPI:   uvicorn main:app --reload
+Go:               air (live reloader) → go install github.com/air-verse/air
+Java Spring:      Spring DevTools dependency → automatic hot restart
+```
+
+### Working Checklist
+- [ ] `docker-compose.yml` in repo root \u2014 covers DB, Redis, Queue, Mail catcher, DB UI
+- [ ] All services use `healthcheck` + `depends_on: condition: service_healthy`
+- [ ] `scripts/setup-local.sh` \u2014 one-command full environment setup
+- [ ] `.env.example` credentials match `docker-compose.yml` service credentials exactly
+- [ ] Mailhog prevents real emails during local development
+- [ ] Hot reload configured \u2014 no manual restart needed for code changes
+- [ ] README Quick Start verified: < 5 minutes for a new engineer from clone to running
+
+### Gotchas
+- ❌ Using `latest` image tag → unexpected breaking changes on next `docker pull`
+- ❌ Missing `healthcheck` conditions → app starts before DB is ready → intermittent errors
+- ❌ `.env.example` credentials not matching `docker-compose.yml` → setup silently fails
+- ❌ No Mail catcher → local dev sends real emails to real users during testing
+
+---
+
+## 26. API Versioning & Deprecation Strategy
+
+### Philosophy
+> APIs are contracts. Breaking them silently destroys consumer trust. Versioning strategy MUST be decided before the first public endpoint ships \u2014 retrofitting it later is painful.
+
+### Versioning Approaches
+```
+Strategy               Example                              Recommendation
+\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+URL Path (Recommended)  /api/v1/users → /api/v2/users       ✅ Explicit, easy to test, debug, cache
+Header Versioning       X-API-Version: 2                    ⚠️  Less visible, can't test in browser
+Query Parameter         /api/users?version=2                ❌  Poor caching, non-standard
+Content Negotiation     Accept: application/vnd.myapp.v2+json  ⚠️  Over-engineered for most apps
+```
+
+### URL Path Versioning — Rules
+```
+✅ Version only on MAJOR breaking changes (field removed, type changed, auth changed)
+✅ Non-breaking additions (new fields, new endpoints) → same version, no bump
+✅ Support N (current) and N-1 (previous) versions simultaneously at minimum
+✅ Sunset period: minimum 6 months from announcement to shutdown
+✅ Version the entire API surface, not individual endpoints
+❌ Never version per-endpoint (/api/users/v2/:id) \u2014 creates inconsistent routing chaos
+```
+
+### Breaking vs Non-Breaking Changes
+```
+NON-BREAKING (safe \u2014 no version bump needed):
+  ✅ Adding new optional response fields
+  ✅ Adding new optional request fields
+  ✅ Adding new endpoints entirely
+  ✅ Loosening validation rules (previously rejected → now accepted)
+  ✅ Adding new enum values (if consumer handles unknown gracefully)
+
+BREAKING (requires new major version):
+  ❌ Removing or renaming any response field
+  ❌ Changing a field's data type (string → number, object → array)
+  ❌ Changing URL structure or HTTP method
+  ❌ Adding a REQUIRED request field
+  ❌ Changing authentication mechanism
+  ❌ Tightening validation (previously valid input → now rejected)
+  ❌ Changing error response structure
+```
+
+### Deprecation Lifecycle
+```
+Phase 1: Announce
+  → Add Deprecation + Sunset HTTP headers to ALL old-version responses
+  → Publish migration guide in docs + changelog
+  → Notify API consumers (email / developer portal)
+
+Phase 2: Monitor (6+ months)
+  → Track usage of deprecated version per API key / consumer
+  → Proactively contact consumers still on old version
+  → Track traffic trending toward zero
+
+Phase 3: Sunset
+  → After Sunset date → return HTTP 410 Gone (NOT 404)
+  → Body: { "error": "API_DEPRECATED",
+            "message": "v1 sunset on 2027-01-01. Migrate to /api/v2/",
+            "migrationGuide": "https://docs.company.com/v1-to-v2" }
+
+Phase 4: Remove
+  → Delete v1 code 30 days after 410 responses confirmed stable
+```
+
+### Deprecation HTTP Headers (IETF Standards — RFC 8594)
+```
+# Set on EVERY response from the deprecated version
+Deprecation: true
+Sunset: Sat, 01 Jan 2027 00:00:00 GMT
+Link: </api/v2/users>; rel="successor-version"
+
+# Why use standards: API clients / monitoring tools detect these headers automatically
+# Consumer can configure automated warnings when they receive Deprecation header
+```
+
+### CHANGELOG.md Format
+```markdown
+## [2.0.0] \u2014 2026-09-01  ⚠️ BREAKING
+
+### Breaking Changes
+- `GET /api/v2/users` \u2014 `fullName` split into `firstName` + `lastName`
+- `POST /api/v2/auth/login` \u2014 tokens now returned inside `tokens` wrapper object
+
+### Migration Guide
+See [v1 to v2 migration guide](docs/migrations/v1-to-v2.md)
+
+### Deprecation Notice
+v1 API deprecated as of 2026-09-01. Sunset date: 2027-03-01.
+All v1 responses now include `Deprecation: true` and `Sunset` headers.
+
+## [1.4.0] \u2014 2026-08-15  (Non-Breaking)
+
+### Added
+- `GET /api/v1/users/:id/preferences` \u2014 new endpoint
+- `updatedAt` field added to all user list responses
+```
+
+### Working Checklist
+- [ ] URL path versioning decided before first public endpoint (`/api/v1/`)
+- [ ] CHANGELOG.md maintained per release \u2014 breaking changes clearly marked
+- [ ] Deprecation headers (`Deprecation`, `Sunset`, `Link`) on all old-version responses
+- [ ] Minimum 6-month sunset period enforced before removal
+- [ ] Deprecated version usage tracked per consumer (API key / user agent analytics)
+- [ ] HTTP 410 Gone returned after sunset date (not 404)
+- [ ] Migration guide published before deprecation announcement
+
+### Gotchas
+- ❌ Shipping breaking changes in a minor/patch release → silent breakage for all consumers
+- ❌ No sunset date → consumers never migrate → you maintain v1 forever
+- ❌ Returning 404 after sunset instead of 410 → consumers think it's a bug, not deprecation
+- ❌ No consumer usage tracking → you don't know who still depends on v1
+
+---
+
 ## ⚡ Implementation Priority Order
 
 ### Sprint 0 — Before First Line of Feature Code
@@ -1375,6 +2484,7 @@ docs/
   ✅ Correlation ID middleware
   ✅ Global error handler
   ✅ Standard request / response format
+  ✅ Local dev stack (docker-compose.yml \u2014 one-command setup) [§25]
 ```
 
 ### Sprint 1 — Week 1
@@ -1387,18 +2497,24 @@ docs/
   ✅ Input validation layer
   ✅ Health check endpoints (/live + /ready + /startup)
   ✅ Graceful shutdown handlers
-  ✅ API versioning (/api/v1/)
+  ✅ API versioning from day 1 (/api/v1/) + deprecation strategy defined [§26]
+  ✅ Feature flags (OpenFeature SDK integrated) [§2 expanded]
+  ✅ Cron job distributed locking infrastructure (Redis NX lock) [§22]
 ```
 
 ### Sprint 2 — Before First Release
 ```
   ✅ Metrics endpoint (Prometheus format)
   ✅ Distributed tracing (OpenTelemetry)
-  ✅ Caching layer (Redis — cache-aside + stampede prevention)
+  ✅ Caching layer (Redis \u2014 cache-aside + stampede prevention)
   ✅ Async job queue + DLQ
   ✅ Resilience patterns (timeouts, retries, circuit breaker, idempotency)
+  ✅ File upload architecture (pre-signed URLs + virus scan) [§23]
+  ✅ Alerting & SLO thresholds defined + runbooks written [§24]
+  ✅ GDPR compliance (PII inventory, retention policy, erasure flow) [§8 expanded]
+  ✅ Read replica routing configured [§10 expanded]
   ✅ Full unit + integration test suite
-  ✅ Performance baseline (k6 / Locust — SLA targets defined)
+  ✅ Performance baseline (k6 / Locust \u2014 SLA targets defined)
   ✅ API documentation (OpenAPI 3.x + contract tests)
   ✅ CI/CD pipeline (all steps automated)
   ✅ Docker multi-stage build + image scanning
@@ -1415,7 +2531,11 @@ docs/
 | Raw `console.log()` in production | No structure, not searchable | Structured logger (Pino/Zap/Loguru) |
 | Secrets hardcoded in source | Credential leak | Secrets Manager / env vars |
 | No correlation ID | Bug trace impossible in prod | Middleware assigns UUID per request |
-| No graceful shutdown | Dropped requests on deploy | SIGTERM handler + grace period |
+| Immediate socket close on SIGTERM | K8s iptables race causes 502s | K8s `preStop` (sleep 5) + 5s drain window |
+| Ignoring client request aborts | Zombie SQL queries starve DB pool | Propagate `AbortSignal` / `Context` to all I/O |
+| Direct DB connections from 50+ pods | Postgres connection exhaustion | PgBouncer / RDS Proxy in transaction mode |
+| Breaking DDL during rolling deploy | Live v1 pods crash immediately | Expand-and-Contract migration pattern |
+| Passing ORM transaction to Domain Service | Violates Clean Architecture | Unit of Work abstraction interface |
 | No request timeout | Slow client exhausts threads | Strict I/O timeouts everywhere |
 | Storing tokens in localStorage | XSS token theft | HTTP-Only Secure cookies |
 | No circuit breaker | Cascading service failure | Circuit breaker + fallback defined |
@@ -1423,8 +2543,20 @@ docs/
 | No DLQ for async jobs | Silent job loss | Dead Letter Queue + alert on depth |
 | Over-indexing DB tables | Write performance regression | Index only what EXPLAIN ANALYZE shows |
 | Wildcard CORS `*` with credentials | Cross-origin attacks | Explicit origin whitelist |
-| No PII redaction in logs | Compliance violation (GDPR) | Sanitize before every log call |
+| No PII redaction in logs | GDPR compliance violation | Sanitize before every log call |
+| Cron job without distributed lock | Duplicate execution across pods | Redis NX lock before every cron run |
+| Raw S3 URLs for private files | Auth bypass \u2014 anyone with URL can access | Time-limited signed CDN URLs per request |
+| Alerts without runbooks | Engineer guesses at 3am | Every CRITICAL alert has runbook link |
+| Offset pagination on large tables | O(n) DB scan + page drift at scale | Cursor-based (keyset) pagination |
+| No missed cron job detection | Silent data processing gaps | Track `last_run_at`, alert on 2× miss interval |
+| Copying prod DB to non-prod | Real PII exposed to all devs | Data masking script before every restore |
+| Breaking changes in minor version | Silent consumer breakage | Semantic versioning + Deprecation headers |
+| No sunset period on deprecated API | Consumers never migrate | Minimum 6-month sunset with monitoring |
+| External HTTP call inside DB transaction | Long-held lock \u2014 cascading slowdown | Keep transactions < 100ms, no I/O inside |
+| No optimistic/pessimistic locking | Lost update / double-spend | Version column (optimistic) or SELECT FOR UPDATE |
+| File type check via extension only | Malware upload bypasses check | Magic byte validation (file-type library) |
+| No virus scan on file uploads | Malware stored and served to users | ClamAV / AWS Macie on every S3 upload event |
 
 ---
 
-*Document Version: 2.0 (Final Merged) | Updated: 2026-09-09 | Language-Agnostic Backend Base Setup Guide*
+*Document Version: 3.0 (Production Battle-Tested) | Updated: 2026-09-10 | Language-Agnostic Backend Base Setup Guide*

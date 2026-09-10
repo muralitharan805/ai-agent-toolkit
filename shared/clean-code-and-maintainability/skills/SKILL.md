@@ -1,6 +1,6 @@
 ---
 name: clean-code-and-maintainability
-description: Enforces Robert C. Martin's Clean Code principles, mandatory TSDoc/JSDoc block comments, strict TypeScript typing (no any type), function length limits, parameter DTO encapsulation, and guard clauses. Triggered by 'clean-code:', 'refactor:', or 'code-quality:'.
+description: "Focuses strictly on source code design (SOLID, function length, naming conventions, TS zero-any, guard clauses). Not for CI/CD linting tooling. Triggered by 'clean-code:', 'refactor:', or 'code-quality:'."
 ---
 
 # Clean Code & Maintainability Standards Skill

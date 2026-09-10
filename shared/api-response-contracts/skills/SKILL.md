@@ -1,6 +1,6 @@
 ---
 name: api-response-contracts
-description: "Designs and audits universal API response contracts, success envelopes, pagination models, error catalogs, and zero-leakage security boundaries. Triggered by 'api-contract:', 'response-envelope:', or '/api-response-contracts'."
+description: "Focuses strictly on the JSON payload structure at runtime (success/error envelopes, pagination formats, and error codes). Not for OpenAPI/Swagger documentation. Triggered by 'api-contract:', 'response-envelope:', or '/api-response-contracts'."
 metadata:
   framework_version: "Language-Agnostic"
   last_verified_date: "2026-09-10"

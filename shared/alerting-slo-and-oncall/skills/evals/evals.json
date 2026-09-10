@@ -1,0 +1,47 @@
+{
+  "skill_name": "alerting-slo-and-oncall",
+  "evals": [
+    {
+      "id": 1,
+      "name": "SLI/SLO/Error Budget Definition",
+      "prompt": "Define SLIs, SLOs, and error budget for an order processing API service.",
+      "expected_output": "Defines measurable SLIs (5xx error rate, p99 latency, availability), sets SLO targets with numeric values, calculates error budget in minutes per month, and specifies what happens when the budget is exhausted.",
+      "assertions": [
+        "Defines at least 3 SLIs: HTTP 5xx error rate, p99 latency, and availability",
+        "Sets numeric SLO targets for each SLI (e.g., error rate < 0.1%)",
+        "Calculates error budget as (100% - SLO%) in time units per month",
+        "Specifies deploy freeze policy when error budget is exhausted"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Minimum Alert Set with Runbook Links",
+      "prompt": "Configure the minimum required alert set for a backend API service with proper severity routing and runbook links.",
+      "expected_output": "Creates CRITICAL alerts for 5xx rate and DB pool saturation that page on-call, WARNING alerts for p99 latency and DLQ depth that route to Slack, all with minimum 5-minute evaluation windows and runbook URLs.",
+      "assertions": [
+        "CRITICAL alert for HTTP 5xx rate > 1% with 5-minute evaluation window",
+        "CRITICAL alert for DB connection pool > 90% saturation",
+        "WARNING alert for HTTP p99 latency > 1000ms routing to Slack only",
+        "WARNING alert for DLQ depth > 100 messages",
+        "All CRITICAL alerts include a runbook URL annotation",
+        "CRITICAL alerts route to PagerDuty/OpsGenie, WARNING to Slack"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Runbook Authoring for CRITICAL Alert",
+      "prompt": "Write a production runbook for the HTTP 5xx Spike CRITICAL alert.",
+      "expected_output": "Runbook includes Symptoms section, Immediate Checks (< 2 minutes with kubectl commands), Rollback steps, and Escalation path with time-boxed decision point.",
+      "assertions": [
+        "Runbook includes a Symptoms section describing when the alert fires",
+        "Immediate Checks section provides actionable steps completable in under 2 minutes",
+        "Includes kubectl or equivalent commands for log inspection",
+        "Provides rollback command for deploy-related incidents",
+        "Specifies escalation path with time threshold (e.g., escalate after 20 minutes)"
+      ],
+      "files": []
+    }
+  ]
+}
