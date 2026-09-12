@@ -116,6 +116,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--top", type=int, default=10, help="Filter top N candidates in batch mode (default: 10).")
     parser.add_argument("--dorks", type=str, help="Generate multi-platform Google search dorks for target keyword/domain.")
     parser.add_argument("--export-obsidian", type=str, help="Export scored candidates as standardized Obsidian notes into directory.")
+    parser.add_argument("--sync-csv", type=str, help="Rebuild or refresh discovery_matrix.csv in the target directory.")
 
     # Output formatting
     parser.add_argument("--strict", action="store_true", help="Exit with non-zero status if candidate fails.")
@@ -310,6 +311,23 @@ def evaluate_candidate(
         )
 
 
+def refresh_discovery_csv(out_dir: Path) -> Optional[Path]:
+    """Automatically generate or refresh discovery_matrix.csv in the target directory."""
+    try:
+        script_dir = Path(__file__).resolve().parent
+        if str(script_dir) not in sys.path:
+            sys.path.insert(0, str(script_dir))
+        from export_discovery_matrix import generate_matrix
+
+        csv_path = out_dir / "discovery_matrix.csv"
+        generate_matrix(out_dir, csv_path)
+        sys.stderr.write(f"📊 Auto-updated Discovery Matrix CSV: {csv_path.name}\n")
+        return csv_path
+    except Exception as err:
+        sys.stderr.write(f"⚠️  Notice: Could not auto-refresh matrix CSV: {err}\n")
+        return None
+
+
 def export_to_obsidian(result: EvaluationResult, target_dir: Path) -> Path:
     """Export scored candidate as a standardized Obsidian discovery log note."""
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -434,6 +452,7 @@ def process_batch(candidates_raw: List[Dict[str, Any]], args: argparse.Namespace
             if cand.total_score >= 23:
                 saved = export_to_obsidian(cand, out_dir)
                 sys.stderr.write(f"📝 Exported Obsidian dossier: {saved.name}\n")
+        refresh_discovery_csv(out_dir)
 
     if args.json:
         print(json.dumps([asdict(r) for r in top_n], indent=2))
@@ -451,6 +470,11 @@ def process_batch(candidates_raw: List[Dict[str, Any]], args: argparse.Namespace
 
 def main() -> None:
     args = parse_args()
+
+    if getattr(args, "sync_csv", None):
+        target_dir = Path(args.sync_csv)
+        refresh_discovery_csv(target_dir)
+        sys.exit(0)
 
     if args.dorks:
         dorks = generate_search_dorks(args.dorks)
@@ -496,6 +520,7 @@ def main() -> None:
         out_dir = Path(args.export_obsidian)
         saved = export_to_obsidian(result, out_dir)
         sys.stderr.write(f"📝 Exported Obsidian dossier: {saved.name}\n")
+        refresh_discovery_csv(out_dir)
 
     if args.json:
         print(json.dumps(asdict(result), indent=2))

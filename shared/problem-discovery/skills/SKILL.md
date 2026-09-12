@@ -110,10 +110,11 @@ Score strictly on documented, source-backed evidence using `scripts/score_proble
    - **Score 23–27 PTS**: QUALIFIED OPPORTUNITY. Conduct 2–3 field customer interviews or operator shadowing sessions.
    - **Score 28–35 PTS**: TIER-1 GOLD PROBLEM. Proceed to Stages 7 and 8.
 
-### Stage 7: Standardized Obsidian Discovery Log Dossier Generator
-Format the complete findings into a structured Markdown research note using `assets/discovery-log-template.md`:
-- Save note as `PROB-[DATE]-[SCORE]PTS-[ID].md` into `/home/murali/Documents/obsidian-notes/01_Inbox/discovery_logs/`.
-- If external file-write is unavailable, emit complete markdown content for manual saving.
+### Stage 7: Standardized Obsidian Discovery Log Dossier Generator & Matrix Sync
+- **MANDATORY AUTONOMOUS SAME-TURN PERSISTENCE**: Whenever a candidate scores $\ge 23$ PTS, the agent MUST immediately generate and save the complete structured Markdown research note into `/home/murali/Documents/obsidian-notes/01_Inbox/discovery_logs/PROB-[DATE]-[SCORE]PTS-[ID].md` using `assets/discovery-log-template.md` in the **SAME invocation turn**.
+- **AUTOMATIC CENTRAL MATRIX (CSV / EXCEL) REFRESH**: Whenever a new dossier is created or updated, the agent MUST ensure `/home/murali/Documents/obsidian-notes/01_Inbox/discovery_logs/discovery_matrix.csv` is updated automatically (via `score_problem_candidate.py --sync-csv` or `export_discovery_matrix.py`) to keep the Google Sheets / Excel tracker synchronized with all candidates ranked by score.
+- **PROHIBITION OF CONVERSATIONAL DELAY**: The agent is STRICTLY FORBIDDEN from merely presenting the findings or candidate summary in chat without simultaneously persisting the dossier file and updating the central matrix CSV on disk first.
+- If external file-write is completely unavailable or permissions are restricted, emit the full markdown dossier directly in the response for manual saving.
 
 ### Stage 8: 3-Tier Production Solution Wedge Derivation
 For validated opportunities ($\ge 28$ PTS), derive a progressive 3-tier execution roadmap (see `references/solo-builder-micro-saas-strategy.md`):
