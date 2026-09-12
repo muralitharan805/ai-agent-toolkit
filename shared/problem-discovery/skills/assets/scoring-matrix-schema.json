@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentskills.io/schemas/problem-discovery/scoring-matrix.schema.json",
+  "title": "ProblemDiscoveryCandidateSchema",
+  "description": "JSON Schema modeling grounded problem candidate evaluations, 14-node workflow deconstructions, 35-point evidence scores, and 3-tier solution wedges.",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "domain",
+    "evidence_level",
+    "scores",
+    "stop_checks"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^PROB-[A-Za-z0-9_-]+$",
+      "description": "Unique identifier for the problem candidate dossier."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 120,
+      "description": "Concise, descriptive title of the operational failure point."
+    },
+    "domain": {
+      "type": "string",
+      "description": "Industry vertical or technical domain (e.g., Construction, Developer Tools, E-Commerce)."
+    },
+    "evidence_level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Evidence Quality Ladder level: 1 (Primary Behavioral), 2 (Primary Verbal), 3 (Corroborated Reviews), 4 (Secondary Industry Reports), 5 (Unvalidated Hypothesis)."
+    },
+    "scores": {
+      "type": "object",
+      "required": [
+        "frequency",
+        "severity",
+        "workaround",
+        "wtp",
+        "decision_maker",
+        "feasibility",
+        "discrepancy"
+      ],
+      "properties": {
+        "frequency": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Problem recurrence: 0 (Annual/Rare) to 5 (Daily continuous)."
+        },
+        "severity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Financial loss or statutory penalty: 0 (Cosmetic) to 5 (Direct fines/loss)."
+        },
+        "workaround": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Existing workaround investment: 0 (None) to 5 (Dedicated staff/macros)."
+        },
+        "wtp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Willingness to pay clarity: 0 (Expects free) to 5 (High ROI $200+/mo)."
+        },
+        "decision_maker": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Purchasing friction: 0 (Enterprise RFP) to 5 (Self-serve operator card)."
+        },
+        "feasibility": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Solo builder engineering feasibility: 0 (Deep hardware/AI) to 5 (Lean micro-tool)."
+        },
+        "discrepancy": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Data fragility and format mismatch: 0 (Clean API) to 5 (Hostile schemas/PDFs)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "stop_checks": {
+      "type": "object",
+      "properties": {
+        "infrequent_low_impact": { "type": "boolean", "default": false },
+        "no_meaningful_workaround": { "type": "boolean", "default": false },
+        "commercial_alternative_fits_well": { "type": "boolean", "default": false },
+        "single_source_bias": { "type": "boolean", "default": false },
+        "internal_training_issue": { "type": "boolean", "default": false },
+        "unreachable_audience": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+    "workflow_14_nodes": {
+      "type": "object",
+      "properties": {
+        "actor": { "type": "string" },
+        "trigger": { "type": "string" },
+        "input": { "type": "string" },
+        "steps": { "type": "array", "items": { "type": "string" } },
+        "tools": { "type": "array", "items": { "type": "string" } },
+        "decisions": { "type": "string" },
+        "handoffs": { "type": "string" },
+        "delays": { "type": "string" },
+        "rework": { "type": "string" },
+        "errors": { "type": "string" },
+        "output": { "type": "string" },
+        "cost": { "type": "string" },
+        "risk": { "type": "string" },
+        "audit": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "solution_wedge": {
+      "type": "object",
+      "properties": {
+        "tier1_free_tool": { "type": "object" },
+        "tier2_micro_utility": { "type": "object" },
+        "tier3_recurring_saas": { "type": "object" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

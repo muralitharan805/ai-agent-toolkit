@@ -1,0 +1,70 @@
+{
+  "skill_name": "problem-discovery",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Validated B2B Operational Problem Discovery & 35-Point Scoring",
+      "prompt": "Execute evidence-driven problem discovery on Subcontractor Certificate of Insurance (COI) expiration tracking with manual Excel logs, missed renewals resulting in legal liability, and $150/mo Zapier spend across 8 general contractors.",
+      "expected_output": "Extracts Level 1 behavioral evidence, maps 14-node workflow, scores candidate >= 28 PTS (Tier-1 Gold Problem), evaluates commercial guard, and derives 3-tier solution wedge.",
+      "assertions": [
+        "Deconstructs workflow using 14-node forensic mapping",
+        "Identifies active Willingness to Pay (WTP) economic signals",
+        "Computes 35-point evidence score exceeding 28 points",
+        "Derives 3-tier production solution wedge"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Validated Developer Tooling & API Contract Pipeline",
+      "prompt": "Investigate recurring breaking changes in multi-service backend deployments where REST API endpoint response schemas drift between NestJS microservices without automated CI contract testing.",
+      "expected_output": "Maps 14-node developer workflow, verifies Level 1 error logs, scores candidate >= 28 PTS, and scopes 3-tier prototype (Tier 1 CLI schema linter, Tier 2 GitHub Action, Tier 3 schema registry SaaS).",
+      "assertions": [
+        "Identifies developer glue-work and configuration drift across services",
+        "Enforces Evidence Quality Ladder hard gate",
+        "Scores candidate above 28 points as a Tier-1 Gold Problem",
+        "Derives 3-tier solution wedge tailored for developer tooling"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Saturation Trap Gatekeeper Disqualification",
+      "prompt": "Evaluate a product idea proposing a smart apartment society visitor gate management and maintenance fee collection mobile app for residential housing societies.",
+      "expected_output": "Screens candidate against Saturation Trap Gatekeeper, identifies entrenched funded giants (MyGate, NoBrokerHood) and multi-month committee voting, and parks candidate immediately.",
+      "assertions": [
+        "Identifies brutally saturated market category dominated by funded competitors",
+        "Detects lengthy committee / AGM multi-month decision friction",
+        "Triggers Saturation Trap Gatekeeper stop check",
+        "Parks candidate without proceeding to prototype design"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Commercial Already-Solved Stop Check Trigger",
+      "prompt": "Evaluate a problem discovery candidate proposing a basic PDF freelance invoice generator with simple receipt export.",
+      "expected_output": "Executes commercial pre-scoring scan, identifies >= 3 modern SaaS under $50/mo (Wave, Invoice Ninja), triggers Stop Check #3, and parks/archives candidate.",
+      "assertions": [
+        "Executes commercial alternative search query",
+        "Detects existing affordable SaaS solutions under $50 per month",
+        "Triggers Stop Check #3 for commercial alternative fits well",
+        "Parks or archives candidate without writing code"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "No-Problem Fallback Anti-Hallucination Rejection",
+      "prompt": "Evaluate user feedback stating that a SaaS application button color is annoying without any operational consequence, financial loss, or maintained workaround.",
+      "expected_output": "Classifies friction as low-consequence complaint, scores candidate < 15 PTS, and outputs mandatory No-Problem fallback anti-hallucination message.",
+      "assertions": [
+        "Classifies friction as cosmetic complaint or inconvenience",
+        "Calculates 35-point score below 15 points",
+        "Outputs mandatory no-problem fallback message",
+        "Rejects premature solution prototyping"
+      ],
+      "files": []
+    }
+  ]
+}

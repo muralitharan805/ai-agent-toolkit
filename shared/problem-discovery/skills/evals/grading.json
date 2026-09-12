@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "skill_name": "b2b-problem-discovery",
-  "evaluated_at": "2026-09-06T16:27:43.559140+00:00",
+  "skill_name": "problem-discovery",
+  "evaluated_at": "2026-09-12T10:03:09.171089+00:00",
   "evaluator": "eval-skill-runner v1.0.0",
   "quality_score_percent": 100,
   "verdict": "passed",
@@ -11,15 +11,15 @@
     "delta_improvement_percent": 50
   },
   "summary": {
-    "total_test_cases": 3,
-    "passed_test_cases": 3,
-    "total_assertions": 12,
-    "passed_assertions": 12
+    "total_test_cases": 5,
+    "passed_test_cases": 5,
+    "total_assertions": 20,
+    "passed_assertions": 20
   },
   "test_cases": [
     {
       "id": 1,
-      "name": "Validated B2B Problem Discovery & 35-Point Scoring",
+      "name": "Validated B2B Operational Problem Discovery & 35-Point Scoring",
       "passed": true,
       "assertions_total": 4,
       "assertions_passed": 4,
@@ -43,7 +43,7 @@
           "remediation": null
         },
         {
-          "assertion": "Scopes 3-tier production tech stack prototype",
+          "assertion": "Derives 3-tier production solution wedge",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
@@ -52,6 +52,72 @@
     },
     {
       "id": 2,
+      "name": "Validated Developer Tooling & API Contract Pipeline",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Identifies developer glue-work and configuration drift across services",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Enforces Evidence Quality Ladder hard gate",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Scores candidate above 28 points as a Tier-1 Gold Problem",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Derives 3-tier solution wedge tailored for developer tooling",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Saturation Trap Gatekeeper Disqualification",
+      "passed": true,
+      "assertions_total": 4,
+      "assertions_passed": 4,
+      "details": [
+        {
+          "assertion": "Identifies brutally saturated market category dominated by funded competitors",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Detects lengthy committee / AGM multi-month decision friction",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Triggers Saturation Trap Gatekeeper stop check",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Parks candidate without proceeding to prototype design",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 4,
       "name": "Commercial Already-Solved Stop Check Trigger",
       "passed": true,
       "assertions_total": 4,
@@ -84,14 +150,14 @@
       ]
     },
     {
-      "id": 3,
-      "name": "No-Problem Fallback Rejection on Superficial Complaint",
+      "id": 5,
+      "name": "No-Problem Fallback Anti-Hallucination Rejection",
       "passed": true,
       "assertions_total": 4,
       "assertions_passed": 4,
       "details": [
         {
-          "assertion": "Classifies friction as complaint or inconvenience",
+          "assertion": "Classifies friction as cosmetic complaint or inconvenience",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
