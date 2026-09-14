@@ -3,61 +3,61 @@
   "evals": [
     {
       "id": 1,
-      "name": "Validated B2B Operational Problem Discovery & 35-Point Scoring",
-      "prompt": "Execute evidence-driven problem discovery on Subcontractor Certificate of Insurance (COI) expiration tracking with manual Excel logs, missed renewals resulting in legal liability, and $150/mo Zapier spend across 8 general contractors.",
-      "expected_output": "Extracts Level 1 behavioral evidence, maps 14-node workflow, scores candidate >= 28 PTS (Tier-1 Gold Problem), evaluates commercial guard, and derives 3-tier solution wedge.",
+      "name": "Verified B2B Operational Problem Discovery & Experiment Scoping",
+      "prompt": "Execute evidence-driven problem discovery on Subcontractor Certificate of Insurance (COI) expiration tracking where 8 general contractors provided sanitized Excel shadow sheets and fine receipts ($5,000 legal liability, $150/mo Zapier spend).",
+      "expected_output": "Verifies attached Level 1 primary behavioral evidence, maps 14-node workflow, computes Research Prioritization score >= 28 PTS, checks multi-dimensional alternatives, and designs a low-cost concierge trial before code.",
       "assertions": [
         "Deconstructs workflow using 14-node forensic mapping",
-        "Identifies active Willingness to Pay (WTP) economic signals",
-        "Computes 35-point evidence score exceeding 28 points",
-        "Derives 3-tier production solution wedge"
+        "Verifies primary behavioral evidence artifacts and sources",
+        "Computes 35-point research prioritization score",
+        "Designs low-cost validation experiment before writing software"
       ],
       "files": []
     },
     {
       "id": 2,
-      "name": "Validated Developer Tooling & API Contract Pipeline",
-      "prompt": "Investigate recurring breaking changes in multi-service backend deployments where REST API endpoint response schemas drift between NestJS microservices without automated CI contract testing.",
-      "expected_output": "Maps 14-node developer workflow, verifies Level 1 error logs, scores candidate >= 28 PTS, and scopes 3-tier prototype (Tier 1 CLI schema linter, Tier 2 GitHub Action, Tier 3 schema registry SaaS).",
+      "name": "Unverified Input Detection & Research Prioritization Guard",
+      "prompt": "Evaluate an asserted developer tool problem where a user claims microservice REST API schemas drift between NestJS services and asks for immediate full-stack SaaS code without attaching CI logs, error traces, or customer interview quotes.",
+      "expected_output": "Flags input as unverified assertions without primary evidence artifacts, sets validation status to UNVERIFIED / RESEARCH_PRIORITY, enforces the unverified input hard gate, and demands error logs or developer shadowing before code.",
       "assertions": [
-        "Identifies developer glue-work and configuration drift across services",
-        "Enforces Evidence Quality Ladder hard gate",
-        "Scores candidate above 28 points as a Tier-1 Gold Problem",
-        "Derives 3-tier solution wedge tailored for developer tooling"
+        "Detects unverified input claims lacking primary evidence artifacts",
+        "Enforces unverified input hard gate without marking validated",
+        "Assigns research priority tier rather than build status",
+        "Requests concrete primary artifacts like CI logs or traces"
       ],
       "files": []
     },
     {
       "id": 3,
-      "name": "Saturation Trap Gatekeeper Disqualification",
-      "prompt": "Evaluate a product idea proposing a smart apartment society visitor gate management and maintenance fee collection mobile app for residential housing societies.",
-      "expected_output": "Screens candidate against Saturation Trap Gatekeeper, identifies entrenched funded giants (MyGate, NoBrokerHood) and multi-month committee voting, and parks candidate immediately.",
+      "name": "Track B Free Utility / Civic Workflow Evaluation",
+      "prompt": "Evaluate a proposed civic helper tool for village cardholders tracking public ration shop stock arrivals and token queue wait times in Tamil Nadu based on field interviews with 12 residents and photos of morning queue registers.",
+      "expected_output": "Routes candidate to Track B (Free Utility / Public Benefit), replaces WTP with utility/time-saved adoption, checks local language/offline mobile constraints, and scopes a standalone static web utility without penalizing for zero commercial WTP.",
       "assertions": [
-        "Identifies brutally saturated market category dominated by funded competitors",
-        "Detects lengthy committee / AGM multi-month decision friction",
-        "Triggers Saturation Trap Gatekeeper stop check",
-        "Parks candidate without proceeding to prototype design"
+        "Routes candidate to Track B for free public utility",
+        "Evaluates utility time saved and adoption instead of dollar WTP",
+        "Enforces offline-first and vernacular device constraints",
+        "Scopes smallest suitable solution as static client utility"
       ],
       "files": []
     },
     {
       "id": 4,
-      "name": "Commercial Already-Solved Stop Check Trigger",
-      "prompt": "Evaluate a problem discovery candidate proposing a basic PDF freelance invoice generator with simple receipt export.",
-      "expected_output": "Executes commercial pre-scoring scan, identifies >= 3 modern SaaS under $50/mo (Wave, Invoice Ninja), triggers Stop Check #3, and parks/archives candidate.",
+      "name": "Multi-Dimensional Alternative Fit & Non-Software Audit",
+      "prompt": "Evaluate a freelance invoice generator candidate where 3 global SaaS tools exist under $50/month (Wave, Invoice Ninja), but a local guild of physical handicraft artisans in a semi-urban cluster cannot use them due to lack of local GST invoice compliance, English-only interfaces, and mandatory credit card billing.",
+      "expected_output": "Performs multi-dimensional alternative audit (evaluating language, geography, local tax compliance, and device constraints), checks non-software options (printed bill book vs mobile utility), and determines true workflow fit rather than blindly archiving based on competitor count.",
       "assertions": [
-        "Executes commercial alternative search query",
-        "Detects existing affordable SaaS solutions under $50 per month",
-        "Triggers Stop Check #3 for commercial alternative fits well",
-        "Parks or archives candidate without writing code"
+        "Evaluates multi-dimensional competitor fit beyond pricing",
+        "Assesses local tax compliance language and device constraints",
+        "Audits non-software alternatives like printable bill books",
+        "Distinguishes generic SaaS saturation from acute local gaps"
       ],
       "files": []
     },
     {
       "id": 5,
       "name": "No-Problem Fallback Anti-Hallucination Rejection",
-      "prompt": "Evaluate user feedback stating that a SaaS application button color is annoying without any operational consequence, financial loss, or maintained workaround.",
-      "expected_output": "Classifies friction as low-consequence complaint, scores candidate < 15 PTS, and outputs mandatory No-Problem fallback anti-hallucination message.",
+      "prompt": "Evaluate user feedback stating that users find a dashboard header icon slightly unintuitive, with zero operational consequence, zero wasted hours, and no maintained workaround.",
+      "expected_output": "Classifies friction as cosmetic complaint, calculates priority score < 15 PTS, rejects premature solution prototyping, and outputs mandatory anti-hallucination fallback message.",
       "assertions": [
         "Classifies friction as cosmetic complaint or inconvenience",
         "Calculates 35-point score below 15 points",

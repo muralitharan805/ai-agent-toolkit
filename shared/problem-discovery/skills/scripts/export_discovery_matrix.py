@@ -107,12 +107,17 @@ def parse_discovery_file(file_path: Path) -> Dict[str, Any]:
     )
     risk = clean_text(risk_match.group(1)) if risk_match else ""
 
+    # Track
+    track_match = re.search(r"track:\s*([^\n]+)", content)
+    track = clean_text(track_match.group(1)).lower() if track_match else "commercial"
+
     # 10. Status
     status_match = (
-        re.search(r"\*\*Status\*\*:\s*([^\n]+)", content)
+        re.search(r"validation_status:\s*([^\n]+)", content)
+        or re.search(r"\*\*Status\*\*:\s*([^\n]+)", content)
         or re.search(r"status:\s*([^\n]+)", content)
     )
-    status = clean_text(status_match.group(1)) if status_match else "EXPLORING"
+    status = clean_text(status_match.group(1)) if status_match else "UNVERIFIED"
 
     # 11. 3-Tier Wedges
     tier1_match = (
@@ -139,6 +144,7 @@ def parse_discovery_file(file_path: Path) -> Dict[str, Any]:
     return {
         "candidate_id": candidate_id,
         "score": score,
+        "track": track,
         "classification": classification,
         "domain": domain,
         "title": title,
@@ -184,6 +190,7 @@ def generate_matrix(directory: Path, output_csv: Path) -> List[Dict[str, Any]]:
     fieldnames = [
         "rank",
         "score",
+        "track",
         "classification",
         "status",
         "folder",

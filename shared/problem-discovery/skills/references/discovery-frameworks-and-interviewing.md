@@ -4,108 +4,107 @@
 
 High-conviction software opportunities are discovered by observing operators in their natural working environments, not by soliciting feature wishlists. When people describe their problems in interviews, they frequently request local optimizations to visible symptoms while concealing root operational bottlenecks.
 
-This guide outlines structured discovery frameworks (TRACE, FOCUS, 5-Phase Forensic Engine) and field interview protocols (The Mom Test, operator shadowing) applicable to **any problem discovery domain**.
+This guide outlines structured discovery frameworks (The PAIN Model, Jobs to Be Done, The Mom Test, Service Blueprints, Desirability-Feasibility-Viability) and field interview protocols applicable to any domain.
 
 ---
 
-## 1. Unified Discovery Frameworks
+## 1. The PAIN Discovery Framework
 
-### The TRACE Framework
-TRACE is an agile, 5-stage operational methodology optimized for rapid process tracing:
+When analyzing any reported complaint or friction, extract 4 precise operational dimensions:
 
-```text
-┌────────────────────────────────────────────────────────┐
-│                  THE TRACE FRAMEWORK                   │
-├───────┬──────────────────────┬─────────────────────────┤
-│ **T** │ **Trace Workflow**   │ Observe what operators  │
-│       │                      │ actually do step-by-step│
-├───────┼──────────────────────┼─────────────────────────┤
-│ **R** │ **Record Friction**  │ Document delays, errors,│
-│       │                      │ workarounds, re-entry   │
-├───────┼──────────────────────┼─────────────────────────┤
-│ **A** │ **Analyze Causes**   │ Separate symptoms from  │
-│       │                      │ structural root causes  │
-├───────┼──────────────────────┼─────────────────────────┤
-│ **C** │ **Confirm Value**    │ Validate frequency, cost│
-│       │                      │ and willingness to pay  │
-├───────┼──────────────────────┼─────────────────────────┤
-│ **E** │ **Evaluate Solution**│ Only now assess tool    │
-│       │                      │ feasibility & wedge fit │
-└───────┴──────────────────────┴─────────────────────────┘
-```
+$$\textbf{P} \text{erson} \quad+\quad \textbf{A} \text{ctivity} \quad+\quad \textbf{I} \text{ncident} \quad+\quad \textbf{N} \text{umber}$$
 
-### The FOCUS Immersion Framework
-FOCUS provides a thorough immersion loop when investigating specialized verticals:
-1. **Field Immersion**: Sit alongside operators or join technical communities where the friction occurs.
-2. **Observation**: Record exact tool transitions, keyboard shortcuts, and manual copy-paste handoffs.
-3. **Cause Digging**: Ask "Why did this mismatch happen?" repeatedly until reaching systemic boundaries.
-4. **Understanding Economics**: Calculate hourly labor wasted and statutory non-compliance exposure.
-5. **Scoring**: Evaluate against the 35-Point Evidence Matrix before writing specifications.
+- **Person**: Exactly who faces the friction? (Job title, role, company/fleet size, literacy).
+- **Activity**: What specific operational outcome are they attempting to complete?
+- **Incident**: Where precisely does the breakdown occur? (Which handoff, format mismatch, or portal cutoff?).
+- **Number**: What is the verifiable recurrence and measurable consequence? (Hours wasted, money lost, penalty rate).
 
-### The 5-Phase Forensic Engineering Pipeline
-$$\textbf{Observe} \longrightarrow \textbf{Deconstruct} \longrightarrow \textbf{Probe} \longrightarrow \textbf{Quantify} \longrightarrow \textbf{Stress-Test}$$
-- **Observe**: Screen recordings, unversioned spreadsheets, error logs.
-- **Deconstruct**: Map each action into the 14 operational workflow nodes.
-- **Probe**: Inquire about edge cases, volume spikes, and recent breakdowns.
-- **Quantify**: Tally hours wasted, rework frequency, and financial consequences.
-- **Stress-Test**: Check existing commercial competitors (< $50/mo) and platform lock-in risks.
+### Concrete Example:
+- **Person**: Small fleet bookkeeper (managing 15 transport trucks)
+- **Activity**: Quarterly fuel tax reconciliation
+- **Incident**: Cross-referencing physical paper fuel receipts against telematics GPS mileage logs
+- **Number**: Occurs every quarter; consumes 2–3 full workdays of manual Excel transcription
+> *"Accounting is difficult"* is an unbuildable abstraction. The specific statement above is an actionable, high-conviction product opportunity.
 
 ---
 
-## 2. Field Interviewing: The Mom Test Protocol
+## 2. Unified Frameworks: Different Tools for Different Questions
+
+Different stages of discovery require different analytical lenses:
+
+| Framework | Core Purpose | Key Inquiry |
+|---|---|---|
+| **The PAIN Model** | Extract person, task, failure incident, and measurable consequence | *"Who suffers, during what activity, at what incident, with what numbers?"* |
+| **Jobs to Be Done (JTBD)** | Understand the underlying outcome the user wants to achieve | *"What progress is the user trying to make when this task arises?"* |
+| **Customer Discovery / Mom Test** | Collect historical factual behavior rather than speculative opinions | *"What did you actually do the last time this broke?"* |
+| **Workflow Mapping / Service Blueprint** | Locate steps, people, handoffs, delays, and failure points | *"Where does data pause, wait for approval, or require manual re-entry?"* |
+| **Desirability–Feasibility–Viability** ([Strategyzer](https://www.strategyzer.com/library/how-to-systematically-reduce-the-risk-uncertainty-of-new-ideas)) | Systematically reduce risk across demand, technical delivery, and sustainability | *"Is there authentic demand? Can we build it? Can we sustain it without heavy overhead?"* |
+
+### The Master Discovery Sequence:
+$$\textbf{Observe} \longrightarrow \textbf{Map} \longrightarrow \textbf{Corroborate} \longrightarrow \textbf{Check Alternatives} \longrightarrow \textbf{Test Smallest Intervention} \longrightarrow \textbf{Measure Behavior}$$
+
+---
+
+## 3. Large Workflow Deconstruction & Isolating the Break Point
+
+Large operational workflows look complex from the outside:
+$$\text{Request arrives} \rightarrow \text{Checks details} \rightarrow \text{Copies into tool} \rightarrow \text{Asks for approval} \rightarrow \text{Waits} \rightarrow \text{Corrects missing data} \rightarrow \text{Produces output} \rightarrow \text{Confirms}$$
+
+A large workflow by itself is not an opportunity. You must isolate the **repeated small failure point**. At every step of the chain, ask these **5 Diagnostic Questions**:
+
+1. **Who is doing this step?** (Job title, vernacular literacy, device used).
+2. **What exact information is required?** (Format, schema, completeness).
+3. **Why does it pass to the next person or tool?** (Policy, technical limitation, sign-off).
+4. **Where does idle waiting or rework occur?** (Bottlenecks, back-and-forth messaging).
+5. **What is the consequence if this step fails?** (Financial loss, delay, wrong print/shipment, compliance fine).
+
+---
+
+## 4. Field Interviewing: The Mom Test Protocol
 
 > **The Cardinal Axiom**: Never ask customers what they think of an idea. Ask them what they did the last time they faced the problem.
 
-People are naturally polite and encouraging. If you ask *"Would you pay for an app that automates X?"*, 80%+ of respondents will answer positively—yet zero will purchase upon release. Verbal praise is not validation. Only historical behavior, spent budget, and maintained workarounds indicate demand.
+People are naturally polite and encouraging. If you ask *"Would you use or pay for an app that does X?"*, respondents routinely answer affirmatively out of courtesy. Polite encouragement is easily misread as validated commercial demand.
 
-```text
-┌────────────────────────────────────────────────────────┐
-│               THE MOM TEST CONVERGENCE                 │
-├──────────────────────────┬─────────────────────────────┤
-│ ❌ Future Hypotheticals  │ "Would you pay $50/month for│
-│    (Worthless data)      │ a tool that syncs inventory?│
-├──────────────────────────┼─────────────────────────────┤
-│ ✅ Past Factual Behavior │ "How many hours did you     │
-│    (High-fidelity truth) │ spend reconciling stock last│
-│                          │ Tuesday? What broke?"       │
-└──────────────────────────┴─────────────────────────────┘
-```
+### The 7 Grounded Behavioral Field Questions:
+During field interviews, use these grounded behavioral prompts:
 
-### Good Questions vs Bad Questions Cheat Sheet
+1. *"When was the last time you performed this task?"* (Anchors to a specific recent date).
+2. *"Can you walk me through the step-by-step actions you took?"* (Surfaces actual workflows).
+3. *"What exact files, tools, or registers did you touch?"* (Identifies real software/paper touchpoints).
+4. *"Where in that sequence did you spend the most time or feel the most frustration?"* (Isolates the bottleneck).
+5. *"When was the last time a mistake slipped through? What was the financial or operational consequence?"* (Measures severity).
+6. *"How much are you currently paying for tools, freelancers, or services to manage this today?"* (Uncovers active budgets).
+7. *"Can you show me an anonymized screenshot, spreadsheet, or sample report?"* (Produces primary artifacts).
 
-| ❌ Bad Question (Hypothetical / Bias) | ✅ Good Question (Behavioral / Grounded) | Why It Matters |
-|---|---|---|
-| *"Do you think our proposed tool is a good concept?"* | *"What do you actually do today when this data is missing?"* | Hypotheticals solicit polite opinions; actual habits reveal true urgency. |
-| *"How much would you pay for this software?"* | *"What tools, contractors, or scripts are you currently paying for to manage this?"* | Uncovers active budgets vs wishful thinking. |
-| *"Would you like an AI dashboard that alerts you to errors?"* | *"How did you discover the last error that slipped into production or billing?"* | Identifies actual detection mechanisms rather than fantasy features. |
-| *"What features should we build into this app?"* | *"Can you show me the file or spreadsheet where this work was done this morning?"* | Exposes real operational artifacts rather than speculative feature lists. |
+### The Golden Pilot Commitment Question:
+At the conclusion of an interview, the single most revealing question that separates real demand from polite conversation is:
+
+> **"If I prepare a simple working version of this tool, are you ready to pilot test it with your real data during your next work cycle?"**
+
+- If they say *"Send me an email whenever it's live"*, interest is weak.
+- If they immediately offer their next schedule date and agree to provide sample test data, **authentic validation is confirmed**.
 
 ---
 
-## 3. The Golden Diagnostic Question
+## 5. Inaction Root Cause Analysis
 
-When an operator complains about an operational headache, the single most revealing question is:
+When an operator reveals they maintain no active software tool or spreadsheet, **do not automatically reject the problem**. Distinguish between two completely different operational states:
 
-> **"What do you actually do today when that happens?"**
-
-Their response immediately categorizes the opportunity:
-1. *"We don't do anything; we just live with it."* $\longrightarrow$ **REJECT**. Low pain; no budget will be allocated.
-2. *"We looked for a tool once, couldn't find one, so we gave up."* $\longrightarrow$ **REJECT**. Inaction indicates low consequence.
-3. *"We hired an intern / paid a freelancer / built a 15-tab macro spreadsheet that runs every morning."* $\longrightarrow$ **VALIDATED OPPORTUNITY**. Real human capital and budget are already actively burning.
+1. **Inaction with Low Consequence**:
+   - The user doesn't bother doing anything because ignoring the task causes zero measurable loss.
+   - $\longrightarrow$ **REJECT / PARK**. No adoption or budget will ever materialize.
+2. **Inaction under Severe Consequence (Task Abandonment)**:
+   - The user attempted to find tools, found only complex English enterprise ERPs costing $5,000+/year requiring desktop PCs, and gave up under duress.
+   - The operational consequence remains severe (e.g. repeated inventory shortage, tax penalties, absorbed rework costs).
+   - $\longrightarrow$ **HIGH-CONVICTION LATENT OPPORTUNITY**. Accessible, simple micro-tools thrive in this exact vacuum.
 
 ---
 
-## 4. Operator Shadowing Protocol
+## 6. Counter Shadowing Protocol (Local & Retail Field Work)
 
 To observe authentic operational behavior without prompting:
-1. **Pre-Session Setup**: Request to observe an ordinary work shift (e.g., end-of-month reconciliation, weekly release, inventory update). Emphasize: *"I am not evaluating your personal performance; I am studying how different software systems communicate."*
-2. **Silent Observation**: Watch the screen without interrupting. Note every time the operator:
-   - Switches between browser tabs or windows.
-   - Copies text from one tool and pastes it into another.
-   - Types numbers from a PDF document into a form.
-   - Opens a local spreadsheet to look up reference codes.
-3. **Targeted Debrief**: At natural pauses, ask:
-   - *"What was the reason for checking that third tab just now?"*
-   - *"Where did that CSV file originate, and who created it?"*
-   - *"What would occur downstream if this entry was delayed by 24 hours?"*
-4. **Hunting Shadow Systems**: Ask to see the desktop folder, bookmarks bar, or shared drive where team members keep their personal reference files. The existence of files named `FINAL_v4_MASTER_DO_NOT_DELETE.xlsx` confirms human glue-work.
+1. **Visit During Peak Transition Hours**: Morning inventory arrivals (8:00–10:00 AM) or daily closing (7:00–9:00 PM).
+2. **Silent Observation**: Note tab-switching, copying numbers from paper receipts to phones, and customer interruptions.
+3. **The "Show Me Your Register" Inquiry**: Ask to see the dog-eared register or WhatsApp message group where orders were tracked yesterday.
+4. **Shadow Systems**: Identify personal cheat sheets, desktop folders named `FINAL_v2_USE_THIS.xlsx`, or margin scribbles in physical notebooks.

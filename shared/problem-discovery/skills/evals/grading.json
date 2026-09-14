@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "skill_name": "problem-discovery",
-  "evaluated_at": "2026-09-12T10:03:09.171089+00:00",
+  "evaluated_at": "2026-09-14T03:59:31.338444+00:00",
   "evaluator": "eval-skill-runner v1.0.0",
   "quality_score_percent": 100,
   "verdict": "passed",
@@ -19,7 +19,7 @@
   "test_cases": [
     {
       "id": 1,
-      "name": "Validated B2B Operational Problem Discovery & 35-Point Scoring",
+      "name": "Verified B2B Operational Problem Discovery & Experiment Scoping",
       "passed": true,
       "assertions_total": 4,
       "assertions_passed": 4,
@@ -31,19 +31,19 @@
           "remediation": null
         },
         {
-          "assertion": "Identifies active Willingness to Pay (WTP) economic signals",
+          "assertion": "Verifies primary behavioral evidence artifacts and sources",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Computes 35-point evidence score exceeding 28 points",
+          "assertion": "Computes 35-point research prioritization score",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Derives 3-tier production solution wedge",
+          "assertion": "Designs low-cost validation experiment before writing software",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
@@ -52,31 +52,31 @@
     },
     {
       "id": 2,
-      "name": "Validated Developer Tooling & API Contract Pipeline",
+      "name": "Unverified Input Detection & Research Prioritization Guard",
       "passed": true,
       "assertions_total": 4,
       "assertions_passed": 4,
       "details": [
         {
-          "assertion": "Identifies developer glue-work and configuration drift across services",
+          "assertion": "Detects unverified input claims lacking primary evidence artifacts",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Enforces Evidence Quality Ladder hard gate",
+          "assertion": "Enforces unverified input hard gate without marking validated",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Scores candidate above 28 points as a Tier-1 Gold Problem",
+          "assertion": "Assigns research priority tier rather than build status",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Derives 3-tier solution wedge tailored for developer tooling",
+          "assertion": "Requests concrete primary artifacts like CI logs or traces",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
@@ -85,31 +85,31 @@
     },
     {
       "id": 3,
-      "name": "Saturation Trap Gatekeeper Disqualification",
+      "name": "Track B Free Utility / Civic Workflow Evaluation",
       "passed": true,
       "assertions_total": 4,
       "assertions_passed": 4,
       "details": [
         {
-          "assertion": "Identifies brutally saturated market category dominated by funded competitors",
+          "assertion": "Routes candidate to Track B for free public utility",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Detects lengthy committee / AGM multi-month decision friction",
+          "assertion": "Evaluates utility time saved and adoption instead of dollar WTP",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Triggers Saturation Trap Gatekeeper stop check",
+          "assertion": "Enforces offline-first and vernacular device constraints",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Parks candidate without proceeding to prototype design",
+          "assertion": "Scopes smallest suitable solution as static client utility",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
@@ -118,31 +118,31 @@
     },
     {
       "id": 4,
-      "name": "Commercial Already-Solved Stop Check Trigger",
+      "name": "Multi-Dimensional Alternative Fit & Non-Software Audit",
       "passed": true,
       "assertions_total": 4,
       "assertions_passed": 4,
       "details": [
         {
-          "assertion": "Executes commercial alternative search query",
+          "assertion": "Evaluates multi-dimensional competitor fit beyond pricing",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Detects existing affordable SaaS solutions under $50 per month",
+          "assertion": "Assesses local tax compliance language and device constraints",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Triggers Stop Check #3 for commercial alternative fits well",
+          "assertion": "Audits non-software alternatives like printable bill books",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Parks or archives candidate without writing code",
+          "assertion": "Distinguishes generic SaaS saturation from acute local gaps",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null

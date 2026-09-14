@@ -2,12 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentskills.io/schemas/problem-discovery/scoring-matrix.schema.json",
   "title": "ProblemDiscoveryCandidateSchema",
-  "description": "JSON Schema modeling grounded problem candidate evaluations, 14-node workflow deconstructions, 35-point evidence scores, and 3-tier solution wedges.",
+  "description": "JSON Schema modeling grounded problem candidate evaluations, dual-track prioritization scores, evidence verification, and smallest suitable solutions.",
   "type": "object",
   "required": [
     "id",
     "title",
     "domain",
+    "track",
+    "validation_status",
     "evidence_level",
     "scores",
     "stop_checks"
@@ -26,13 +28,42 @@
     },
     "domain": {
       "type": "string",
-      "description": "Industry vertical or technical domain (e.g., Construction, Developer Tools, E-Commerce)."
+      "description": "Industry vertical or technical domain (e.g., Construction, Developer Tools, Local Retail)."
+    },
+    "track": {
+      "type": "string",
+      "enum": ["commercial", "free_utility"],
+      "default": "commercial",
+      "description": "Evaluation track: Commercial (SaaS/WTP) or Free Utility (Public benefit / Civic / Offline)."
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "research_priority",
+        "corroborated",
+        "experiment_validated",
+        "parked",
+        "rejected"
+      ],
+      "description": "Empirical validation status based on observed evidence and experiment outcomes."
+    },
+    "priority_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 35,
+      "description": "35-Point Research Prioritization Score (measure of research priority, NOT market proof)."
     },
     "evidence_level": {
       "type": "integer",
       "minimum": 1,
       "maximum": 5,
-      "description": "Evidence Quality Ladder level: 1 (Primary Behavioral), 2 (Primary Verbal), 3 (Corroborated Reviews), 4 (Secondary Industry Reports), 5 (Unvalidated Hypothesis)."
+      "description": "Evidence Quality Ladder level: 1 (Primary Behavioral), 2 (Primary Verbal), 3 (Corroborated Reviews/Threads), 4 (Secondary Reports), 5 (Unvalidated Hypothesis)."
+    },
+    "evidence_artifacts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "File paths, URLs, or recorded quotes backing the claims."
     },
     "scores": {
       "type": "object",
@@ -40,7 +71,7 @@
         "frequency",
         "severity",
         "workaround",
-        "wtp",
+        "track_dimension",
         "decision_maker",
         "feasibility",
         "discrepancy"
@@ -56,37 +87,37 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 5,
-          "description": "Financial loss or statutory penalty: 0 (Cosmetic) to 5 (Direct fines/loss)."
+          "description": "Financial loss, consequence, or penalty: 0 (Cosmetic) to 5 (Direct fines/loss)."
         },
         "workaround": {
           "type": "integer",
           "minimum": 0,
           "maximum": 5,
-          "description": "Existing workaround investment: 0 (None) to 5 (Dedicated staff/macros)."
+          "description": "Existing workaround investment or inaction root cause: 0 (None) to 5 (Dedicated staff/macros)."
         },
-        "wtp": {
+        "track_dimension": {
           "type": "integer",
           "minimum": 0,
           "maximum": 5,
-          "description": "Willingness to pay clarity: 0 (Expects free) to 5 (High ROI $200+/mo)."
+          "description": "Track A: WTP ($29-$199/mo); Track B: Utility, Repeat Adoption & Time Saved."
         },
         "decision_maker": {
           "type": "integer",
           "minimum": 0,
           "maximum": 5,
-          "description": "Purchasing friction: 0 (Enterprise RFP) to 5 (Self-serve operator card)."
+          "description": "Adoption friction: 0 (Enterprise RFP) to 5 (Self-serve operator card / instant install)."
         },
         "feasibility": {
           "type": "integer",
           "minimum": 0,
           "maximum": 5,
-          "description": "Solo builder engineering feasibility: 0 (Deep hardware/AI) to 5 (Lean micro-tool)."
+          "description": "Solo builder engineering feasibility: 0 (Deep hardware/frontier AI) to 5 (Lean micro-tool)."
         },
         "discrepancy": {
           "type": "integer",
           "minimum": 0,
           "maximum": 5,
-          "description": "Data fragility and format mismatch: 0 (Clean API) to 5 (Hostile schemas/PDFs)."
+          "description": "Process discrepancy & handoff breakdown: 0 (Clean tool) to 5 (Acute multi-party breakdown)."
         }
       },
       "additionalProperties": false
@@ -123,12 +154,27 @@
       },
       "additionalProperties": false
     },
-    "solution_wedge": {
+    "experiment_outcome": {
       "type": "object",
       "properties": {
-        "tier1_free_tool": { "type": "object" },
-        "tier2_micro_utility": { "type": "object" },
-        "tier3_recurring_saas": { "type": "object" }
+        "hypothesis": { "type": "string" },
+        "test_mechanism": { "type": "string" },
+        "success_metric": { "type": "string" },
+        "observed_result": { "type": "string" },
+        "verified": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "smallest_suitable_solution": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": ["template_sop", "static_web_utility", "cli_tool", "browser_extension", "micro_saas"]
+        },
+        "tool_name": { "type": "string" },
+        "description": { "type": "string" },
+        "distribution_channel": { "type": "string" }
       },
       "additionalProperties": false
     }
