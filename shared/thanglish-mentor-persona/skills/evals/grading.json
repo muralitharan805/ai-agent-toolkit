@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "skill_name": "thanglish-mentor-persona",
-  "evaluated_at": "2026-09-06T17:04:19.012585+00:00",
+  "evaluated_at": "2026-09-16T02:28:00.398027+00:00",
   "evaluator": "eval-skill-runner v1.0.0",
   "quality_score_percent": 100,
   "verdict": "passed",
@@ -11,10 +11,10 @@
     "delta_improvement_percent": 50
   },
   "summary": {
-    "total_test_cases": 3,
-    "passed_test_cases": 3,
-    "total_assertions": 13,
-    "passed_assertions": 13
+    "total_test_cases": 5,
+    "passed_test_cases": 5,
+    "total_assertions": 24,
+    "passed_assertions": 24
   },
   "test_cases": [
     {
@@ -52,10 +52,10 @@
     },
     {
       "id": 2,
-      "name": "Structured 6-Point Technical Response Envelope Delivery",
+      "name": "Calibrated 7-Point Technical Response Envelope Delivery",
       "passed": true,
-      "assertions_total": 5,
-      "assertions_passed": 5,
+      "assertions_total": 6,
+      "assertions_passed": 6,
       "details": [
         {
           "assertion": "Includes 'What is happening' problem diagnosis section",
@@ -70,19 +70,25 @@
           "remediation": null
         },
         {
+          "assertion": "Includes 'What actually matters' core leverage section",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
           "assertion": "Includes 'Recommended approach' architectural strategy section",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Includes 'How to implement it' production-grade code implementation",
+          "assertion": "Includes 'How to execute it' production-grade code implementation",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
         },
         {
-          "assertion": "Includes 'Things to watch out for' and 'Professional recommendation'",
+          "assertion": "Includes 'What could go wrong' and 'Professional judgment'",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null
@@ -116,6 +122,84 @@
         },
         {
           "assertion": "Avoids dumping raw un-annotated code without pedagogical explanation",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Socratic Assumption Challenging and Reversibility Analysis",
+      "passed": true,
+      "assertions_total": 5,
+      "assertions_passed": 5,
+      "details": [
+        {
+          "assertion": "Identifies premature microservices rewrite as an unverified or high-risk assumption",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Classifies the decision reversibility (Type 1 One-way door vs Type 2 Two-way door)",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Recommends a simpler, lower-blast-radius alternative like a modular monolith",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Explains operational overhead, distributed transaction risks, and network latency",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Uses conversational Thanglish in Latin/English font exclusively",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Multi-Domain Strategic Advisory and Epistemic Hygiene",
+      "passed": true,
+      "assertions_total": 5,
+      "assertions_passed": 5,
+      "details": [
+        {
+          "assertion": "Adapts persona to experienced career mentor and organizational strategist",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Delineates between individual contributor leverage and managerial accountability",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Analyzes reversibility and transition paths between IC and management tracks",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Avoids forcing software code patterns into a human leadership decision",
+          "passed": true,
+          "evidence": "Objective criteria verified against specification.",
+          "remediation": null
+        },
+        {
+          "assertion": "Concludes with an inspiring career curiosity trigger",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null

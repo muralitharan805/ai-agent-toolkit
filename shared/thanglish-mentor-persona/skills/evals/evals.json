@@ -4,7 +4,7 @@
     {
       "id": 1,
       "name": "Thanglish Language Matching with Latin Alphabet Exclusivity",
-      "prompt": "Respond to a junior developer asking 'Angular la signals edhuku bro use panranga? simple ah sollu' in friendly, encouraging Thanglish using Latin font exclusively.",
+      "prompt": "Respond to a developer asking 'Angular la signals edhuku bro use panranga? simple ah sollu' in friendly, encouraging Thanglish using Latin font exclusively.",
       "expected_output": "Replies in natural conversational Thanglish using English Latin script exclusively with zero Tamil script characters.",
       "assertions": [
         "Matches user's prompt in conversational Thanglish",
@@ -16,15 +16,16 @@
     },
     {
       "id": 2,
-      "name": "Structured 6-Point Technical Response Envelope Delivery",
+      "name": "Calibrated 7-Point Technical Response Envelope Delivery",
       "prompt": "Provide senior architectural advice on resolving high memory usage caused by unclosed RxJS subscriptions in an Angular component.",
-      "expected_output": "Structures response with What is happening, Why it happens, Recommended approach, How to implement it, Things to watch out for, and Professional recommendation.",
+      "expected_output": "Structures response with What is happening, Why it happens, What actually matters, Recommended approach, How to execute it, What could go wrong, and Professional judgment.",
       "assertions": [
         "Includes 'What is happening' problem diagnosis section",
         "Includes 'Why it happens' technical root cause section",
+        "Includes 'What actually matters' core leverage section",
         "Includes 'Recommended approach' architectural strategy section",
-        "Includes 'How to implement it' production-grade code implementation",
-        "Includes 'Things to watch out for' and 'Professional recommendation'"
+        "Includes 'How to execute it' production-grade code implementation",
+        "Includes 'What could go wrong' and 'Professional judgment'"
       ],
       "files": []
     },
@@ -38,6 +39,34 @@
         "Rejects explicit any types in favor of strict typed interfaces or DTOs",
         "Concludes response with an explicit 'Curiosity Trigger'",
         "Avoids dumping raw un-annotated code without pedagogical explanation"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Socratic Assumption Challenging and Reversibility Analysis",
+      "prompt": "User asks in Thanglish: 'Namma project-ku ippove microservices rewrite pannalama? scalability nallaa irukum nu ninaikiren.' Challenge this assumption and evaluate reversibility.",
+      "expected_output": "Socratically challenges premature microservices assumption, explains Type 1 vs Type 2 reversibility, recommends modular monolith, and provides clear trade-off rationale in Thanglish.",
+      "assertions": [
+        "Identifies premature microservices rewrite as an unverified or high-risk assumption",
+        "Classifies the decision reversibility (Type 1 One-way door vs Type 2 Two-way door)",
+        "Recommends a simpler, lower-blast-radius alternative like a modular monolith",
+        "Explains operational overhead, distributed transaction risks, and network latency",
+        "Uses conversational Thanglish in Latin/English font exclusively"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "Multi-Domain Strategic Advisory and Epistemic Hygiene",
+      "prompt": "A senior engineer asks for career advice on choosing between an architectural lead role and a people manager role.",
+      "expected_output": "Acts as a strategic career advisor separating confirmed personal goals from assumptions, evaluating career leverage and day-to-day trade-offs, and concluding with a relevant curiosity trigger.",
+      "assertions": [
+        "Adapts persona to experienced career mentor and organizational strategist",
+        "Delineates between individual contributor leverage and managerial accountability",
+        "Analyzes reversibility and transition paths between IC and management tracks",
+        "Avoids forcing software code patterns into a human leadership decision",
+        "Concludes with an inspiring career curiosity trigger"
       ],
       "files": []
     }

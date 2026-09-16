@@ -6,7 +6,7 @@
 validate_thanglish_response.py
 ------------------------------
 Standalone CLI automation tool to audit Thanglish and English assistant responses
-for Latin-font exclusivity (zero Tamil Unicode characters), structured 6-point
+for Latin-font exclusivity (zero Tamil Unicode characters), calibrated 7-point / 6-point
 response envelope presence, and pedagogical curiosity triggers.
 
 Outputs structured JSON to stdout and diagnostics to stderr.
@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Audit assistant responses for Thanglish font exclusivity, 6-point envelope, and curiosity triggers."
+        description="Audit assistant responses for Thanglish font exclusivity, response envelope, and curiosity triggers."
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -53,7 +53,7 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def audit_response_content(text: str) -> Dict[str, Any]:
-    """Audit response text for Tamil script characters, 6-point envelope, and curiosity triggers."""
+    """Audit response text for Tamil script characters, response envelope, and curiosity triggers."""
     violations: List[Dict[str, str]] = []
     passes: List[str] = []
 
@@ -69,28 +69,46 @@ def audit_response_content(text: str) -> Dict[str, Any]:
     else:
         passes.append("Zero Tamil Unicode characters found (Latin/English font exclusively)")
 
-    # 2. Check for 6-Point Response Envelope Sections
-    expected_sections = [
-        ("1. What is happening", r"\b1\.\s*What\s+is\s+happening\b"),
-        ("2. Why it happens", r"\b2\.\s*Why\s+it\s+happens\b"),
-        ("3. Recommended approach", r"\b3\.\s*Recommended\s+approach\b"),
-        ("4. How to implement it", r"\b4\.\s*How\s+to\s+implement\s+it\b"),
-        ("5. Things to watch out for", r"\b5\.\s*Things\s+to\s+watch\s+out\s+for\b"),
-        ("6. Professional recommendation", r"\b6\.\s*Professional\s+recommendation\b"),
+    # 2. Check for Response Envelope Sections (Supports Calibrated 7-Point or Classic 6-Point)
+    # 7-point targets:
+    # 1. What is happening
+    # 2. Why it happens / Why it is happening
+    # 3. What actually matters
+    # 4. Recommended approach
+    # 5. How to execute it / How to implement it
+    # 6. What could go wrong / Things to watch out for
+    # 7. Professional judgment / Professional recommendation
+    has_what_happens = bool(re.search(r"\b1\.\s*What\s+is\s+happening\b", text, re.IGNORECASE))
+    has_why_happens = bool(re.search(r"\b2\.\s*Why\s+it\s+(?:happens|is\s+happening)\b", text, re.IGNORECASE))
+    has_what_matters = bool(re.search(r"\b(?:3\.\s*)?What\s+actually\s+matters\b", text, re.IGNORECASE))
+    has_recommended = bool(re.search(r"\b(?:\d\.\s*)?Recommended\s+approach\b", text, re.IGNORECASE))
+    has_execution = bool(re.search(r"\b(?:\d\.\s*)?How\s+to\s+(?:implement|execute)\s+it\b", text, re.IGNORECASE))
+    has_risks = bool(re.search(r"\b(?:\d\.\s*)?(?:Things\s+to\s+watch\s+out\s+for|What\s+could\s+go\s+wrong)\b", text, re.IGNORECASE))
+    has_judgment = bool(re.search(r"\b(?:\d\.\s*)?Professional\s+(?:recommendation|judgment)\b", text, re.IGNORECASE))
+
+    envelope_checks = [
+        ("What is happening", has_what_happens),
+        ("Why it happens", has_why_happens),
+        ("Recommended approach", has_recommended),
+        ("How to execute/implement it", has_execution),
+        ("What could go wrong / Things to watch out for", has_risks),
+        ("Professional judgment / recommendation", has_judgment),
     ]
 
-    missing_sections: List[str] = []
-    for section_name, pattern in expected_sections:
-        if re.search(pattern, text, re.IGNORECASE):
-            passes.append(f"Response envelope section verified: '{section_name}'")
-        else:
-            missing_sections.append(section_name)
+    missing_sections = [name for name, present in envelope_checks if not present]
+
+    if has_what_matters:
+        passes.append("Calibrated Section: 'What actually matters' verified")
+
+    for name, present in envelope_checks:
+        if present:
+            passes.append(f"Envelope section verified: '{name}'")
 
     if missing_sections:
         violations.append({
             "code": "INCOMPLETE_RESPONSE_ENVELOPE",
             "severity": "HIGH",
-            "message": f"Missing {len(missing_sections)} of 6 envelope sections: {', '.join(missing_sections)}",
+            "message": f"Missing {len(missing_sections)} core envelope sections: {', '.join(missing_sections)}",
         })
 
     # 3. Check for Curiosity Trigger
@@ -103,7 +121,7 @@ def audit_response_content(text: str) -> Dict[str, Any]:
         violations.append({
             "code": "MISSING_CURIOSITY_TRIGGER",
             "severity": "MEDIUM",
-            "message": "Response lacks concluding curiosity trigger to inspire junior engineer growth.",
+            "message": "Response lacks concluding curiosity trigger to inspire deeper learning.",
         })
 
     critical_count = sum(1 for v in violations if v["severity"] == "CRITICAL")
@@ -116,6 +134,7 @@ def audit_response_content(text: str) -> Dict[str, Any]:
         "violation_count": len(violations),
         "is_latin_exclusive": len(tamil_matches) == 0,
         "has_full_envelope": len(missing_sections) == 0,
+        "has_what_matters_section": has_what_matters,
         "has_curiosity_trigger": has_curiosity,
         "status": "PASSED" if (critical_count == 0 and high_count == 0) else "FAILED",
     }

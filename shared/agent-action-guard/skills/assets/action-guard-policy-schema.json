@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentActionGuardPolicy",
+  "description": "Schema definition for agent action guard policies, tool permissions, and protected paths.",
+  "type": "object",
+  "required": [
+    "default_mode",
+    "allowed_read_tools",
+    "blocked_mutating_tools",
+    "protected_file_patterns",
+    "prohibited_shell_commands",
+    "confirmation_keywords"
+  ],
+  "properties": {
+    "default_mode": {
+      "type": "string",
+      "enum": ["CONSULTATION_READ_ONLY", "EXECUTION_MUTATING"],
+      "default": "CONSULTATION_READ_ONLY",
+      "description": "Default operational mode for the assistant."
+    },
+    "allowed_read_tools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of safe inspection tools permitted during consultation mode."
+    },
+    "blocked_mutating_tools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of mutating tools blocked until explicit human approval."
+    },
+    "protected_file_patterns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Glob patterns for confidential files that must never be modified."
+    },
+    "prohibited_shell_commands": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Blacklisted shell commands that risk system destruction or backdoor file edits."
+    },
+    "confirmation_keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Human action command phrases required to unlock execution mode."
+    }
+  }
+}
