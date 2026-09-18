@@ -43,7 +43,6 @@ DEFAULT_GLOBAL_MODULES=(
   "shared/security-auditing-and-pen-testing"
   "shared/security-baseline"
   "shared/github-issue-pr-automation"
-  "shared/generators"
 )
 
 # ------------------------------------------------------------------------------
