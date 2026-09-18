@@ -4,7 +4,7 @@
 # Script: sync-context.sh
 # Purpose: Universal dynamic synchronization utility for AI Agent Toolkit.
 #          Syncs skills, rules, and workflows into project workspace (.agents/)
-#          or into system global customization paths (~/.gemini/).
+#          or into agent-specific global customization paths.
 # Architecture: Zero-hardcoding dynamic discovery & universal path routing.
 # ==============================================================================
 
@@ -17,6 +17,7 @@ TOOLKIT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Global Defaults & State Flags
 TARGET_DIR="./"
 IS_GLOBAL=false
+TARGET_AGENT="antigravity"
 SYNC_ALL=false
 SELECTORS=()
 START_TAG="<!-- AGENT_TOOLKIT_START -->"
@@ -55,7 +56,8 @@ Usage: $(basename "$0") [scope] [options] [path-or-selector...]
 Scope Identifiers:
   -w, --workspace <path>    Target project directory for Workspace Level (.agents/) [Default: ./]
   -t, --target <path>       Alias for --workspace
-  -g, --global              Sync to machine Global Level (~/.gemini/)
+  -g, --global              Sync to machine global level
+      --agent <name>         Global target agent: antigravity (default) or codex
 
 Selectors & Options:
   -a, --all                 Dynamically discover and sync ALL categories and modules
@@ -73,7 +75,8 @@ Universal Path Routing (Zero Hardcoding):
   3. Single Skill:         $(basename "$0") frameworks/angular/skills/angular-enterprise-scaffolding -w /path/to/project
   4. Single Rule:          $(basename "$0") shared/code-quality/rules/clean-code-standards.md -w /path/to/project
   5. Single Workflow:      $(basename "$0") shared/git/workflows/github-feature-workflow.md -w /path/to/project
-  6. Global Rules Sync:    $(basename "$0") shared/code-quality shared/communication --global
+  6. Antigravity Global:   $(basename "$0") shared --global --agent antigravity
+  7. Codex Global Skills:   $(basename "$0") frameworks/angular --global --agent codex
 
 EOF
   exit 0
@@ -91,6 +94,17 @@ parse_arguments() {
         ;;
       -w|--workspace|-t|--target)
         TARGET_DIR="$2"
+        shift 2
+        ;;
+      --agent)
+        TARGET_AGENT="$2"
+        case "$TARGET_AGENT" in
+          antigravity|codex) ;;
+          *)
+            echo "Error: Unsupported agent '$TARGET_AGENT'. Supported values: antigravity, codex"
+            exit 1
+            ;;
+        esac
         shift 2
         ;;
       -a|--all)
@@ -180,18 +194,23 @@ parse_preset() {
 # ------------------------------------------------------------------------------
 setup_scope_paths() {
   if [[ "$IS_GLOBAL" == true ]]; then
-    TARGET_SKILLS_DIR="${HOME}/.gemini/antigravity/skills"
-    TARGET_CONFIG_SKILLS_DIR="${HOME}/.gemini/config/skills"
-    TARGET_WORKFLOWS_DIR="${HOME}/.gemini/config/workflows"
-    TARGET_GLOBAL_WORKFLOWS_DIR="${HOME}/.gemini/config/global_workflows"
-    TARGET_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
-    GLOBAL_GEMINI_MD="${HOME}/.gemini/GEMINI.md"
-    SCOPE_LABEL="Global Level (~/.gemini)"
+    if [[ "$TARGET_AGENT" == "codex" ]]; then
+      TARGET_SKILLS_DIR="${HOME}/.agents/skills"
+      SCOPE_LABEL="Codex Global Level (~/.agents/skills)"
+      mkdir -p "${TARGET_SKILLS_DIR}"
+    else
+      TARGET_SKILLS_DIR="${HOME}/.gemini/antigravity/skills"
+      TARGET_CONFIG_SKILLS_DIR="${HOME}/.gemini/config/skills"
+      TARGET_WORKFLOWS_DIR="${HOME}/.gemini/config/workflows"
+      TARGET_GLOBAL_WORKFLOWS_DIR="${HOME}/.gemini/config/global_workflows"
+      TARGET_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
+      GLOBAL_GEMINI_MD="${HOME}/.gemini/GEMINI.md"
+      SCOPE_LABEL="Antigravity Global Level (~/.gemini)"
 
-    mkdir -p "$(dirname "$GLOBAL_GEMINI_MD")"
-    touch "$GLOBAL_GEMINI_MD"
-
-    mkdir -p "${TARGET_SKILLS_DIR}" "${TARGET_CONFIG_SKILLS_DIR}" "${TARGET_WORKFLOWS_DIR}" "${TARGET_GLOBAL_WORKFLOWS_DIR}" "${TARGET_PLUGINS_DIR}"
+      mkdir -p "$(dirname "$GLOBAL_GEMINI_MD")"
+      touch "$GLOBAL_GEMINI_MD"
+      mkdir -p "${TARGET_SKILLS_DIR}" "${TARGET_CONFIG_SKILLS_DIR}" "${TARGET_WORKFLOWS_DIR}" "${TARGET_GLOBAL_WORKFLOWS_DIR}" "${TARGET_PLUGINS_DIR}"
+    fi
   else
     if [[ ! -d "$TARGET_DIR" ]]; then
       mkdir -p "$TARGET_DIR"
@@ -272,7 +291,7 @@ sync_single_skill() {
   mkdir -p "$dest_dir"
   cp -r "${skill_dir}/." "${dest_dir}/"
 
-  if [[ "$IS_GLOBAL" == true ]]; then
+  if [[ "$IS_GLOBAL" == true && "$TARGET_AGENT" == "antigravity" ]]; then
     local config_dest="${TARGET_CONFIG_SKILLS_DIR}/${skill_name}"
     if [[ -d "$config_dest" ]]; then
       rm -rf "$config_dest"
@@ -308,6 +327,7 @@ sync_single_rule() {
 sync_single_workflow() {
   local wf_file="$1"
   if [[ ! -f "$wf_file" ]]; then return 0; fi
+  if [[ "$IS_GLOBAL" == true && "$TARGET_AGENT" == "codex" ]]; then return 0; fi
 
   local file_name="$(basename "$wf_file")"
   validate_item "$wf_file" "workflows"
@@ -333,6 +353,7 @@ sync_single_workflow() {
 sync_single_plugin() {
   local plugin_dir="$1"
   if [[ ! -d "$plugin_dir" ]]; then return 0; fi
+  if [[ "$IS_GLOBAL" == true && "$TARGET_AGENT" == "codex" ]]; then return 0; fi
 
   local plugin_name="$(basename "$plugin_dir")"
   local dest_dir="${TARGET_PLUGINS_DIR}/${plugin_name}"
@@ -394,6 +415,10 @@ is_module_dir() {
 }
 
 prune_retired_generator_artifacts() {
+  if [[ "$IS_GLOBAL" == true && "$TARGET_AGENT" == "codex" ]]; then
+    return 0
+  fi
+
   local retired_wfs=(
     "audit-agent-toolkit.md"
     "consolidate-agent-toolkit.md"
@@ -548,7 +573,7 @@ sync_all_dynamically() {
 # Global GEMINI.md Tagged Block Updater
 # ------------------------------------------------------------------------------
 update_global_gemini_md() {
-  if [[ "$IS_GLOBAL" != true ]]; then
+  if [[ "$IS_GLOBAL" != true || "$TARGET_AGENT" != "antigravity" ]]; then
     return 0
   fi
 
@@ -688,7 +713,7 @@ main() {
   # Prune retired generator artifacts (migrated workflows and merged skills)
   prune_retired_generator_artifacts
 
-  if [[ "$IS_GLOBAL" == true ]]; then
+  if [[ "$IS_GLOBAL" == true && "$TARGET_AGENT" == "antigravity" ]]; then
     update_global_gemini_md
 
     if [[ -f "$GLOBAL_GEMINI_MD" ]]; then
