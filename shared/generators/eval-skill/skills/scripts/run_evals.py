@@ -6,9 +6,10 @@
 
 """
 run_evals.py
-Evaluation runner for Agent Skills (agentskills.io open standard).
-Validates evals suite integrity, verifies assertion coverage, optionally checks
-target artifacts, computes quality scores, and emits structured reports to stdout.
+Evaluation suite validator for Agent Skills (agentskills.io open standard).
+Validates eval definitions and performs only deterministic checks that this runner
+can actually verify. Semantic assertions are reported as not_evaluated rather than
+being treated as passes.
 """
 
 import os
@@ -143,7 +144,9 @@ def run_evaluation(
 
     evaluated_cases: List[Dict[str, Any]] = []
     total_assertions = 0
-    passed_assertions = 0
+    verified_assertions = 0
+    failed_assertions = 0
+    not_evaluated_assertions = 0
 
     for item in test_cases:
         test_id = item.get("id")
@@ -155,108 +158,137 @@ def run_evaluation(
         total_assertions += case_assertions_total
 
         details: List[Dict[str, Any]] = []
-        case_passed_assertions = 0
+        case_verified = 0
+        case_failed = 0
+        case_not_evaluated = 0
 
-        # In dry-run mode or assertion verification mode:
         files_ok, missing_files = evaluate_files_presence(workspace_root, expected_files)
 
         for assertion_text in assertions:
             is_file_assertion = "file" in assertion_text.lower() or "scaffold" in assertion_text.lower()
-            if not dry_run and is_file_assertion and expected_files and not files_ok:
-                passed = False
-                evidence = f"Expected files missing: {', '.join(missing_files)}"
-                remediation = "Ensure scaffolding step outputs all required files."
-            else:
-                # Standard verification passed
-                passed = True
-                evidence = "Objective criteria verified against specification."
-                remediation = None
 
-            if passed:
-                case_passed_assertions += 1
+            if dry_run:
+                status = "not_evaluated"
+                evidence = "Dry-run mode validates suite structure only."
+                remediation = None
+            elif is_file_assertion and expected_files:
+                if files_ok:
+                    status = "verified"
+                    evidence = "All declared expected files are present."
+                    remediation = None
+                else:
+                    status = "failed"
+                    evidence = f"Expected files missing: {', '.join(missing_files)}"
+                    remediation = "Ensure scaffolding step outputs all declared files."
+            else:
+                status = "not_evaluated"
+                evidence = (
+                    "This assertion requires an agent run or a dedicated deterministic grader; "
+                    "the local suite validator cannot verify it."
+                )
+                remediation = "Run this case through a real agent-eval harness with an assertion-specific grader."
+
+            if status == "verified":
+                case_verified += 1
+                verified_assertions += 1
+            elif status == "failed":
+                case_failed += 1
+                failed_assertions += 1
+            else:
+                case_not_evaluated += 1
+                not_evaluated_assertions += 1
 
             details.append({
                 "assertion": assertion_text,
-                "passed": passed,
+                "status": status,
                 "evidence": evidence,
                 "remediation": remediation,
             })
 
-        passed_assertions += case_passed_assertions
-        test_case_passed = (case_passed_assertions == case_assertions_total)
+        if case_failed:
+            case_status = "failed"
+        elif case_not_evaluated:
+            case_status = "not_evaluated"
+        else:
+            case_status = "verified"
 
         evaluated_cases.append({
             "id": test_id,
             "name": test_name,
-            "passed": test_case_passed,
+            "status": case_status,
             "assertions_total": case_assertions_total,
-            "assertions_passed": case_passed_assertions,
+            "assertions_verified": case_verified,
+            "assertions_failed": case_failed,
+            "assertions_not_evaluated": case_not_evaluated,
             "details": details,
         })
 
-    score_percent = 100 if total_assertions == 0 else round((passed_assertions / total_assertions) * 100)
-    verdict = "passed" if score_percent == 100 else ("needs_revision" if score_percent >= 80 else "failed")
+    if failed_assertions:
+        verdict = "failed"
+    elif not_evaluated_assertions:
+        verdict = "not_evaluated"
+    else:
+        verdict = "verified"
+
+    deterministic_coverage_percent = (
+        0 if total_assertions == 0 else round(((verified_assertions + failed_assertions) / total_assertions) * 100)
+    )
 
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "skill_name": skill_name,
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
-        "evaluator": "eval-skill-runner v1.0.0",
-        "quality_score_percent": score_percent,
+        "evaluator": "eval-suite-validator v1.1.0",
         "verdict": verdict,
-        "benchmark": {
-            "baseline_pass_rate_percent": 50,
-            "equipped_pass_rate_percent": score_percent,
-            "delta_improvement_percent": max(0, score_percent - 50),
-        },
+        "deterministic_coverage_percent": deterministic_coverage_percent,
+        "benchmark": None,
         "summary": {
             "total_test_cases": len(test_cases),
-            "passed_test_cases": sum(1 for tc in evaluated_cases if tc["passed"]),
+            "verified_test_cases": sum(1 for tc in evaluated_cases if tc["status"] == "verified"),
+            "failed_test_cases": sum(1 for tc in evaluated_cases if tc["status"] == "failed"),
+            "not_evaluated_test_cases": sum(1 for tc in evaluated_cases if tc["status"] == "not_evaluated"),
             "total_assertions": total_assertions,
-            "passed_assertions": passed_assertions,
+            "verified_assertions": verified_assertions,
+            "failed_assertions": failed_assertions,
+            "not_evaluated_assertions": not_evaluated_assertions,
         },
         "test_cases": evaluated_cases,
     }
 
 
 def format_visual_scorecard(report: Dict[str, Any], skill_dir: str) -> str:
-    """Format evaluation results into a human-readable visual scorecard."""
+    """Format evaluation-suite validation results."""
     summary = report["summary"]
-    score = report["quality_score_percent"]
     verdict = report["verdict"].upper()
-    verdict_emoji = "🟢" if verdict == "PASSED" else ("🟡" if verdict == "NEEDS_REVISION" else "🔴")
 
     lines = [
-        f"=== 🧪 AGENT SKILL EVALUATION REPORT: {report['skill_name']} ===",
-        f"Skill Directory : {skill_dir}",
-        f"Total Test Cases: {summary['total_test_cases']}",
-        f"Total Assertions: {summary['total_assertions']}",
+        f"=== AGENT SKILL EVAL SUITE REPORT: {report['skill_name']} ===",
+        f"Skill Directory       : {skill_dir}",
+        f"Total Test Cases      : {summary['total_test_cases']}",
+        f"Total Assertions      : {summary['total_assertions']}",
+        f"Deterministic Coverage: {report['deterministic_coverage_percent']}%",
         "",
-        "Comparative Benchmark:",
-        f"  - Baseline (Without Skill): {report['benchmark']['baseline_pass_rate_percent']}% 🔴",
-        f"  - Equipped (With Skill)   : {report['benchmark']['equipped_pass_rate_percent']}% {verdict_emoji}",
-        f"  - Net Skill Lift (Delta)  : +{report['benchmark']['delta_improvement_percent']}% 🚀",
+        "Important: semantic assertions are NOT auto-passed.",
+        "They remain NOT_EVALUATED until a real agent run or dedicated grader verifies them.",
         "",
     ]
 
     for tc in report["test_cases"]:
-        status_icon = "🟢" if tc["passed"] else "🔴"
-        lines.append(f"Test Case #{tc['id']}: \"{tc['name']}\"")
+        lines.append(f"Test Case #{tc['id']}: {tc['name']} [{tc['status'].upper()}]")
         for d in tc["details"]:
-            assertion_icon = "✅ PASS" if d["passed"] else "❌ FAIL"
-            lines.append(f"  {assertion_icon} - {d['assertion']}")
-            if not d["passed"] and d.get("remediation"):
-                lines.append(f"    ⚠️ Remediation: {d['remediation']}")
-        lines.append(f"  Result: {tc['assertions_passed']}/{tc['assertions_total']} Assertions Passed {status_icon}")
+            lines.append(f"  - [{d['status'].upper()}] {d['assertion']}")
+            if d.get("remediation") and d["status"] != "verified":
+                lines.append(f"    Remediation: {d['remediation']}")
         lines.append("")
 
     lines.extend([
-        f"Final Quality Score : {score}% {verdict_emoji}",
-        f"Overall Verdict     : {verdict} {verdict_emoji}",
+        f"Verified Assertions    : {summary['verified_assertions']}",
+        f"Failed Assertions      : {summary['failed_assertions']}",
+        f"Not Evaluated          : {summary['not_evaluated_assertions']}",
+        f"Overall Verdict        : {verdict}",
         "=" * 54,
     ])
     return "\n".join(lines)
-
 
 def save_grading_report(report: Dict[str, Any], target_path: str) -> None:
     """Persist grading report to specified output path."""
@@ -314,7 +346,7 @@ def main() -> int:
     else:
         sys.stdout.write(format_visual_scorecard(report, args.skill_dir) + "\n")
 
-    return 0 if report["verdict"] == "passed" else 1
+    return 1 if report["verdict"] == "failed" else 0
 
 
 if __name__ == "__main__":
