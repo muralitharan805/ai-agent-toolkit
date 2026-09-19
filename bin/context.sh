@@ -69,7 +69,7 @@ Selectors:
   context.sh -w 'angular/*' --target ~/work/app
   context.sh -w angular/core --tool codex --target ~/work/app
   context.sh -w frameworks/angular --target ~/work/app
-  context.sh -w tooling/generate-skill --target ~/work/toolkit-dev
+  context.sh -w tools/generators/generate-skill --target ~/work/toolkit-dev
   context.sh -g shared/security-baseline --tool antigravity
 
 Options:
@@ -552,7 +552,7 @@ resolve_selector() {
   done < <(emit_pattern_matches "$TOOLKIT_ROOT/$selector")
 
   if [[ "${#candidates[@]}" -eq 0 ]]; then
-    for root in "${CONSUMER_ROOTS[@]}" tooling; do
+    for root in "${CONSUMER_ROOTS[@]}" tools; do
       while IFS= read -r candidate; do
         [[ -e "$candidate" ]] && candidates+=("$candidate")
       done < <(emit_pattern_matches "$TOOLKIT_ROOT/$root/$selector")
