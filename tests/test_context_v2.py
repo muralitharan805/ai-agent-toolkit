@@ -164,6 +164,36 @@ class ContextV2IntegrationTests(unittest.TestCase):
                 (home / ".gemini" / "config" / "skills" / "demo-module").exists()
             )
 
+    def test_antigravity_selective_global_cleanup_keeps_other_rules(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            home = root / "home"
+            home.mkdir(parents=True)
+
+            first = root / "first"
+            second = root / "second"
+            write_module(first, rule="FIRST RULE")
+            write_module(second, rule="SECOND RULE")
+
+            self.run_context("-g", str(first), env={"HOME": str(home)})
+            self.run_context("-g", str(second), env={"HOME": str(home)})
+
+            gemini_md = home / ".gemini" / "GEMINI.md"
+            combined = gemini_md.read_text(encoding="utf-8")
+            self.assertIn("FIRST RULE", combined)
+            self.assertIn("SECOND RULE", combined)
+
+            self.run_context(
+                "-g",
+                str(first),
+                "--clean",
+                env={"HOME": str(home)},
+            )
+
+            remaining = gemini_md.read_text(encoding="utf-8")
+            self.assertNotIn("FIRST RULE", remaining)
+            self.assertIn("SECOND RULE", remaining)
+
     def test_shorthand_selector_resolves_under_frameworks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "project"
