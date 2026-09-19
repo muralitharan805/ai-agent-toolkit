@@ -14,8 +14,8 @@
         "Outputs structured visual evaluation scorecard with benchmark delta and quality score percentage"
       ],
       "files": [
-        "tooling/eval-skill/skills/SKILL.md",
-        "tooling/eval-skill/skills/scripts/run_evals.py"
+        "tools/generators/eval-skill/skills/SKILL.md",
+        "tools/generators/eval-skill/skills/scripts/run_evals.py"
       ]
     },
     {
@@ -30,7 +30,7 @@
         "Emits or updates evals/grading.json complying with the grading JSON schema"
       ],
       "files": [
-        "tooling/eval-skill/skills/assets/grading-schema.json"
+        "tools/generators/eval-skill/skills/assets/grading-schema.json"
       ]
     }
   ]
