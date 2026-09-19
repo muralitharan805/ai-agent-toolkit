@@ -13,7 +13,7 @@ Act as the Principal Systems Architect and Lead Open-Source Maintainer for **`ai
 ## 5-Pillar Directory Map
 
 ```text
-shared/ai-agent-toolkit/skills/ai-agent-toolkit-context/
+shared/ai-agent-toolkit/skills/
 ├── SKILL.md                                        # Tier 2 Core Architectural Orientation (< 500 lines)
 ├── references/
 │   └── taxonomy-and-sync-guide.md                  # Comprehensive category taxonomy and sync specs
@@ -29,7 +29,7 @@ Consult the bundled reference guides and governing rules:
 - [Taxonomy & Sync Guide](references/taxonomy-and-sync-guide.md): Complete directory taxonomy and sync internals.
 - [Tools & Generator Architecture](references/tools-and-generators-guide.md): Dynamic `tools/<family>/<tool-name>/` placement and generator authoring rules.
 - [Authoring & Quality Standards Rule](../../rules/ai-toolkit-authoring-rules.md): Governing rule mandating the 5-pillar standard and Principal Architect depth.
-- [Suite Architect Decision Framework](../../../generators/skills/generate-agent-suite/references/suite-architect-decision-framework.md): Decision logic for Skill vs Rule selection.
+- [Suite Architect Decision Framework](../../../tools/generators/generate-agent-suite/skills/references/suite-architect-decision-framework.md): Decision logic for Skill vs Rule selection.
 
 ---
 
@@ -42,7 +42,7 @@ When a user asks about the toolkit or requests new context:
 2. **Inspect Existing Taxonomy**:
    - `frameworks/`: Framework-specific context (e.g. `angular/`, `nestjs/`, `strapi-v5/`).
    - `infra/`: Cloud, deployment, and infrastructure context (e.g. `cloudflare/`, `docker/`, `postgres/`, `redis/`).
-   - `shared/`: Universal standards (e.g. `code-quality/`, `communication/`, `generators/`, `git/`, `logging/`, `package-management/`, `security/`).
+   - `shared/`: Universal consumer standards and repository-wide context.
    - `domains/`: Domain/project-specific context.
    - `tools/`: Toolkit-internal authoring tools. It is a dynamic family root; `tools/generators/` is the first family.
 3. **Check for Deduplication (Smart Upsert)**:
@@ -118,24 +118,24 @@ Utilize the built-in generator engines and CLI automation tools:
 1. **Master Orchestrator**: Run `/generate-agent-suite <topic>` (or `suite: <topic>`) to scaffold skills and rules.
 2. **Cluster & Duplicate Scanner**: When consolidating or merging context, the agent MUST execute `scan_duplicates.py` to automatically detect semantic clusters and overlaps:
    ```bash
-   python3 tools/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py <path-to-target>
+   uv run tools/generators/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py <path-to-target>
    ```
 3. **Automated Validation Gateways**:
    ```bash
    # Validate a Skill directory:
-   python3 tools/generators/skills/generate-skill/scripts/validate_skill.py <path-to-skill>
+   uv run tools/generators/generate-skill/skills/scripts/validate_skill.py <path-to-skill>
 
    # Validate a Rule file:
-   python3 tools/generators/skills/generate-rule/scripts/validate_rule.py <path-to-rule.md>
+   uv run tools/generators/generate-rule/skills/scripts/validate_rule.py <path-to-rule.md>
 
    # Verify an entire Module Suite:
-   python3 tools/generators/skills/generate-agent-suite/scripts/verify_suite.py <path-to-module>
+   uv run tools/generators/generate-agent-suite/skills/scripts/verify_suite.py <path-to-module>
 
    # Run empirical assertions and save scorecard:
-   python3 tools/generators/skills/eval-skill/scripts/run_evals.py <path-to-skill> --save-grading
+   uv run tools/generators/eval-skill/skills/scripts/run_evals.py <path-to-skill> --save-grading
 
    # Audit whole repository health, token ceilings, and domain leaks:
-   python3 tools/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py .
+   uv run tools/generators/audit-agent-toolkit/skills/scripts/audit_toolkit.py .
    ```
 
 ---
