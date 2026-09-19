@@ -76,7 +76,7 @@ Output the target file path followed by the markdown block wrapped in 4-backtick
 ### 4. Validation
 Run the bundled validator to ensure compliance:
 ```bash
-python3 tooling/generate-rule/skills/scripts/validate_rule.py [determined-toolkit-path]/rules/[rule-name].md
+python3 tools/generators/generate-rule/skills/scripts/validate_rule.py [determined-toolkit-path]/rules/[rule-name].md
 ```
 
 ---
