@@ -517,7 +517,7 @@ dispatch_path() {
     found=1
   done < <(
     find "$path" \
-      -type d \( -name .git -o -name .agents -o -name .claude -o -name node_modules \) -prune -o \
+      -type d \( -name .git -o -name .agents -o -name .claude -o -name node_modules -o -name examples -o -name evals -o -name references -o -name assets -o -name scripts \) -prune -o \
       -type d \( -name skills -o -name rules -o -name workflows -o -name plugins \) -print 2>/dev/null \
       | sed 's|/[^/]*$||' | sort -u
   )
@@ -593,65 +593,86 @@ sync_all_consumer_context() {
   done
 }
 
-update_global_gemini_md() {
+register_global_rules() {
   [[ "$MODE" == "global" && "$TARGET_TOOL" == "antigravity" ]] || return 0
   [[ "${#GLOBAL_RULE_FILES[@]}" -gt 0 ]] || return 0
 
-  local temp backup
+  local -a cmd=(
+    python3 "$MANIFEST_HELPER" aggregate-add
+    --root "$MANIFEST_ROOT"
+    --name "gemini_rules"
+    --toolkit-root "$TOOLKIT_ROOT"
+  )
+  local rule_file
+  for rule_file in "${GLOBAL_RULE_FILES[@]}"; do
+    cmd+=(--source "$rule_file")
+  done
+  "${cmd[@]}" >/dev/null
+}
+
+registered_global_rules() {
+  python3 "$MANIFEST_HELPER" aggregate-list \
+    --root "$MANIFEST_ROOT" \
+    --name "gemini_rules" \
+    | python3 -c 'import json,sys; [print(x) for x in json.load(sys.stdin)["sources"]]'
+}
+
+render_global_gemini_md() {
+  [[ "$MODE" == "global" && "$TARGET_TOOL" == "antigravity" ]] || return 0
+
+  local temp
   temp="$(mktemp)"
-  backup="${GLOBAL_GEMINI_MD}.bak"
   : > "$temp"
 
-  local rf
-  for rf in "${GLOBAL_RULE_FILES[@]}"; do
-    strip_yaml_frontmatter "$rf" >> "$temp"
-    printf '\n\n' >> "$temp"
-  done
-
-  [[ -s "$GLOBAL_GEMINI_MD" ]] && cp "$GLOBAL_GEMINI_MD" "$backup"
+  local source absolute
+  while IFS= read -r source; do
+    [[ -n "$source" ]] || continue
+    if [[ "$source" = /* ]]; then
+      absolute="$source"
+    else
+      absolute="$TOOLKIT_ROOT/$source"
+    fi
+    if [[ -f "$absolute" ]]; then
+      strip_yaml_frontmatter "$absolute" >> "$temp"
+      printf '\n\n' >> "$temp"
+    else
+      echo "  [Global Rule] ! source missing: $source"
+    fi
+  done < <(registered_global_rules)
 
   python3 - "$GLOBAL_GEMINI_MD" "$temp" "$START_TAG" "$END_TAG" <<'PY'
 from pathlib import Path
 import sys
+
 path = Path(sys.argv[1])
 buffer = Path(sys.argv[2]).read_text(encoding="utf-8").strip()
 start, end = sys.argv[3], sys.argv[4]
 existing = path.read_text(encoding="utf-8") if path.exists() else ""
-block = f"{start}\n\n{buffer}\n\n{end}"
-if start in existing and end in existing:
-    s = existing.index(start)
-    e = existing.index(end, s) + len(end)
-    updated = existing[:s].rstrip() + "\n\n" + block + existing[e:]
+
+def without_block(text: str) -> str:
+    if start not in text or end not in text:
+        return text
+    s = text.index(start)
+    e = text.index(end, s) + len(end)
+    return (text[:s].rstrip() + "\n\n" + text[e:].lstrip()).strip()
+
+base = without_block(existing)
+if buffer:
+    block = f"{start}\n\n{buffer}\n\n{end}"
+    updated = (base + "\n\n" if base else "") + block
 else:
-    prefix = existing.rstrip()
-    updated = (prefix + "\n\n" if prefix else "") + block + "\n"
-path.write_text(updated, encoding="utf-8")
+    updated = base
+
+if updated != existing.strip():
+    if existing:
+        path.with_name(path.name + ".bak").write_text(existing, encoding="utf-8")
+    path.write_text((updated + "\n") if updated else "", encoding="utf-8")
 PY
+
   rm -f "$temp"
-  echo "Global rules: refreshed toolkit block in $GLOBAL_GEMINI_MD"
+  echo "Global rules: reconciled toolkit block in $GLOBAL_GEMINI_MD"
 }
 
-remove_global_gemini_block() {
-  [[ "$MODE" == "global" && "$TARGET_TOOL" == "antigravity" ]] || return 0
-  [[ -f "$GLOBAL_GEMINI_MD" ]] || return 0
-
-  python3 - "$GLOBAL_GEMINI_MD" "$START_TAG" "$END_TAG" <<'PY'
-from pathlib import Path
-import sys
-path = Path(sys.argv[1])
-start, end = sys.argv[2], sys.argv[3]
-text = path.read_text(encoding="utf-8")
-if start not in text or end not in text:
-    raise SystemExit(0)
-backup = path.with_name(path.name + ".bak")
-backup.write_text(text, encoding="utf-8")
-s = text.index(start)
-e = text.index(end, s) + len(end)
-updated = (text[:s].rstrip() + "\n\n" + text[e:].lstrip()).strip()
-path.write_text((updated + "\n") if updated else "", encoding="utf-8")
-PY
-  echo "Global rules: removed toolkit-managed block from $GLOBAL_GEMINI_MD"
-}
 
 normalized_source_prefix() {
   local source="$1"
@@ -698,10 +719,17 @@ for key in r["modified"]:
 print(f"Cleanup complete. Remaining managed entries: {r['remaining']}")
 PY
 
-  # Global GEMINI.md is marker-managed rather than file-owned. Full global cleanup
-  # removes only the toolkit block and preserves all user content.
-  if [[ "$MODE" == "global" && "${#SELECTORS[@]}" -eq 0 ]]; then
-    remove_global_gemini_block
+  if [[ "$MODE" == "global" && "$TARGET_TOOL" == "antigravity" ]]; then
+    local -a aggregate_cmd=(
+      python3 "$MANIFEST_HELPER" aggregate-remove
+      --root "$MANIFEST_ROOT"
+      --name "gemini_rules"
+    )
+    for prefix in "${prefixes[@]}"; do
+      aggregate_cmd+=(--source-prefix "$prefix")
+    done
+    "${aggregate_cmd[@]}" >/dev/null
+    render_global_gemini_md
   fi
 }
 
@@ -728,7 +756,8 @@ main() {
     sync_selectors shared
   fi
 
-  update_global_gemini_md
+  register_global_rules
+  render_global_gemini_md
   echo "Context sync complete."
 }
 
