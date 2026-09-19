@@ -17,6 +17,23 @@ START_TAG="<!-- AGENT_TOOLKIT_START -->"
 END_TAG="<!-- AGENT_TOOLKIT_END -->"
 
 CONSUMER_ROOTS=("frameworks" "infra" "domains" "shared")
+
+# Tool directory registry.
+# Workspace destinations are resolved relative to --target.
+# Global destinations are absolute under HOME and are enabled only for tools
+# explicitly supported by parse_arguments/setup_scope_paths.
+ANTIGRAVITY_WORKSPACE_ROOT=".agents"
+CODEX_WORKSPACE_ROOT=".agents"
+CLAUDE_WORKSPACE_ROOT=".claude"
+
+ANTIGRAVITY_GLOBAL_ROOT="${HOME}/.gemini"
+ANTIGRAVITY_GLOBAL_SKILLS_LEGACY="${HOME}/.gemini/antigravity/skills"
+ANTIGRAVITY_GLOBAL_SKILLS="${HOME}/.gemini/config/skills"
+ANTIGRAVITY_GLOBAL_WORKFLOWS="${HOME}/.gemini/config/workflows"
+ANTIGRAVITY_GLOBAL_GLOBAL_WORKFLOWS="${HOME}/.gemini/config/global_workflows"
+ANTIGRAVITY_GLOBAL_PLUGINS="${HOME}/.gemini/config/plugins"
+ANTIGRAVITY_GLOBAL_RULES_FILE="${HOME}/.gemini/GEMINI.md"
+
 DEFAULT_GLOBAL_MODULES=(
   "shared/clean-code-and-maintainability"
   "shared/thanglish-mentor-persona"
@@ -200,21 +217,21 @@ setup_scope_paths() {
 
     case "$TARGET_TOOL" in
       antigravity)
-        MANIFEST_ROOT="${project_root}/.agents"
+        MANIFEST_ROOT="${project_root}/${ANTIGRAVITY_WORKSPACE_ROOT}"
         TARGET_SKILLS_DIR="${MANIFEST_ROOT}/skills"
         TARGET_RULES_DIR="${MANIFEST_ROOT}/rules"
         TARGET_WORKFLOWS_DIR="${MANIFEST_ROOT}/workflows"
         TARGET_PLUGINS_DIR="${MANIFEST_ROOT}/plugins"
         ;;
       codex)
-        MANIFEST_ROOT="${project_root}/.agents"
+        MANIFEST_ROOT="${project_root}/${CODEX_WORKSPACE_ROOT}"
         TARGET_SKILLS_DIR="${MANIFEST_ROOT}/skills"
         TARGET_RULES_DIR=""
         TARGET_WORKFLOWS_DIR=""
         TARGET_PLUGINS_DIR=""
         ;;
       claude)
-        MANIFEST_ROOT="${project_root}/.claude"
+        MANIFEST_ROOT="${project_root}/${CLAUDE_WORKSPACE_ROOT}"
         TARGET_SKILLS_DIR="${MANIFEST_ROOT}/skills"
         TARGET_RULES_DIR=""
         TARGET_WORKFLOWS_DIR=""
@@ -223,14 +240,14 @@ setup_scope_paths() {
     esac
     SCOPE_LABEL="workspace:${project_root} (${TARGET_TOOL})"
   else
-    MANIFEST_ROOT="${HOME}/.gemini"
-    TARGET_SKILLS_DIR="${HOME}/.gemini/antigravity/skills"
-    MIRROR_SKILLS_DIR="${HOME}/.gemini/config/skills"
+    MANIFEST_ROOT="${ANTIGRAVITY_GLOBAL_ROOT}"
+    TARGET_SKILLS_DIR="${ANTIGRAVITY_GLOBAL_SKILLS_LEGACY}"
+    MIRROR_SKILLS_DIR="${ANTIGRAVITY_GLOBAL_SKILLS}"
     TARGET_RULES_DIR=""
-    TARGET_WORKFLOWS_DIR="${HOME}/.gemini/config/workflows"
-    TARGET_GLOBAL_WORKFLOWS_DIR="${HOME}/.gemini/config/global_workflows"
-    TARGET_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
-    GLOBAL_GEMINI_MD="${HOME}/.gemini/GEMINI.md"
+    TARGET_WORKFLOWS_DIR="${ANTIGRAVITY_GLOBAL_WORKFLOWS}"
+    TARGET_GLOBAL_WORKFLOWS_DIR="${ANTIGRAVITY_GLOBAL_GLOBAL_WORKFLOWS}"
+    TARGET_PLUGINS_DIR="${ANTIGRAVITY_GLOBAL_PLUGINS}"
+    GLOBAL_GEMINI_MD="${ANTIGRAVITY_GLOBAL_RULES_FILE}"
     SCOPE_LABEL="global:${HOME}/.gemini (antigravity)"
   fi
 
