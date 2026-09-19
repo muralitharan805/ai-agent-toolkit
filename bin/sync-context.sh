@@ -493,51 +493,13 @@ is_module_dir() {
 }
 
 prune_retired_generator_artifacts() {
-  if [[ "$IS_GLOBAL" == true && "$TARGET_AGENT" == "codex" ]]; then
-    return 0
-  fi
-
-  local retired_wfs=(
-    "audit-agent-toolkit.md"
-    "consolidate-agent-toolkit.md"
-    "eval-skill.md"
-    "generate-agent-suite.md"
-    "generate-prompt.md"
-    "generate-rule.md"
-    "generate-skill.md"
-    "generate-workflow.md"
-  )
-
-  if [[ "$IS_GLOBAL" == true ]]; then
-    for wf in "${retired_wfs[@]}"; do
-      if [[ -f "${TARGET_GLOBAL_WORKFLOWS_DIR}/${wf}" ]]; then
-        rm -f "${TARGET_GLOBAL_WORKFLOWS_DIR}/${wf}"
-        echo "  [Prune] 🗑️ Removed retired global workflow: ${wf}"
-      fi
-      if [[ -f "${TARGET_WORKFLOWS_DIR}/${wf}" ]]; then
-        rm -f "${TARGET_WORKFLOWS_DIR}/${wf}"
-      fi
-    done
-    if [[ -d "${TARGET_CONFIG_SKILLS_DIR}/skill-authoring-standards" ]]; then
-      rm -rf "${TARGET_CONFIG_SKILLS_DIR}/skill-authoring-standards"
-      echo "  [Prune] 🗑️ Removed merged skill: skill-authoring-standards"
-    fi
-    if [[ -d "${TARGET_SKILLS_DIR}/skill-authoring-standards" ]]; then
-      rm -rf "${TARGET_SKILLS_DIR}/skill-authoring-standards"
-    fi
-  else
-    for wf in "${retired_wfs[@]}"; do
-      if [[ -f "${TARGET_WORKFLOWS_DIR}/${wf}" ]]; then
-        rm -f "${TARGET_WORKFLOWS_DIR}/${wf}"
-        echo "  [Prune] 🗑️ Removed retired workspace workflow: ${wf}"
-      fi
-    done
-    if [[ -d "${TARGET_SKILLS_DIR}/skill-authoring-standards" ]]; then
-      rm -rf "${TARGET_SKILLS_DIR}/skill-authoring-standards"
-      echo "  [Prune] 🗑️ Removed merged skill: skill-authoring-standards"
-    fi
-  fi
+  # Legacy versions removed specific files by name. That is unsafe once users may
+  # maintain their own .agents content with the same names. Cleanup is therefore
+  # intentionally non-destructive until an artifact can be proven toolkit-owned
+  # by the ownership manifest.
+  return 0
 }
+
 
 # ------------------------------------------------------------------------------
 # Dynamic Path Resolution & Classifier (Zero Hardcoding)
