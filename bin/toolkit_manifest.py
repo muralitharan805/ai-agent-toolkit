@@ -234,6 +234,7 @@ def clean(
     *,
     force: bool = False,
     source_prefixes: Iterable[str] = (),
+    kinds: Iterable[str] = (),
 ) -> dict[str, Any]:
     """Delete only manifest-owned paths, preserving locally modified content."""
     root = root.expanduser().resolve()
@@ -243,10 +244,14 @@ def clean(
     modified: list[str] = []
     skipped: list[str] = []
     changed = False
+    kind_filter = {kind for kind in kinds if kind}
 
     for key, raw_entry in list(manifest["managed"].items()):
         entry = raw_entry if isinstance(raw_entry, dict) else {}
         source = entry.get("source")
+        if kind_filter and entry.get("kind") not in kind_filter:
+            skipped.append(key)
+            continue
         if not source_matches(source, source_prefixes):
             skipped.append(key)
             continue
@@ -379,6 +384,7 @@ def parse_args() -> argparse.Namespace:
     clean_parser.add_argument("--root", required=True)
     clean_parser.add_argument("--force", action="store_true")
     clean_parser.add_argument("--source-prefix", action="append", default=[])
+    clean_parser.add_argument("--kind", action="append", default=[])
 
     aggregate_add_parser = subparsers.add_parser("aggregate-add")
     aggregate_add_parser.add_argument("--root", required=True)
@@ -421,7 +427,12 @@ def main() -> int:
             tool=args.tool,
         )
     elif args.command == "clean":
-        result = clean(root, force=args.force, source_prefixes=args.source_prefix)
+        result = clean(
+            root,
+            force=args.force,
+            source_prefixes=args.source_prefix,
+            kinds=args.kind,
+        )
     elif args.command == "aggregate-add":
         result = aggregate_add(
             root,
