@@ -172,7 +172,7 @@ ai-agent-toolkit/
 ├── domains/                # Domain-specific consumer context
 ├── shared/                 # Cross-cutting consumer context
 │
-├── tooling/                # Toolkit authoring/evaluation tools (opt-in)
+├── tools/generators/                # Toolkit authoring/evaluation tools (opt-in)
 │   ├── generate-skill/
 │   ├── generate-rule/
 │   ├── generate-prompt/
@@ -193,25 +193,25 @@ ai-agent-toolkit/
 └── .github/workflows/
 ```
 
-`frameworks/`, `infra/`, `domains/`, and `shared/` are the consumer catalog. `tooling/` is intentionally excluded from default workspace sync and `--all`. Select a `tooling/...` path explicitly only when developing the toolkit itself.
+`frameworks/`, `infra/`, `domains/`, and `shared/` are the consumer catalog. `tools/generators/` is intentionally excluded from default workspace sync and `--all`. Select a `tools/generators/...` path explicitly only when developing the toolkit itself.
 
 ---
 
 ## 🛠️ Built-in AI Generators & Developer Tooling
 
-Authoring utilities live under `tooling/<tool>/skills/`.
+Authoring utilities live under `tools/generators/<tool>/skills/`.
 
 ```bash
 # Validate an individual skill
-uv run tooling/generate-skill/skills/scripts/validate_skill.py \
+uv run tools/generators/generate-skill/skills/scripts/validate_skill.py \
   frameworks/angular/angular-enterprise-forms/skills
 
 # Run deterministic eval checks
-uv run tooling/eval-skill/skills/scripts/run_evals.py \
+uv run tools/generators/eval-skill/skills/scripts/run_evals.py \
   frameworks/angular/angular-enterprise-forms/skills --save-grading
 
 # Explicitly sync an authoring tool into a toolkit-development workspace
-./bin/context.sh -w tooling/generate-skill --target /path/to/toolkit-development-workspace
+./bin/context.sh -w tools/generators/generate-skill --target /path/to/toolkit-development-workspace
 ```
 
 The authoring tools are not part of normal consumer sync.
@@ -291,7 +291,7 @@ Selectors may point to a whole parent, a nested child, or a glob. Quote globs so
   --target ~/projects/api
 ```
 
-`--all` syncs only the consumer catalog roots: `frameworks/`, `infra/`, `domains/`, and `shared/`. It does not include `tooling/`.
+`--all` syncs only the consumer catalog roots: `frameworks/`, `infra/`, `domains/`, and `shared/`. It does not include `tools/generators/`.
 
 ### Safe Ownership and `MANIFEST_HELPER`
 
@@ -401,12 +401,12 @@ We welcome contributions from open-source developers! Follow these steps to cont
    - Scaffold the 5 pillars: `SKILL.md`, `references/`, `scripts/`, `assets/`, and `evals/evals.json`.
 3. **Automated Validation**:
    ```bash
-   uv run tooling/generate-skill/skills/scripts/validate_skill.py [path-to-skill]
+   uv run tools/generators/generate-skill/skills/scripts/validate_skill.py [path-to-skill]
    ```
    Ensure it reports **100% PASS** with 0 errors and 0 warnings.
 4. **Empirical Evaluation**:
    ```bash
-   uv run tooling/eval-skill/skills/scripts/run_evals.py [path-to-skill] --save-grading
+   uv run tools/generators/eval-skill/skills/scripts/run_evals.py [path-to-skill] --save-grading
    ```
 
 ### Adding a New Rule
@@ -415,7 +415,7 @@ We welcome contributions from open-source developers! Follow these steps to cont
 3. Specify an efficient trigger: `model_decision` (for on-demand guidance) or `glob` with `globs: [...]`. Reserve `always_on` strictly for universal invariants.
 4. Validate with:
    ```bash
-   uv run tooling/generate-rule/skills/scripts/validate_rule.py [path-to-rule.md]
+   uv run tools/generators/generate-rule/skills/scripts/validate_rule.py [path-to-rule.md]
    ```
 
 ### Submission
