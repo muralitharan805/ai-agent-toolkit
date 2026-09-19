@@ -78,5 +78,39 @@ class ToolkitManifestTests(unittest.TestCase):
             self.assertEqual(modified["status"], "modified")
 
 
+    def test_aggregate_sources_can_be_added_and_removed_by_prefix(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            root = tmp_path / ".gemini"
+            toolkit = tmp_path / "toolkit"
+            first = toolkit / "frameworks" / "angular" / "rules" / "one.md"
+            second = toolkit / "shared" / "security" / "rules" / "two.md"
+            first.parent.mkdir(parents=True)
+            second.parent.mkdir(parents=True)
+            first.write_text("one\n", encoding="utf-8")
+            second.write_text("two\n", encoding="utf-8")
+
+            added = toolkit_manifest.aggregate_add(
+                root,
+                "gemini_rules",
+                [first, second],
+                toolkit,
+            )
+            self.assertEqual(
+                added["sources"],
+                [
+                    "frameworks/angular/rules/one.md",
+                    "shared/security/rules/two.md",
+                ],
+            )
+
+            removed = toolkit_manifest.aggregate_remove(
+                root,
+                "gemini_rules",
+                source_prefixes=["frameworks/angular"],
+            )
+            self.assertEqual(removed["removed"], ["frameworks/angular/rules/one.md"])
+            self.assertEqual(removed["sources"], ["shared/security/rules/two.md"])
+
 if __name__ == "__main__":
     unittest.main()
