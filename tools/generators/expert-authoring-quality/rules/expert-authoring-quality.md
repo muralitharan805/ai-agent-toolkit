@@ -37,7 +37,7 @@ This rule mandates that whenever the AI agent creates or modifies modular skills
 
 ### 4. Deduplication & Smart Upsert
 - Before creating a new file, the agent MUST inspect the workspace (`frameworks/`, `infra/`, `shared/`, `domains/`, `.agents/`) for existing skills or rules covering the target topic.
-- When consolidating or refactoring existing context, the agent MUST run `python3 tooling/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py <target-dir>` to automatically detect clusters and semantic overlaps.
+- When consolidating or refactoring existing context, the agent MUST run `python3 tools/generators/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py <target-dir>` to automatically detect clusters and semantic overlaps.
 - If a related file exists, the agent MUST update and merge new requirements into the existing file instead of creating duplicate files.
 
 ### 5. Modular Skill Bundling & Progressive Disclosure (5-Pillar Standard)
@@ -52,12 +52,12 @@ This rule mandates that whenever the AI agent creates or modifies modular skills
 ### 6. Rule Size, Triggers & Validation
 - Rule files MUST target 6,000–8,000 characters (optimal for token economy; hard ceiling 12,000 characters).
 - Rules MUST select the most token-efficient trigger: `model_decision` for situational logic, `glob` with `globs: [...]` for filetype patterns, or `manual`. Avoid blanket `always_on` defaults except for universal workspace invariants.
-- All rules MUST validate cleanly via `python3 tooling/generate-rule/skills/scripts/validate_rule.py`.
+- All rules MUST validate cleanly via `python3 tools/generators/generate-rule/skills/scripts/validate_rule.py`.
 
 ### 7. Workflows Sunset & Procedural Skills Mandate
 - Standalone `.agents/workflows/*.md` files are deprecated by Google Antigravity IDE and STRICTLY FORBIDDEN for new workflows.
 - All sequential processes MUST be authored as **Procedural Skills** under `skills/[skill-name]/` with bundled scripts and checklists.
-- All skills MUST validate cleanly via `python3 tooling/generate-skill/skills/scripts/validate_skill.py`.
+- All skills MUST validate cleanly via `python3 tools/generators/generate-skill/skills/scripts/validate_skill.py`.
 
 ### 8. YAML Frontmatter GUI Compatibility
 - **Skills**: Must include `name` (kebab-case, matching directory) and `description` (1–1024 characters, imperative phrasing).
