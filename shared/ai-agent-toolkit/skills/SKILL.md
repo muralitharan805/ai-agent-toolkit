@@ -27,6 +27,7 @@ shared/ai-agent-toolkit/skills/ai-agent-toolkit-context/
 ## Authoritative Reference Grounding
 Consult the bundled reference guides and governing rules:
 - [Taxonomy & Sync Guide](references/taxonomy-and-sync-guide.md): Complete directory taxonomy and sync internals.
+- [Tools & Generator Architecture](references/tools-and-generators-guide.md): Dynamic `tools/<family>/<tool-name>/` placement and generator authoring rules.
 - [Authoring & Quality Standards Rule](../../rules/ai-toolkit-authoring-rules.md): Governing rule mandating the 5-pillar standard and Principal Architect depth.
 - [Suite Architect Decision Framework](../../../generators/skills/generate-agent-suite/references/suite-architect-decision-framework.md): Decision logic for Skill vs Rule selection.
 
