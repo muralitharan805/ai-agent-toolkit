@@ -42,6 +42,7 @@ DEFAULT_GLOBAL_MODULES=(
   "shared/security-auditing-and-pen-testing"
   "shared/security-baseline"
   "shared/github-issue-pr-automation"
+  "shared/agent-action-guard"
 )
 
 usage() {
@@ -662,11 +663,24 @@ if buffer:
     updated = (base + "\n\n" if base else "") + block
 else:
     updated = base
+    block = ""
 
 if updated != existing.strip():
     if existing:
         path.with_name(path.name + ".bak").write_text(existing, encoding="utf-8")
     path.write_text((updated + "\n") if updated else "", encoding="utf-8")
+
+CHAR_BUDGET_LIMIT = 12000
+total_chars = len(updated)
+if total_chars > CHAR_BUDGET_LIMIT:
+    print(
+        f"  ⚠️  [Warning] {path.name} total size is {total_chars:,} characters "
+        f"(toolkit block: {len(block):,} chars).\n"
+        f"      Exceeds recommended {CHAR_BUDGET_LIMIT:,} character budget! "
+        f"Antigravity IDE may truncate rules beyond this limit.\n"
+        f"      Consider keeping only universal invariants in global and moving domain rules to workspace mode (-w).",
+        file=sys.stderr,
+    )
 PY
 
   rm -f "$temp"
