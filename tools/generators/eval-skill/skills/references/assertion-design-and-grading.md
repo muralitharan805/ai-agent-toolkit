@@ -14,7 +14,7 @@ Subjective grading ("code looks neat", "well designed") is strictly prohibited. 
 | ❌ "Output uses good TypeScript code" | ✅ "All exported functions have explicit return type annotations with zero `any` types" |
 | ❌ "Form handles errors nicely" | ✅ "Uses centralized `<app-form-error [control]='...' />` presenter rather than inline `@if` checks" |
 | ❌ "Database is secured" | ✅ "Queries use parameterized Prisma client calls; zero raw string concatenation in SQL" |
-| ❌ "Includes deployment instructions" | ✅ "Provides exact `./bin/sync-context.sh --global [path]` command in the output" |
+| ❌ "Includes deployment instructions" | ✅ "Provides exact `./bin/context.sh -g [path]` command in the output" |
 | ❌ "Component is reactive" | ✅ "Uses `signal()` and `computed()` primitives instead of RxJS `BehaviorSubject` for local component state" |
 
 ---

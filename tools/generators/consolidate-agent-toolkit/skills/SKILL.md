@@ -102,7 +102,7 @@ When consolidating two skills into a single master bundle:
    python3 tools/generators/generate-skill/skills/scripts/validate_skill.py <master-skill-path>
    python3 tools/generators/eval-skill/skills/scripts/run_evals.py <master-skill-path> --save-grading
    ```
-4. Sync the updated clean context using `bin/sync-context.sh`.
+4. Sync the updated clean context using `bin/context.sh`.
 
 ---
 

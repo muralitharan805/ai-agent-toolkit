@@ -229,10 +229,10 @@ if __name__ == "__main__":
 ### Sync Instructions:
 ```bash
 # Sync to Global level (~/.gemini/config/skills/)
-./bin/sync-context.sh --global [determined-toolkit-path]
+./bin/context.sh -g [determined-toolkit-path] --tool antigravity
 
 # Sync to Workspace level (<project>/.agents/)
-./bin/sync-context.sh [determined-toolkit-path] -w /path/to/project
+./bin/context.sh -w [determined-toolkit-path] --target /path/to/project
 ```
 
 ## Gotchas
