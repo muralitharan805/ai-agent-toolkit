@@ -81,7 +81,7 @@ Action Plan:
   - Skill (Domain or Procedural): [UPDATE existing `...` OR CREATE new modular bundle `SKILL.md` + `references/` + `scripts/` + `evals/` OR SKIPPED]
   - Rule: [UPDATE existing `...` OR CREATE new `...` OR SKIPPED (Rationale)]
   - Workflow: DEPRECATED (Routed into Procedural Skill)
-Verification Command: python3 tooling/generate-agent-suite/skills/scripts/verify_suite.py [target-topic-directory]
+Verification Command: python3 tools/generators/generate-agent-suite/skills/scripts/verify_suite.py [target-topic-directory]
 ========================================
 ```
 
@@ -97,7 +97,7 @@ Output the target file locations under `ai-agent-toolkit` and complete, copy-pas
 ### Step 4: Validation & Quality Gate
 Run the unified suite validator to ensure 100% compliance across all generated skills and rules:
 ```bash
-python3 tooling/generate-agent-suite/skills/scripts/verify_suite.py [target-topic-path]
+python3 tools/generators/generate-agent-suite/skills/scripts/verify_suite.py [target-topic-path]
 ```
 
 ### Step 5: Sync & Deployment Instructions
