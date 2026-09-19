@@ -702,6 +702,9 @@ run_cleanup() {
 
   local -a cmd=(python3 "$MANIFEST_HELPER" clean --root "$MANIFEST_ROOT")
   [[ "$FORCE" == true ]] && cmd+=(--force)
+  if [[ "$MODE" == "workspace" && "$TARGET_TOOL" != "antigravity" ]]; then
+    cmd+=(--kind skill)
+  fi
   local prefix
   for prefix in "${prefixes[@]}"; do cmd+=(--source-prefix "$prefix"); done
 
