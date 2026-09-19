@@ -13,7 +13,7 @@ Act as a Principal AI Quality Assurance Architect and Automated Assertion Grader
 ## 5-Pillar Architecture Directory Map
 
 ```text
-shared/generators/skills/eval-skill/
+tooling/eval-skill/skills/
 ├── SKILL.md                                        # Tier 2 Core Evaluation Instructions
 ├── references/
 │   ├── assertion-design-and-grading.md             # Guide on binary objective assertions vs vague traps
@@ -73,7 +73,7 @@ For each assertion in the test case:
 ### Phase 4: Automated Verification via Runner Script
 Execute the bundled evaluation runner to validate and persist grading:
 ```bash
-python3 shared/generators/skills/eval-skill/scripts/run_evals.py <target-skill-path> --save-grading
+python3 tooling/eval-skill/skills/scripts/run_evals.py <target-skill-path> --save-grading
 ```
 
 Optional CLI flags:
