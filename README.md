@@ -1,5 +1,7 @@
 # 🤖 AI Agent Toolkit (`ai-agent-toolkit`)
 
+[![CI](https://github.com/muralitharan805/ai-agent-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/muralitharan805/ai-agent-toolkit/actions/workflows/ci.yml)
+
 [![Open Standard: agentskills.io](https://img.shields.io/badge/Standard-agentskills.io-blue.svg)](https://agentskills.io)
 [![Target: Google Antigravity IDE](https://img.shields.io/badge/IDE-Google%20Antigravity-orange.svg)](https://deepmind.google)
 [![Package Manager: pnpm](https://img.shields.io/badge/Maintained%20with-pnpm-yellow.svg)](https://pnpm.io)
