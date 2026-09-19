@@ -22,13 +22,13 @@ from typing import Dict, List, Any
 def find_generator_root() -> str:
     """Find the root path of shared/generators."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    # From shared/generators/skills/generate-agent-suite/scripts -> shared/generators
+    # From tooling/generate-agent-suite/skills/scripts -> shared/generators
     return os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
 
 def verify_suite(target_path: str) -> Dict[str, Any]:
     """Inspect and validate all skills and rules in target path."""
     gen_root = find_generator_root()
-    # Check both shared/generators/<tool>/skills/scripts and legacy shared/generators/skills/<tool>/scripts
+    # Check both tooling/<tool>/skills/scripts and legacy tooling/skills/<tool>/scripts
     validate_skill_script = os.path.join(gen_root, "generate-skill", "skills", "scripts", "validate_skill.py")
     if not os.path.exists(validate_skill_script):
         validate_skill_script = os.path.join(gen_root, "skills", "generate-skill", "scripts", "validate_skill.py")
