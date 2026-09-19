@@ -5,5 +5,5 @@ Action Plan:
   - Skill (Domain or Procedural): [UPDATE existing `...` OR CREATE new modular bundle `SKILL.md` + `references/` + `scripts/` + `evals/` OR SKIPPED]
   - Rule: [UPDATE existing `...` OR CREATE new `...` OR SKIPPED (Provide clear 1-sentence technical rationale)]
   - Workflow: DEPRECATED (Routed into Procedural Skill)
-Verification Command: python3 tooling/generate-agent-suite/skills/scripts/verify_suite.py [target-topic-directory]
+Verification Command: python3 tools/generators/generate-agent-suite/skills/scripts/verify_suite.py [target-topic-directory]
 ========================================
