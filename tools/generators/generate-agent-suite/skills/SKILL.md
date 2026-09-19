@@ -26,8 +26,8 @@ Consult the bundled orchestrator guides and tools in this skill:
 - **Quality Verification Suite**: [evals/evals.json](evals/evals.json)
 
 ### Specialized Generator Engines:
-- **Skill Engine**: [generate-skill/SKILL.md](../generate-skill/SKILL.md) (Validator: `scripts/validate_skill.py`)
-- **Rule Engine**: [generate-rule/SKILL.md](../generate-rule/SKILL.md) (Validator: `scripts/validate_rule.py`)
+- **Skill Engine**: [generate-skill/SKILL.md](../../generate-skill/skills/SKILL.md) (Validator: `scripts/validate_skill.py`)
+- **Rule Engine**: [generate-rule/SKILL.md](../../generate-rule/skills/SKILL.md) (Validator: `scripts/validate_rule.py`)
 
 ---
 
@@ -45,7 +45,7 @@ graph TD
     F --> G
     G --> H["Step 3: File Generation"]
     H --> I["Step 4: verify_suite.py Quality Gate"]
-    I --> J["Step 5: sync-context.sh Deployment"]
+    I --> J["Step 5: context.sh Deployment"]
 ```
 
 ### Step 0: Missing Information Protocol (Flipped Interaction)
