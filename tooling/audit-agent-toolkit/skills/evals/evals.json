@@ -14,8 +14,8 @@
         "Validates open-source security isolation ensuring zero proprietary domain leaks"
       ],
       "files": [
-        "shared/generators/skills/audit-agent-toolkit/SKILL.md",
-        "shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py"
+        "tooling/audit-agent-toolkit/skills/SKILL.md",
+        "tooling/audit-agent-toolkit/skills/scripts/audit_toolkit.py"
       ]
     },
     {
@@ -29,7 +29,7 @@
         "Outputs structured visual health scorecard with overall ecosystem percentage"
       ],
       "files": [
-        "shared/generators/skills/audit-agent-toolkit/references/audit-criteria-and-token-budgets.md"
+        "tooling/audit-agent-toolkit/skills/references/audit-criteria-and-token-budgets.md"
       ]
     }
   ]
