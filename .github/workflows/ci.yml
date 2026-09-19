@@ -31,14 +31,14 @@ jobs:
         run: python -m pip install --disable-pip-version-check uv
 
       - name: Validate Bash syntax
-        run: bash -n bin/sync-context.sh
+        run: bash -n bin/context.sh bin/sync-context.sh bin/sync-skills.sh
 
       - name: Compile Python sources
         run: |
           python -m compileall -q \
             bin \
             tests \
-            shared/generators/generate-skill/skills/scripts
+            tooling/generate-skill/skills/scripts
 
       - name: Run unit and integration tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
@@ -47,5 +47,5 @@ jobs:
         run: |
           # Smoke-test one real skill. Strict mode is intentionally deferred until
           # the existing catalog is fully warning-free.
-          uv run shared/generators/generate-skill/skills/scripts/validate_skill.py \
+          uv run tooling/generate-skill/skills/scripts/validate_skill.py \
             frameworks/angular/angular-enterprise-forms/skills
