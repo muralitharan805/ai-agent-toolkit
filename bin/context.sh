@@ -320,20 +320,20 @@ sync_managed_path() {
     missing) echo "  [$label] + $(basename "$target")" ;;
     adoptable)
       manifest_record "$key" "$target" "$source" "$kind"
-      echo "  [$label] = adopted existing identical $(basename "$target")"
+      echo "  [$label] Adopted existing identical $(basename "$target") without rewriting it."
       return 0
       ;;
     clean) echo "  [$label] ~ updating $(basename "$target")" ;;
     unmanaged)
       if [[ "$FORCE" != true ]]; then
-        echo "  [$label] ! protected unmanaged $(basename "$target"); skipped"
+        echo "  [$label] Protected existing unmanaged $(basename "$target"); skipping."
         return 0
       fi
       echo "  [$label] ! force replacing unmanaged $(basename "$target")"
       ;;
     modified)
       if [[ "$FORCE" != true ]]; then
-        echo "  [$label] ! local modifications detected in $(basename "$target"); skipped"
+        echo "  [$label] Local modifications detected in $(basename "$target"); skipping."
         return 0
       fi
       echo "  [$label] ! force replacing modified $(basename "$target")"
