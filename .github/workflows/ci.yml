@@ -38,7 +38,7 @@ jobs:
           python -m compileall -q \
             bin \
             tests \
-            tooling
+            tools
 
       - name: Run unit and integration tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
@@ -47,5 +47,5 @@ jobs:
         run: |
           # Smoke-test one real skill. Strict mode is intentionally deferred until
           # the existing catalog is fully warning-free.
-          uv run tooling/generate-skill/skills/scripts/validate_skill.py \
+          uv run tools/generators/generate-skill/skills/scripts/validate_skill.py \
             frameworks/angular/angular-enterprise-forms/skills
