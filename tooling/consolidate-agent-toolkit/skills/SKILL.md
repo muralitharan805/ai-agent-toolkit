@@ -13,7 +13,7 @@ Act as a Principal Knowledge Architect and Systems Optimizer. You specialize in 
 ## 5-Pillar Directory Map
 
 ```text
-shared/generators/skills/consolidate-agent-toolkit/
+tooling/consolidate-agent-toolkit/skills/
 ├── SKILL.md                                        # Tier 2 Core Consolidation Protocol (< 500 lines)
 ├── references/
 │   └── merging-and-deduplication-playbook.md       # Step-by-step zero-loss merging guidelines
@@ -41,17 +41,17 @@ Execute the bundled duplicate scanning tool:
 
 ```bash
 # Scan entire repository for duplicates and topic clusters:
-python3 shared/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py
+python3 tooling/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py
 
 # Scan a specific framework or infrastructure directory:
-python3 shared/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py frameworks/angular
+python3 tooling/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py frameworks/angular
 
 # Machine-readable JSON output:
-python3 shared/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py --json
+python3 tooling/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py --json
 ```
 
 > [!CAUTION]
-> **Factory Protection**: NEVER scan, audit, merge, or delete files inside `shared/generators/`. This directory contains the toolkit's generator engines and must remain untouched.
+> **Factory Protection**: NEVER scan, audit, merge, or delete files inside `tooling/`. This directory contains the toolkit's generator engines and must remain untouched.
 
 ---
 
@@ -99,8 +99,8 @@ When consolidating two skills into a single master bundle:
 2. Safely remove the empty or redundant secondary directory.
 3. Validate the consolidated master bundle:
    ```bash
-   python3 shared/generators/skills/generate-skill/scripts/validate_skill.py <master-skill-path>
-   python3 shared/generators/skills/eval-skill/scripts/run_evals.py <master-skill-path> --save-grading
+   python3 tooling/generate-skill/skills/scripts/validate_skill.py <master-skill-path>
+   python3 tooling/eval-skill/skills/scripts/run_evals.py <master-skill-path> --save-grading
    ```
 4. Sync the updated clean context using `bin/sync-context.sh`.
 
@@ -108,6 +108,6 @@ When consolidating two skills into a single master bundle:
 
 ## Gotchas
 - **Zero Technical Knowledge Loss**: Never delete a file without first auditing whether it contains unique Gotchas, code snippets, or assertions not present in the master bundle.
-- **Factory Protection**: Files in `shared/generators/` are strictly protected from consolidation.
+- **Factory Protection**: Files in `tooling/` are strictly protected from consolidation.
 - **Rules Size Budget**: When merging rules, ensure the final file remains strictly under the 12,000-character IDE ceiling (target 6,000–8,000 chars).
 - **Procedural Skills**: Never recreate legacy `.agents/workflows/*.md` files during consolidation. Always consolidate into Procedural Skills.
