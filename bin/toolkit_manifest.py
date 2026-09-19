@@ -64,7 +64,7 @@ def manifest_path(root: Path) -> Path:
 def load_manifest(root: Path) -> dict[str, Any]:
     path = manifest_path(root)
     if not path.exists():
-        return {"version": MANIFEST_VERSION, "managed": {}}
+        return {"version": MANIFEST_VERSION, "managed": {}, "aggregates": {}}
 
     with path.open("r", encoding="utf-8") as handle:
         data = json.load(handle)
@@ -80,6 +80,10 @@ def load_manifest(root: Path) -> dict[str, Any]:
         )
     if not isinstance(data.get("managed"), dict):
         raise ValueError("Manifest field 'managed' must be an object")
+    if "aggregates" not in data:
+        data["aggregates"] = {}
+    if not isinstance(data.get("aggregates"), dict):
+        raise ValueError("Manifest field 'aggregates' must be an object")
 
     data["version"] = MANIFEST_VERSION
     return data
@@ -282,6 +286,71 @@ def clean(
     }
 
 
+def aggregate_add(
+    root: Path,
+    name: str,
+    sources: Iterable[Path],
+    toolkit_root: Path | None,
+) -> dict[str, Any]:
+    """Add normalized source files to a named aggregate without duplicates."""
+    manifest = load_manifest(root)
+    aggregates = manifest.setdefault("aggregates", {})
+    current = aggregates.get(name, [])
+    if not isinstance(current, list):
+        raise ValueError(f"Aggregate '{name}' must be a list")
+
+    normalized = [
+        normalized_source(source, toolkit_root)
+        for source in sources
+    ]
+    merged = list(dict.fromkeys([*current, *normalized]))
+    aggregates[name] = merged
+    save_manifest(root, manifest)
+    return {"status": "updated", "name": name, "sources": merged}
+
+
+def aggregate_list(root: Path, name: str) -> dict[str, Any]:
+    manifest = load_manifest(root)
+    current = manifest.get("aggregates", {}).get(name, [])
+    if not isinstance(current, list):
+        raise ValueError(f"Aggregate '{name}' must be a list")
+    return {"status": "ok", "name": name, "sources": current}
+
+
+def aggregate_remove(
+    root: Path,
+    name: str,
+    *,
+    source_prefixes: Iterable[str] = (),
+) -> dict[str, Any]:
+    """Remove aggregate sources matching prefixes; no prefixes clears the aggregate."""
+    manifest = load_manifest(root)
+    aggregates = manifest.setdefault("aggregates", {})
+    current = aggregates.get(name, [])
+    if not isinstance(current, list):
+        raise ValueError(f"Aggregate '{name}' must be a list")
+
+    prefixes = [prefix.rstrip("/") for prefix in source_prefixes if prefix]
+    if prefixes:
+        kept = [source for source in current if not source_matches(source, prefixes)]
+        removed = [source for source in current if source_matches(source, prefixes)]
+    else:
+        kept = []
+        removed = list(current)
+
+    if kept:
+        aggregates[name] = kept
+    else:
+        aggregates.pop(name, None)
+    save_manifest(root, manifest)
+    return {
+        "status": "updated",
+        "name": name,
+        "removed": removed,
+        "sources": kept,
+    }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Manage AI Agent Toolkit sync ownership.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -311,6 +380,21 @@ def parse_args() -> argparse.Namespace:
     clean_parser.add_argument("--force", action="store_true")
     clean_parser.add_argument("--source-prefix", action="append", default=[])
 
+    aggregate_add_parser = subparsers.add_parser("aggregate-add")
+    aggregate_add_parser.add_argument("--root", required=True)
+    aggregate_add_parser.add_argument("--name", required=True)
+    aggregate_add_parser.add_argument("--source", action="append", required=True)
+    aggregate_add_parser.add_argument("--toolkit-root")
+
+    aggregate_list_parser = subparsers.add_parser("aggregate-list")
+    aggregate_list_parser.add_argument("--root", required=True)
+    aggregate_list_parser.add_argument("--name", required=True)
+
+    aggregate_remove_parser = subparsers.add_parser("aggregate-remove")
+    aggregate_remove_parser.add_argument("--root", required=True)
+    aggregate_remove_parser.add_argument("--name", required=True)
+    aggregate_remove_parser.add_argument("--source-prefix", action="append", default=[])
+
     return parser.parse_args()
 
 
@@ -338,6 +422,21 @@ def main() -> int:
         )
     elif args.command == "clean":
         result = clean(root, force=args.force, source_prefixes=args.source_prefix)
+    elif args.command == "aggregate-add":
+        result = aggregate_add(
+            root,
+            args.name,
+            [Path(source).expanduser() for source in args.source],
+            Path(args.toolkit_root).expanduser() if args.toolkit_root else None,
+        )
+    elif args.command == "aggregate-list":
+        result = aggregate_list(root, args.name)
+    elif args.command == "aggregate-remove":
+        result = aggregate_remove(
+            root,
+            args.name,
+            source_prefixes=args.source_prefix,
+        )
     else:
         result = remove(root, args.key)
 
