@@ -61,7 +61,7 @@ def scan_skills_and_rules(target_dir: str) -> Dict[str, Any]:
     for root, dirs, files in os.walk(target_dir):
         parts = root.split(os.sep)
         # Never scan generators, sync targets (.agents), or internal auxiliary directories
-        if any(p in parts for p in ["shared/generators", ".agents", "evals", "references", "assets", "scripts", "examples"]):
+        if any(p in parts for p in ["tooling", ".agents", "evals", "references", "assets", "scripts", "examples"]):
             continue
 
         if "SKILL.md" in files:
