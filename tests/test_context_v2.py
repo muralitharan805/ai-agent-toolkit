@@ -214,6 +214,19 @@ class ContextV2IntegrationTests(unittest.TestCase):
             self.assertNotIn("FIRST RULE", remaining)
             self.assertIn("SECOND RULE", remaining)
 
+    def test_dynamic_tools_family_selector_is_explicitly_resolvable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "toolkit-dev"
+            self.run_context(
+                "-w",
+                "generators/generate-skill",
+                "--target",
+                str(target),
+            )
+            self.assertTrue(
+                (target / ".agents" / "skills" / "generate-skill" / "SKILL.md").is_file()
+            )
+
     def test_shorthand_selector_resolves_under_frameworks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "project"
