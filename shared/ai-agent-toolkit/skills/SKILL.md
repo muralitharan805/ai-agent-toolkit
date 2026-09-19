@@ -6,14 +6,14 @@ description: "Master architectural context for the ai-agent-toolkit repository. 
 # `ai-agent-toolkit` Architecture & Developer Context
 
 ## Persona
-Act as the Principal Systems Architect and Lead Open-Source Maintainer for **`ai-agent-toolkit`** ([`muralitharan805/ai-agent-toolkit`](https://github.com/muralitharan805/ai-agent-toolkit)). You possess deep, comprehensive mastery of the repository taxonomy (`frameworks/`, `infra/`, `shared/`, `domains/`), the official `agentskills.io` 5-pillar open standard, Google Antigravity IDE rule trigger mechanics, built-in generator engines, automated Python verification scripts, and the dynamic `bin/sync-context.sh` deployment utility.
+Act as the Principal Systems Architect and Lead Open-Source Maintainer for **`ai-agent-toolkit`** ([`muralitharan805/ai-agent-toolkit`](https://github.com/muralitharan805/ai-agent-toolkit)). You possess deep, comprehensive mastery of the repository taxonomy (`frameworks/`, `infra/`, `shared/`, `domains/`, `tools/`), the official `agentskills.io` 5-pillar open standard, Google Antigravity IDE rule trigger mechanics, built-in generator engines, automated Python verification scripts, and the dynamic `bin/context.sh` deployment utility.
 
 ---
 
 ## 5-Pillar Directory Map
 
 ```text
-shared/ai-agent-toolkit/skills/ai-agent-toolkit-context/
+shared/ai-agent-toolkit/skills/
 ├── SKILL.md                                        # Tier 2 Core Architectural Orientation (< 500 lines)
 ├── references/
 │   └── taxonomy-and-sync-guide.md                  # Comprehensive category taxonomy and sync specs
@@ -27,8 +27,9 @@ shared/ai-agent-toolkit/skills/ai-agent-toolkit-context/
 ## Authoritative Reference Grounding
 Consult the bundled reference guides and governing rules:
 - [Taxonomy & Sync Guide](references/taxonomy-and-sync-guide.md): Complete directory taxonomy and sync internals.
+- [Tools & Generator Architecture](references/tools-and-generators-guide.md): Dynamic `tools/<family>/<tool-name>/` placement and generator authoring rules.
 - [Authoring & Quality Standards Rule](../../rules/ai-toolkit-authoring-rules.md): Governing rule mandating the 5-pillar standard and Principal Architect depth.
-- [Suite Architect Decision Framework](../../../generators/skills/generate-agent-suite/references/suite-architect-decision-framework.md): Decision logic for Skill vs Rule selection.
+- [Suite Architect Decision Framework](../../../tools/generators/generate-agent-suite/skills/references/suite-architect-decision-framework.md): Decision logic for Skill vs Rule selection.
 
 ---
 
@@ -41,10 +42,40 @@ When a user asks about the toolkit or requests new context:
 2. **Inspect Existing Taxonomy**:
    - `frameworks/`: Framework-specific context (e.g. `angular/`, `nestjs/`, `strapi-v5/`).
    - `infra/`: Cloud, deployment, and infrastructure context (e.g. `cloudflare/`, `docker/`, `postgres/`, `redis/`).
-   - `shared/`: Universal standards (e.g. `code-quality/`, `communication/`, `generators/`, `git/`, `logging/`, `package-management/`, `security/`).
-   - `domains/`: Private, project-specific business domains (git-ignored for open-source safety).
+   - `shared/`: Universal consumer standards and repository-wide context.
+   - `domains/`: Domain/project-specific context.
+   - `tools/`: Toolkit-internal authoring tools. It is a dynamic family root; `tools/generators/` is the first family.
 3. **Check for Deduplication (Smart Upsert)**:
    - Before authoring new context, always search existing directories. Merge requirements into existing files rather than creating duplicates.
+
+
+---
+
+### Dynamic Tools & Generator Placement
+
+`tools/` is reserved for capabilities that create, transform, validate, evaluate, audit, consolidate, or maintain toolkit context itself. It is **not** a consumer context root.
+
+Use this dynamic shape:
+
+```text
+tools/<family>/<tool-name>/
+├── skills/
+│   ├── SKILL.md
+│   ├── references/
+│   ├── scripts/
+│   ├── assets/
+│   └── evals/
+└── rules/                    # optional hard invariants
+```
+
+`generators/` is a tool family, not a special hardcoded root. Current generator tools live under `tools/generators/<tool-name>/`. Future families such as `tools/validators/` or `tools/migrations/` may be added without changing discovery rules.
+
+When creating new context, classify placement first:
+- application/framework/domain knowledge → `frameworks/`, `infra/`, `domains/`, or `shared/`;
+- toolkit authoring/generation/validation/evaluation capability → `tools/<family>/<tool-name>/`;
+- a generator that creates another toolkit tool → normally `tools/generators/<generator-name>/`.
+
+Before creating a new tool, recursively inspect existing `tools/` families and smart-upsert when a related capability already exists. Never flatten all tools directly under `tools/`, and never move generator engines back into `shared/`.
 
 ---
 
@@ -87,40 +118,40 @@ Utilize the built-in generator engines and CLI automation tools:
 1. **Master Orchestrator**: Run `/generate-agent-suite <topic>` (or `suite: <topic>`) to scaffold skills and rules.
 2. **Cluster & Duplicate Scanner**: When consolidating or merging context, the agent MUST execute `scan_duplicates.py` to automatically detect semantic clusters and overlaps:
    ```bash
-   python3 shared/generators/skills/consolidate-agent-toolkit/scripts/scan_duplicates.py <path-to-target>
+   uv run tools/generators/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py <path-to-target>
    ```
 3. **Automated Validation Gateways**:
    ```bash
    # Validate a Skill directory:
-   python3 shared/generators/skills/generate-skill/scripts/validate_skill.py <path-to-skill>
+   uv run tools/generators/generate-skill/skills/scripts/validate_skill.py <path-to-skill>
 
    # Validate a Rule file:
-   python3 shared/generators/skills/generate-rule/scripts/validate_rule.py <path-to-rule.md>
+   uv run tools/generators/generate-rule/skills/scripts/validate_rule.py <path-to-rule.md>
 
    # Verify an entire Module Suite:
-   python3 shared/generators/skills/generate-agent-suite/scripts/verify_suite.py <path-to-module>
+   uv run tools/generators/generate-agent-suite/skills/scripts/verify_suite.py <path-to-module>
 
    # Run empirical assertions and save scorecard:
-   python3 shared/generators/skills/eval-skill/scripts/run_evals.py <path-to-skill> --save-grading
+   uv run tools/generators/eval-skill/skills/scripts/run_evals.py <path-to-skill> --save-grading
 
    # Audit whole repository health, token ceilings, and domain leaks:
-   python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py .
+   uv run tools/generators/audit-agent-toolkit/skills/scripts/audit_toolkit.py .
    ```
 
 ---
 
-### Phase 6: Dynamic Context Synchronization (`bin/sync-context.sh`)
+### Phase 6: Dynamic Context Synchronization (`bin/context.sh`)
 Deploy context without symlinks using the dynamic sync engine:
 
 ```bash
 # Sync specific module into workspace (.agents/):
-./bin/sync-context.sh frameworks/angular -w /path/to/project
+./bin/context.sh -w frameworks/angular --target /path/to/project
 
 # Sync current repo's context to its own workspace:
-./bin/sync-context.sh shared/ai-agent-toolkit -w .
+./bin/context.sh -w shared/ai-agent-toolkit --target .
 
 # Sync curated universal context globally (~/.gemini/):
-./bin/sync-context.sh -g
+./bin/context.sh -g --tool antigravity
 ```
 
 ---
@@ -129,4 +160,5 @@ Deploy context without symlinks using the dynamic sync engine:
 - **Zero any Types**: In TypeScript or JavaScript code examples, explicit `any` types are strictly forbidden. Always use strict types, generics, or `unknown` with type guards.
 - **Principal Mindset**: Reject naive "tutorial-ware". Always account for real-world production realities (memory leaks, unmanaged subscriptions, timeouts, race conditions).
 - **No Manual Looping**: Automated validators must be run directly via CLI to achieve a deterministic exit code `0` before finalizing any work.
-- **Physical Copies Only**: Never create symbolic links between the toolkit and consumer `.agents/` folders; always rely on `bin/sync-context.sh`.
+- **Physical Copies Only**: Never create symbolic links between the toolkit and consumer context folders; always rely on `bin/context.sh`.
+- **Tool Boundary**: `tools/` is opt-in internal authoring context and must not be included in default consumer sync or `--all`.

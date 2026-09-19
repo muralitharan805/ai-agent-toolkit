@@ -21,7 +21,7 @@ Instead of hand-crafting agent instructions and context repeatedly inside every 
 4. [Antigravity Rules & Activation Trigger Strategies](#-antigravity-rules--activation-trigger-strategies)
 5. [Repository Directory Layout](#-repository-directory-layout)
 6. [Built-in AI Generators & Developer Tooling](#-built-in-ai-generators--developer-tooling)
-7. [Universal Dynamic Sync Engine (`sync-context.sh`)](#-universal-dynamic-sync-engine-sync-contextsh)
+7. [Tool-Aware Context CLI (`context.sh`)](#-tool-aware-context-cli-contextsh)
 8. [Quickstart Guide for New Users](#-quickstart-guide-for-new-users)
 9. [How to Contribute to the Open-Source Toolkit](#-how-to-contribute-to-the-open-source-toolkit)
 
@@ -161,192 +161,232 @@ graph LR
 
 ---
 
-## 📂 Repository Directory Layout (Dynamic Deep Architecture)
+## 📂 Repository Directory Layout
 
-The toolkit uses an **infinite-depth dynamic discovery** model. Domains can be nested arbitrarily deep (`[Category] / [Sub-Category] / ... / [Topic] / [Sub-Topic]`). A "Domain Bundle" is dynamically recognized when the synchronization engine hits a `skills/` or `rules/` directory at the end of the tree.
+The repository separates **consumer context** from **toolkit authoring tools**:
 
 ```text
 ai-agent-toolkit/
-├── frameworks/             # Language & Framework-Specific Context
-│   ├── angular/            # Modern Angular 19+ (Signals, Zoneless, M3, Reactive Forms)
-│   ├── nestjs/             # NestJS Clean Architecture, DTOs, and Microservices
-│   └── strapi-v5/          # Strapi Headless CMS schemas & dynamic binding rules
+├── frameworks/             # Framework-specific consumer context
+├── infra/                  # Infrastructure and platform consumer context
+├── domains/                # Domain-specific consumer context
+├── shared/                 # Cross-cutting consumer context
 │
-├── infra/                  # Infrastructure, Cloud & DevOps Context
-│   ├── cloudflare/         # Cloudflare Pages (CSR) & Workers (SSR) edge deployment
-│   ├── docker/             # Multi-stage Dockerfiles, Compose orchestrations & hardening
-│   ├── github-actions/     # Automated SSH deployment pipelines & CI/CD workflows
-│   ├── postgres/           # PostgreSQL indexing, migrations, and pgvector tuning
-│   └── redis/              # Distributed caching modules and cache invalidation
+├── tools/generators/                # Toolkit authoring/evaluation tools (opt-in)
+│   ├── generate-skill/
+│   ├── generate-rule/
+│   ├── generate-prompt/
+│   ├── generate-agent-suite/
+│   ├── eval-skill/
+│   ├── audit-agent-toolkit/
+│   ├── consolidate-agent-toolkit/
+│   └── expert-authoring-quality/
 │
-├── shared/                 # Cross-Cutting Universal Engineering Standards
-│   ├── code-quality/       # Clean Code, TSDoc comments, and zero-any rules
-│   ├── communication/      # Thanglish language matching & senior mentorship persona
-│   ├── generators/         # Built-in AI generators, evaluators, and validators
-│   ├── git/                # Conventional Commits, GitHub Issue & PR automation
-│   ├── google-suite/       # GA4 Analytics, SEO sitemaps, and AdSense integration
-│   ├── logging/            # Structured JSON logs, correlation IDs & secret masking
-│   ├── package-management/ # Strict pnpm package manager and Corepack enforcement
-│   └── security/           # OWASP Top 10 mitigation, secret scanning & pentest audits
+├── bin/
+│   ├── context.sh          # Primary tool-aware sync/cleanup CLI
+│   ├── sync-context.sh     # Legacy compatibility wrapper
+│   ├── sync-skills.sh      # Older compatibility wrapper
+│   └── toolkit_manifest.py # Ownership manifest + safe cleanup helper
 │
-├── bin/                    # Universal Dynamic Synchronization Utility
-│   └── sync-context.sh     # Zero-hardcoding sync script for Workspace & Global scopes
-│
-└── source-doc/             # Official vendor specifications (agentskills.io & Antigravity)
+├── tests/
+├── source-doc/
+└── .github/workflows/
 ```
+
+`frameworks/`, `infra/`, `domains/`, and `shared/` are the consumer catalog. `tools/generators/` is intentionally excluded from default workspace sync and `--all`. Select a `tools/generators/...` path explicitly only when developing the toolkit itself.
 
 ---
 
 ## 🛠️ Built-in AI Generators & Developer Tooling
 
-This repository is self-authoring. It contains agentic authoring tools under `shared/generators/<tool>/skills/` to scaffold, validate, and test new skills and rules:
-
-```mermaid
-graph TD
-    User([Developer / Agent Prompt]) --> Orchestrator["/generate-agent-suite<br>(Master Decision Framework)"]
-    Orchestrator -->|Needs Capability| GenSkill["/generate-skill<br>(5-Pillar Bundle Engine)"]
-    Orchestrator -->|Needs Invariant| GenRule["/generate-rule<br>(Antigravity Rule Engine)"]
-    
-    GenSkill --> ValSkill["validate_skill.py<br>(Schema, Links & Lines Audit)"]
-    GenRule --> ValRule["validate_rule.py<br>(Frontmatter & Char Ceiling Audit)"]
-    
-    ValSkill --> SuiteVerifier["verify_suite.py<br>(Suite Quality Scorecard)"]
-    ValRule --> SuiteVerifier
-    
-    SuiteVerifier --> Evaluator["/eval-skill & run_evals.py<br>(Objective Assertion Grader)"]
-```
-
-### Slash Commands & Shorthand Triggers
-
-| Tool | Slash Command / Shorthand | What It Achieves |
-| :--- | :--- | :--- |
-| **Agent Suite Orchestrator** | `/generate-agent-suite`<br>`suite: <topic>` | Evaluates user scenarios, performs smart deduplication, and orchestrates the generation of matching Skills and Rules. |
-| **5-Pillar Skill Generator** | `/generate-skill`<br>`skill: <topic>` | Scaffolds a complete 5-pillar skill directory bundle with references, scripts, templates, and evals. |
-| **Rule Generator** | `/generate-rule`<br>`rule: <topic>` | Scaffolds a strict, token-budgeted Antigravity Rule file with valid trigger and canonical sections. |
-| **Evaluation Runner** | `/eval-skill <path>`<br>`eval: <path>` | Runs objective assertions from `evals.json` using `run_evals.py` and emits a visual scorecard and `grading.json`. |
-| **Prompt Architect** | `/generate-prompt`<br>`prompt-architect:` | Transforms raw user requests into zero-noise, production-ready XML-tagged prompts. |
-| **Toolkit Consolidator** | `/consolidate-agent-toolkit`<br>`consolidate: <path>` | Automatically executes `scan_duplicates.py` to detect semantic clusters and overlaps, merges fragmented skills/rules into canonical 5-pillar bundles, and safely prunes redundant files. |
-| **Ecosystem Auditor** | `/audit-agent-toolkit`<br>`audit: <path>` | Audits repository health, character/line limits, frontmatter syntax, global parity, and domain isolation leaks using `audit_toolkit.py`. |
-
-### CLI Validation & Verification Utilities
-
-Python utilities use PEP 723 metadata. Prefer `uv run` so declared dependencies are resolved in an isolated environment:
+Authoring utilities live under `tools/generators/<tool>/skills/`.
 
 ```bash
-# Validate an individual Skill directory:
-uv run shared/generators/generate-skill/skills/scripts/validate_skill.py \
+# Validate an individual skill
+uv run tools/generators/generate-skill/skills/scripts/validate_skill.py \
   frameworks/angular/angular-enterprise-forms/skills
 
-# Run the local eval-suite validator:
-uv run shared/generators/eval-skill/skills/scripts/run_evals.py \
+# Run deterministic eval checks
+uv run tools/generators/eval-skill/skills/scripts/run_evals.py \
   frameworks/angular/angular-enterprise-forms/skills --save-grading
 
-# Authoring tools are opt-in; explicitly sync them only when developing the toolkit:
-./bin/sync-context.sh shared/generators -w /path/to/toolkit-development-workspace
+# Explicitly sync an authoring tool into a toolkit-development workspace
+./bin/context.sh -w tools/generators/generate-skill --target /path/to/toolkit-development-workspace
 ```
 
+The authoring tools are not part of normal consumer sync.
 
 ---
 
-## 🔄 Universal Dynamic Sync Engine (`sync-context.sh`)
+## 🔄 Tool-Aware Context CLI (`context.sh`)
 
-`bin/sync-context.sh` is an idempotent, zero-hardcoding synchronization engine. It discovers categories dynamically and copies physical context files directly into consumer workspaces or your machine's global configuration.
+`bin/context.sh` is the primary context lifecycle command. It resolves selected toolkit directories, routes supported context types to the selected AI tool, records ownership, and can safely clean up what it installed.
 
 ```bash
-./bin/sync-context.sh [scope] [options] [path-or-selector...]
+./bin/context.sh -w [selectors...] [--tool antigravity|codex|claude] [--target <project>]
+./bin/context.sh -g [selectors...] --tool antigravity
 ```
 
-### Safe Ownership & Conflict Protection
+Antigravity is the default tool.
 
-Workspace synchronization is non-destructive by default. The toolkit records only content it owns in:
+### Workspace Routing
+
+| Tool | Workspace destination | Supported context |
+| :--- | :--- | :--- |
+| `antigravity` | `<project>/.agents/` | Skills, rules, workflows, plugins |
+| `codex` | `<project>/.agents/skills/` | Skills |
+| `claude` | `<project>/.claude/skills/` | Skills |
+
+Unsupported context types are reported and skipped instead of being copied into an incorrect directory.
+
+```bash
+# Antigravity is the default
+./bin/context.sh -w frameworks/angular --target ~/projects/app
+
+# Codex workspace skills
+./bin/context.sh -w angular/angular-enterprise-forms \
+  --tool codex \
+  --target ~/projects/app
+
+# Claude workspace skills
+./bin/context.sh -w angular/angular-enterprise-forms \
+  --tool claude \
+  --target ~/projects/app
+```
+
+### Global Routing
+
+Global context currently supports **Antigravity only**. Codex and Claude are intentionally workspace-only in this toolkit.
+
+```bash
+./bin/context.sh -g shared/security-baseline --tool antigravity
+```
+
+Antigravity global context uses the configured Gemini/Antigravity directories. Selected rules are combined inside the toolkit-owned block in `~/.gemini/GEMINI.md`:
 
 ```text
-<project>/.agents/.toolkit-manifest.json
+<!-- AGENT_TOOLKIT_START -->
+...toolkit-managed combined rules...
+<!-- AGENT_TOOLKIT_END -->
 ```
 
-Existing user-created `.agents/skills/`, rules, workflows, and plugins are **not overwritten** merely because they share a name with toolkit content.
+Content outside those markers remains user-owned and is preserved.
 
-- Missing target → install and record toolkit ownership.
-- Existing unmanaged target → preserve and skip.
-- Existing target identical to the toolkit source → adopt without rewriting it.
-- Toolkit-managed target with no local changes → update safely.
-- Toolkit-managed target with local edits → preserve and report a conflict.
-- `--force` → explicitly replace the conflicting target and let the toolkit take ownership.
+### Directory, Parent, Nested, and Glob Selectors
+
+Selectors may point to a whole parent, a nested child, or a glob. Quote globs so your shell does not expand them before `context.sh` receives them.
 
 ```bash
-# Safe default: preserves user-owned or locally modified content
-./bin/sync-context.sh frameworks/angular -w /path/to/project
+# Parent: recursively discover all Angular context modules
+./bin/context.sh -w frameworks/angular --target ~/projects/app
 
-# Explicit destructive override for matching targets only
-./bin/sync-context.sh frameworks/angular -w /path/to/project --force
+# Shorthand nested path (resolved under catalog roots)
+./bin/context.sh -w angular/angular-enterprise-forms --target ~/projects/app
+
+# Glob children
+./bin/context.sh -w 'angular/*' --target ~/projects/app
+
+# Multiple areas
+./bin/context.sh -w infra/docker infra/postgres shared/security-baseline \
+  --target ~/projects/api
 ```
 
-The sync engine does not automatically delete legacy files by filename alone because it cannot prove those files belong to the toolkit.
+`--all` syncs only the consumer catalog roots: `frameworks/`, `infra/`, `domains/`, and `shared/`. It never includes the internal `tools/` root.
 
-### Common Sync Workflows
+### Safe Ownership and `MANIFEST_HELPER`
 
-#### 1. Sync Curated Standards Globally
+`bin/context.sh` is the installer/router. `bin/toolkit_manifest.py` is the ownership ledger used before and after filesystem changes.
 
-Antigravity remains the default global target:
+For an Antigravity or Codex workspace the manifest is stored under `<project>/.agents/.toolkit-manifest.json`; for a Claude workspace it is stored under `<project>/.claude/.toolkit-manifest.json`.
+
+Each managed entry records the source, exact target, context kind, scope, tool, and installed hash:
+
+```json
+{
+  "version": 2,
+  "managed": {
+    "skills/angular-enterprise-forms": {
+      "source": "frameworks/angular/angular-enterprise-forms/skills",
+      "target": "skills/angular-enterprise-forms",
+      "kind": "skill",
+      "scope": "workspace",
+      "tool": "antigravity",
+      "hash": "..."
+    }
+  }
+}
+```
+
+This provides the safety boundary:
+
+- Existing content not present in the manifest is treated as user-owned and is not overwritten by default.
+- Toolkit-managed content with local modifications is preserved by default.
+- `--force` explicitly allows replacement during sync.
+- Cleanup considers only manifest-owned paths.
+- Codex workspace cleanup is skill-scoped, so Antigravity rules sharing the same `.agents` root are preserved.
+- Antigravity global rule sources are tracked as a manifest aggregate so selective cleanup can rebuild the combined toolkit block correctly.
+- `GEMINI.md` is not treated as a toolkit-owned file; only the tagged toolkit block is managed.
+
+### Cleanup
+
+Remove everything the toolkit owns in one workspace:
 
 ```bash
-./bin/sync-context.sh -g --agent antigravity
+./bin/context.sh -w --target ~/projects/app --clean
 ```
 
-For Codex global Agent Skills:
+Remove only context that originated under a selector:
 
 ```bash
-./bin/sync-context.sh frameworks/angular -g --agent codex
+./bin/context.sh -w frameworks/angular --target ~/projects/app --clean
 ```
 
-Antigravity global rules are merged into `~/.gemini/GEMINI.md`. Codex global skills are installed under `~/.agents/skills/`. Workspace sync continues to target `.agents/` and does not require an agent selector.
+If a toolkit-managed target was edited locally, normal cleanup preserves it. To explicitly discard those local changes too:
 
-
-#### 2. Sync Framework or Infrastructure to a Project Workspace
-Syncs specific modules directly into your project's `.agents/` folder:
 ```bash
-# Sync Angular frontend standards to your app:
-./bin/sync-context.sh frameworks/angular -w /path/to/my-angular-app
-
-# Sync Docker and PostgreSQL infrastructure context:
-./bin/sync-context.sh infra/docker infra/postgres -w /path/to/my-backend-app
-
-# Sync shared code quality and git automation rules:
-./bin/sync-context.sh shared/code-quality shared/git -w /path/to/my-project
+./bin/context.sh -w --target ~/projects/app --force-clean
 ```
 
-#### 3. Preset Shorthands
-Quickly configure entire stacks with predefined bundles:
+For Antigravity global cleanup:
+
 ```bash
-# Fullstack bundle (Angular + NestJS + Docker + Postgres + Redis + Shared):
-./bin/sync-context.sh --preset fullstack-app -w /path/to/fullstack-project
-
-# NestJS API bundle (NestJS + Postgres + Redis + Shared):
-./bin/sync-context.sh --preset nestjs-api -w /path/to/backend-api
+./bin/context.sh -g --tool antigravity --clean
 ```
+
+This removes manifest-owned global context and only the toolkit marker block from `GEMINI.md`; unrelated user content remains.
+
+### Legacy Command Compatibility
+
+`bin/sync-context.sh` remains as a compatibility wrapper for the older interface, including the previous `-w <project>` destination syntax. New documentation and new integrations should use `bin/context.sh`.
 
 ---
 
 ## 🚀 Quickstart Guide for New Users
 
-### 1. Clone the Repository
+### 1. Clone Once
+
 ```bash
 git clone https://github.com/muralitharan805/ai-agent-toolkit.git
 cd ai-agent-toolkit
 ```
 
-### 2. Configure Global Developer Defaults
-Run the global sync utility once to equip your Google Antigravity IDE or Gemini agent across all workspaces:
+### 2. Sync Context into a Project
+
 ```bash
-./bin/sync-context.sh -g
+# Antigravity
+./bin/context.sh -w 'angular/*' --target ~/projects/my-angular-app
+
+# Codex
+./bin/context.sh -w frameworks/angular --tool codex --target ~/projects/my-angular-app
 ```
 
-### 3. Equip an Existing Project Workspace
-Navigate to any project on your computer and inject the appropriate context:
+### 3. Optional Antigravity Global Defaults
+
 ```bash
-./bin/sync-context.sh frameworks/angular shared/code-quality -w ~/my-awesome-angular-project
+./bin/context.sh -g --tool antigravity
 ```
-Open your project in Google Antigravity IDE. The agent will immediately index `.agents/skills/` and `.agents/rules/` and begin adhering to your standards!
+
+The toolkit repository remains the source of truth; the manifest tracks only what the toolkit installs into each destination.
 
 ---
 
@@ -361,12 +401,12 @@ We welcome contributions from open-source developers! Follow these steps to cont
    - Scaffold the 5 pillars: `SKILL.md`, `references/`, `scripts/`, `assets/`, and `evals/evals.json`.
 3. **Automated Validation**:
    ```bash
-   python3 shared/generators/skills/generate-skill/scripts/validate_skill.py [path-to-skill]
+   uv run tools/generators/generate-skill/skills/scripts/validate_skill.py [path-to-skill]
    ```
    Ensure it reports **100% PASS** with 0 errors and 0 warnings.
 4. **Empirical Evaluation**:
    ```bash
-   python3 shared/generators/skills/eval-skill/scripts/run_evals.py [path-to-skill] --save-grading
+   uv run tools/generators/eval-skill/skills/scripts/run_evals.py [path-to-skill] --save-grading
    ```
 
 ### Adding a New Rule
@@ -375,7 +415,7 @@ We welcome contributions from open-source developers! Follow these steps to cont
 3. Specify an efficient trigger: `model_decision` (for on-demand guidance) or `glob` with `globs: [...]`. Reserve `always_on` strictly for universal invariants.
 4. Validate with:
    ```bash
-   python3 shared/generators/skills/generate-rule/scripts/validate_rule.py [path-to-rule.md]
+   uv run tools/generators/generate-rule/skills/scripts/validate_rule.py [path-to-rule.md]
    ```
 
 ### Submission
