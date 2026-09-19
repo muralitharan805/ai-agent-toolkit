@@ -14,7 +14,7 @@ Action Plan:
   - Skill (Domain Knowledge): CREATE `infra/redis/skills/caching-strategies/` (Interceptors, @UseCache decorator, TTL configuration).
   - Rule (Antigravity Rule): CREATE `infra/redis/rules/cache-invariants.md` (Mandatory invalidation on mutations, prohibition of caching sensitive /auth endpoints).
   - Workflow: DEPRECATED (Not applicable).
-Verification Command: python3 shared/generators/skills/generate-agent-suite/scripts/verify_suite.py infra/redis/
+Verification Command: python3 tooling/generate-agent-suite/skills/scripts/verify_suite.py infra/redis/
 ========================================
 ```
 
@@ -34,7 +34,7 @@ Action Plan:
   - Skill (Procedural Execution): CREATE `frameworks/angular/skills/cloudflare-angular-spa-deployment/` (Checklist, Wrangler preview, _redirects verification).
   - Rule: SKIPPED (Sequential deployment runbook; no global workspace constraints or glob triggers required).
   - Workflow: DEPRECATED (Routed into Procedural Skill).
-Verification Command: python3 shared/generators/skills/generate-skill/scripts/validate_skill.py frameworks/angular/skills/cloudflare-angular-spa-deployment/
+Verification Command: python3 tooling/generate-skill/skills/scripts/validate_skill.py frameworks/angular/skills/cloudflare-angular-spa-deployment/
 ========================================
 ```
 
@@ -54,6 +54,6 @@ Action Plan:
   - Skill: SKIPPED (No multi-step procedural workflow or extensive API reference needed).
   - Rule: CREATE `shared/security/rules/zero-hardcoded-secrets.md` (trigger: always_on or glob, strict prohibition with Correct vs Forbidden examples).
   - Workflow: DEPRECATED (Not applicable).
-Verification Command: python3 shared/generators/skills/generate-rule/scripts/validate_rule.py shared/security/rules/zero-hardcoded-secrets.md
+Verification Command: python3 tooling/generate-rule/skills/scripts/validate_rule.py shared/security/rules/zero-hardcoded-secrets.md
 ========================================
 ```
