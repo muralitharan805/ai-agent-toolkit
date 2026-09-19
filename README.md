@@ -291,7 +291,7 @@ Selectors may point to a whole parent, a nested child, or a glob. Quote globs so
   --target ~/projects/api
 ```
 
-`--all` syncs only the consumer catalog roots: `frameworks/`, `infra/`, `domains/`, and `shared/`. It does not include `tools/generators/`.
+`--all` syncs only the consumer catalog roots: `frameworks/`, `infra/`, `domains/`, and `shared/`. It never includes the internal `tools/` root.
 
 ### Safe Ownership and `MANIFEST_HELPER`
 
