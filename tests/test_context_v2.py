@@ -118,6 +118,26 @@ class ContextV2IntegrationTests(unittest.TestCase):
             self.assertFalse((target / ".agents" / "skills" / "demo-module").exists())
             self.assertTrue((unmanaged / "SKILL.md").exists())
 
+    def test_codex_cleanup_does_not_remove_antigravity_rules(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "demo-module"
+            target = root / "project"
+            write_module(source)
+
+            self.run_context("-w", str(source), "--tool", "antigravity", "--target", str(target))
+            self.run_context("-w", str(source), "--tool", "codex", "--target", str(target))
+
+            rule = target / ".agents" / "rules" / "demo-rule.md"
+            skill = target / ".agents" / "skills" / "demo-module"
+            self.assertTrue(rule.exists())
+            self.assertTrue(skill.exists())
+
+            self.run_context("-w", "--tool", "codex", "--target", str(target), "--clean")
+
+            self.assertTrue(rule.exists())
+            self.assertFalse(skill.exists())
+
     def test_codex_global_is_rejected(self) -> None:
         result = self.run_context("-g", "--tool", "codex", check=False)
         self.assertNotEqual(result.returncode, 0)
