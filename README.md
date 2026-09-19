@@ -323,6 +323,8 @@ This provides the safety boundary:
 - Toolkit-managed content with local modifications is preserved by default.
 - `--force` explicitly allows replacement during sync.
 - Cleanup considers only manifest-owned paths.
+- Codex workspace cleanup is skill-scoped, so Antigravity rules sharing the same `.agents` root are preserved.
+- Antigravity global rule sources are tracked as a manifest aggregate so selective cleanup can rebuild the combined toolkit block correctly.
 - `GEMINI.md` is not treated as a toolkit-owned file; only the tagged toolkit block is managed.
 
 ### Cleanup
