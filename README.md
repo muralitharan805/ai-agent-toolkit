@@ -165,7 +165,7 @@ graph LR
 
 The repository separates **consumer context** from **toolkit authoring tools**:
 
-\`\`\`text
+```text
 ai-agent-toolkit/
 ├── frameworks/             # Framework-specific consumer context
 ├── infra/                  # Infrastructure and platform consumer context
@@ -191,17 +191,17 @@ ai-agent-toolkit/
 ├── tests/
 ├── source-doc/
 └── .github/workflows/
-\`\`\`
+```
 
-\`frameworks/\`, \`infra/\`, \`domains/\`, and \`shared/\` are the consumer catalog. \`tooling/\` is intentionally excluded from default workspace sync and \`--all\`. Select a \`tooling/...\` path explicitly only when developing the toolkit itself.
+`frameworks/`, `infra/`, `domains/`, and `shared/` are the consumer catalog. `tooling/` is intentionally excluded from default workspace sync and `--all`. Select a `tooling/...` path explicitly only when developing the toolkit itself.
 
 ---
 
 ## 🛠️ Built-in AI Generators & Developer Tooling
 
-Authoring utilities live under \`tooling/<tool>/skills/\`.
+Authoring utilities live under `tooling/<tool>/skills/`.
 
-\`\`\`bash
+```bash
 # Validate an individual skill
 uv run tooling/generate-skill/skills/scripts/validate_skill.py \
   frameworks/angular/angular-enterprise-forms/skills
@@ -212,20 +212,20 @@ uv run tooling/eval-skill/skills/scripts/run_evals.py \
 
 # Explicitly sync an authoring tool into a toolkit-development workspace
 ./bin/context.sh -w tooling/generate-skill --target /path/to/toolkit-development-workspace
-\`\`\`
+```
 
 The authoring tools are not part of normal consumer sync.
 
 ---
 
-## 🔄 Tool-Aware Context CLI (\`context.sh\`)
+## 🔄 Tool-Aware Context CLI (`context.sh`)
 
-\`bin/context.sh\` is the primary context lifecycle command. It resolves selected toolkit directories, routes supported context types to the selected AI tool, records ownership, and can safely clean up what it installed.
+`bin/context.sh` is the primary context lifecycle command. It resolves selected toolkit directories, routes supported context types to the selected AI tool, records ownership, and can safely clean up what it installed.
 
-\`\`\`bash
+```bash
 ./bin/context.sh -w [selectors...] [--tool antigravity|codex|claude] [--target <project>]
 ./bin/context.sh -g [selectors...] --tool antigravity
-\`\`\`
+```
 
 Antigravity is the default tool.
 
@@ -233,13 +233,13 @@ Antigravity is the default tool.
 
 | Tool | Workspace destination | Supported context |
 | :--- | :--- | :--- |
-| \`antigravity\` | \`<project>/.agents/\` | Skills, rules, workflows, plugins |
-| \`codex\` | \`<project>/.agents/skills/\` | Skills |
-| \`claude\` | \`<project>/.claude/skills/\` | Skills |
+| `antigravity` | `<project>/.agents/` | Skills, rules, workflows, plugins |
+| `codex` | `<project>/.agents/skills/` | Skills |
+| `claude` | `<project>/.claude/skills/` | Skills |
 
 Unsupported context types are reported and skipped instead of being copied into an incorrect directory.
 
-\`\`\`bash
+```bash
 # Antigravity is the default
 ./bin/context.sh -w frameworks/angular --target ~/projects/app
 
@@ -252,31 +252,31 @@ Unsupported context types are reported and skipped instead of being copied into 
 ./bin/context.sh -w angular/angular-enterprise-forms \
   --tool claude \
   --target ~/projects/app
-\`\`\`
+```
 
 ### Global Routing
 
 Global context currently supports **Antigravity only**. Codex and Claude are intentionally workspace-only in this toolkit.
 
-\`\`\`bash
+```bash
 ./bin/context.sh -g shared/security-baseline --tool antigravity
-\`\`\`
+```
 
-Antigravity global context uses the configured Gemini/Antigravity directories. Selected rules are combined inside the toolkit-owned block in \`~/.gemini/GEMINI.md\`:
+Antigravity global context uses the configured Gemini/Antigravity directories. Selected rules are combined inside the toolkit-owned block in `~/.gemini/GEMINI.md`:
 
-\`\`\`text
+```text
 <!-- AGENT_TOOLKIT_START -->
 ...toolkit-managed combined rules...
 <!-- AGENT_TOOLKIT_END -->
-\`\`\`
+```
 
 Content outside those markers remains user-owned and is preserved.
 
 ### Directory, Parent, Nested, and Glob Selectors
 
-Selectors may point to a whole parent, a nested child, or a glob. Quote globs so your shell does not expand them before \`context.sh\` receives them.
+Selectors may point to a whole parent, a nested child, or a glob. Quote globs so your shell does not expand them before `context.sh` receives them.
 
-\`\`\`bash
+```bash
 # Parent: recursively discover all Angular context modules
 ./bin/context.sh -w frameworks/angular --target ~/projects/app
 
@@ -289,19 +289,19 @@ Selectors may point to a whole parent, a nested child, or a glob. Quote globs so
 # Multiple areas
 ./bin/context.sh -w infra/docker infra/postgres shared/security-baseline \
   --target ~/projects/api
-\`\`\`
+```
 
-\`--all\` syncs only the consumer catalog roots: \`frameworks/\`, \`infra/\`, \`domains/\`, and \`shared/\`. It does not include \`tooling/\`.
+`--all` syncs only the consumer catalog roots: `frameworks/`, `infra/`, `domains/`, and `shared/`. It does not include `tooling/`.
 
-### Safe Ownership and \`MANIFEST_HELPER\`
+### Safe Ownership and `MANIFEST_HELPER`
 
-\`bin/context.sh\` is the installer/router. \`bin/toolkit_manifest.py\` is the ownership ledger used before and after filesystem changes.
+`bin/context.sh` is the installer/router. `bin/toolkit_manifest.py` is the ownership ledger used before and after filesystem changes.
 
-For an Antigravity or Codex workspace the manifest is stored under \`<project>/.agents/.toolkit-manifest.json\`; for a Claude workspace it is stored under \`<project>/.claude/.toolkit-manifest.json\`.
+For an Antigravity or Codex workspace the manifest is stored under `<project>/.agents/.toolkit-manifest.json`; for a Claude workspace it is stored under `<project>/.claude/.toolkit-manifest.json`.
 
 Each managed entry records the source, exact target, context kind, scope, tool, and installed hash:
 
-\`\`\`json
+```json
 {
   "version": 2,
   "managed": {
@@ -315,47 +315,47 @@ Each managed entry records the source, exact target, context kind, scope, tool, 
     }
   }
 }
-\`\`\`
+```
 
 This provides the safety boundary:
 
 - Existing content not present in the manifest is treated as user-owned and is not overwritten by default.
 - Toolkit-managed content with local modifications is preserved by default.
-- \`--force\` explicitly allows replacement during sync.
+- `--force` explicitly allows replacement during sync.
 - Cleanup considers only manifest-owned paths.
-- \`GEMINI.md\` is not treated as a toolkit-owned file; only the tagged toolkit block is managed.
+- `GEMINI.md` is not treated as a toolkit-owned file; only the tagged toolkit block is managed.
 
 ### Cleanup
 
 Remove everything the toolkit owns in one workspace:
 
-\`\`\`bash
+```bash
 ./bin/context.sh -w --target ~/projects/app --clean
-\`\`\`
+```
 
 Remove only context that originated under a selector:
 
-\`\`\`bash
+```bash
 ./bin/context.sh -w frameworks/angular --target ~/projects/app --clean
-\`\`\`
+```
 
 If a toolkit-managed target was edited locally, normal cleanup preserves it. To explicitly discard those local changes too:
 
-\`\`\`bash
+```bash
 ./bin/context.sh -w --target ~/projects/app --force-clean
-\`\`\`
+```
 
 For Antigravity global cleanup:
 
-\`\`\`bash
+```bash
 ./bin/context.sh -g --tool antigravity --clean
-\`\`\`
+```
 
-This removes manifest-owned global context and only the toolkit marker block from \`GEMINI.md\`; unrelated user content remains.
+This removes manifest-owned global context and only the toolkit marker block from `GEMINI.md`; unrelated user content remains.
 
 ### Legacy Command Compatibility
 
-\`bin/sync-context.sh\` remains as a compatibility wrapper for the older interface, including the previous \`-w <project>\` destination syntax. New documentation and new integrations should use \`bin/context.sh\`.
+`bin/sync-context.sh` remains as a compatibility wrapper for the older interface, including the previous `-w <project>` destination syntax. New documentation and new integrations should use `bin/context.sh`.
 
 ---
 
@@ -363,26 +363,26 @@ This removes manifest-owned global context and only the toolkit marker block fro
 
 ### 1. Clone Once
 
-\`\`\`bash
+```bash
 git clone https://github.com/muralitharan805/ai-agent-toolkit.git
 cd ai-agent-toolkit
-\`\`\`
+```
 
 ### 2. Sync Context into a Project
 
-\`\`\`bash
+```bash
 # Antigravity
 ./bin/context.sh -w 'angular/*' --target ~/projects/my-angular-app
 
 # Codex
 ./bin/context.sh -w frameworks/angular --tool codex --target ~/projects/my-angular-app
-\`\`\`
+```
 
 ### 3. Optional Antigravity Global Defaults
 
-\`\`\`bash
+```bash
 ./bin/context.sh -g --tool antigravity
-\`\`\`
+```
 
 The toolkit repository remains the source of truth; the manifest tracks only what the toolkit installs into each destination.
 
