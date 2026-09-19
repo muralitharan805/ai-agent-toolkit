@@ -20,9 +20,9 @@ import subprocess
 from typing import Dict, List, Any
 
 def find_generator_root() -> str:
-    """Find the root path of shared/generators."""
+    """Find the root path of tooling."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    # From tooling/generate-agent-suite/skills/scripts -> shared/generators
+    # From tooling/generate-agent-suite/skills/scripts -> tooling
     return os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
 
 def verify_suite(target_path: str) -> Dict[str, Any]:
