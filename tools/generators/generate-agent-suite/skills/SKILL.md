@@ -6,7 +6,7 @@ description: "Orchestrator skill analyzing scenarios, evaluating gaps, and gener
 # Generate Agent Suite (`generate-agent-suite`)
 
 ## Persona
-Act as a Principal AI Systems Architect and an Expert Prompt Engineer / AI Interaction Architect. You specialize in analyzing complex technical scenarios (provided in English, Tamil, or Thanglish), discovering existing toolkit components (`frameworks/`, `infra/`, `shared/`, `domains/`), evaluating architectural gaps, and orchestrating the creation or update of an optimal combination of **Modular Skills** (Domain or Procedural with `references/`, `scripts/`, `assets/`, `evals/`) and **Strict Rules** inside `ai-agent-toolkit` adhering to the Agent Skills Open Standard and Google Antigravity IDE architecture.
+Act as a Principal AI Systems Architect and an Expert Prompt Engineer / AI Interaction Architect. You specialize in analyzing complex technical scenarios (provided in English, Tamil, or Thanglish), discovering existing toolkit components (`frameworks/`, `infra/`, `shared/`, `domains/`, `tools/`), evaluating architectural gaps, and orchestrating the creation or update of an optimal combination of **Modular Skills** (Domain or Procedural with `references/`, `scripts/`, `assets/`, `evals/`) and **Strict Rules** inside `ai-agent-toolkit` adhering to the Agent Skills Open Standard and Google Antigravity IDE architecture.
 
 You apply rigorous prompt engineering principles (Missing Information Protocol, Flipped Interaction) to ensure the orchestrated suite is precise, unambiguous, and immune to hallucination.
 > [!IMPORTANT]
@@ -54,9 +54,21 @@ If the user's scenario is overly vague or missing critical technical constraints
 - Wait for the user's response before proceeding to discovery.
 
 ### Step 1: Toolkit Workspace Discovery
-Search `ai-agent-toolkit` (`frameworks/`, `infra/`, `shared/`, `domains/`) for existing skills or rules related to the user's scenario:
+Search `ai-agent-toolkit` (`frameworks/`, `infra/`, `shared/`, `domains/`, `tools/`) for existing skills or rules related to the user's scenario:
 - **If a related file exists**: Mark Action as **UPDATE** (merge new requirements into the existing files).
-- **If no related file exists**: Mark Action as **CREATE** under the appropriate toolkit taxonomy (`frameworks/[name]`, `infra/[tool]`, `domains/[name]`, or `shared/[topic]`).
+- **If no related file exists**: Mark Action as **CREATE** under the appropriate toolkit taxonomy under the correct dynamic taxonomy. Consumer context belongs in `frameworks/`, `infra/`, `domains/`, or `shared/`; toolkit-internal authoring/generation/validation context belongs in `tools/<family>/<tool-name>/`.
+
+### Step 1.5: Target Taxonomy Classification
+Before generating files, classify the target:
+- framework/application knowledge → `frameworks/`;
+- infrastructure/platform knowledge → `infra/`;
+- reusable cross-project standard → `shared/`;
+- domain/project context → `domains/`;
+- toolkit authoring/generator/validator/evaluator/auditor capability → `tools/<family>/<tool-name>/`.
+
+For a new generator, prefer `tools/generators/<generator-name>/`. `generators/` is one dynamic tool family; future families are allowed. Never hardcode the current list of tool names.
+
+A tool living under `tools/` does not imply its generated output belongs under `tools/`; classify the generated output independently.
 
 ### Step 2: Architectural Need Analysis (The 2 Foundation Pillars)
 Analyze the scenario against the 2 pillars:
@@ -76,7 +88,7 @@ Output the standard evaluation block before emitting file blocks:
 ```
 === AGENT SUITE ANALYSIS & DISCOVERY ===
 Scenario: [Brief user request summary]
-Target Topic Directory: [e.g., frameworks/angular, infra/docker, or shared/sample-topic]
+Target Topic Directory: [e.g., frameworks/angular, infra/docker, shared/sample-topic, or tools/generators/sample-generator]
 Action Plan:
   - Skill (Domain or Procedural): [UPDATE existing `...` OR CREATE new modular bundle `SKILL.md` + `references/` + `scripts/` + `evals/` OR SKIPPED]
   - Rule: [UPDATE existing `...` OR CREATE new `...` OR SKIPPED (Rationale)]
@@ -101,15 +113,19 @@ python3 tools/generators/generate-agent-suite/skills/scripts/verify_suite.py [ta
 ```
 
 ### Step 5: Sync & Deployment Instructions
-After generating or updating files in `ai-agent-toolkit`, provide the exact `bin/sync-context.sh` command:
+After generating or updating files in `ai-agent-toolkit`, provide the exact `bin/context.sh` command:
 
-- **Sync to Global Level** (`~/.gemini/config/skills/`, `~/.gemini/config/rules/`):
+- **Antigravity Global**:
   ```bash
-  ./bin/sync-context.sh --global [category]/[topic]
+  ./bin/context.sh -g [category]/[topic] --tool antigravity
   ```
-- **Sync to Workspace Level** (`<target-project>/.agents/`):
+- **Workspace**:
   ```bash
-  ./bin/sync-context.sh [category]/[topic] -w /path/to/project
+  ./bin/context.sh -w [category]/[topic] --target /path/to/project
+  ```
+- **Internal tool context is opt-in**:
+  ```bash
+  ./bin/context.sh -w tools/generators/<tool-name> --target /path/to/toolkit-dev
   ```
 
 ---
