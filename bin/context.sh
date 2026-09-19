@@ -35,14 +35,10 @@ ANTIGRAVITY_GLOBAL_PLUGINS="${HOME}/.gemini/config/plugins"
 ANTIGRAVITY_GLOBAL_RULES_FILE="${HOME}/.gemini/GEMINI.md"
 
 DEFAULT_GLOBAL_MODULES=(
-  "shared/clean-code-and-maintainability"
   "shared/thanglish-mentor-persona"
-  "shared/observability-and-telemetry"
-  "shared/pnpm-package-management"
-  "shared/security-auditing-and-pen-testing"
-  "shared/security-baseline"
-  "shared/github-issue-pr-automation"
   "shared/agent-action-guard"
+  "shared/clean-code-and-maintainability"
+  "shared/code-quality-and-devex"
 )
 
 usage() {
