@@ -13,11 +13,13 @@ set -e
 # Base toolkit root resolution
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOOLKIT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+MANIFEST_HELPER="${SCRIPT_DIR}/toolkit_manifest.py"
 
 # Global Defaults & State Flags
 TARGET_DIR="./"
 IS_GLOBAL=false
 TARGET_AGENT="antigravity"
+FORCE_OVERWRITE=false
 SYNC_ALL=false
 SELECTORS=()
 START_TAG="<!-- AGENT_TOOLKIT_START -->"
@@ -57,6 +59,9 @@ Scope Identifiers:
   -t, --target <path>       Alias for --workspace
   -g, --global              Sync to machine global level
       --agent <name>         Global target agent: antigravity (default) or codex
+
+Safety:
+      --force                Explicitly replace unmanaged or locally modified toolkit targets
 
 Selectors & Options:
   -a, --all                 Dynamically discover and sync ALL categories and modules
@@ -105,6 +110,10 @@ parse_arguments() {
             ;;
         esac
         shift 2
+        ;;
+      --force)
+        FORCE_OVERWRITE=true
+        shift 1
         ;;
       -a|--all)
         SYNC_ALL=true
@@ -195,6 +204,7 @@ setup_scope_paths() {
   if [[ "$IS_GLOBAL" == true ]]; then
     if [[ "$TARGET_AGENT" == "codex" ]]; then
       TARGET_SKILLS_DIR="${HOME}/.agents/skills"
+      MANIFEST_ROOT="${HOME}/.agents"
       SCOPE_LABEL="Codex Global Level (~/.agents/skills)"
       mkdir -p "${TARGET_SKILLS_DIR}"
     else
@@ -204,6 +214,7 @@ setup_scope_paths() {
       TARGET_GLOBAL_WORKFLOWS_DIR="${HOME}/.gemini/config/global_workflows"
       TARGET_PLUGINS_DIR="${HOME}/.gemini/config/plugins"
       GLOBAL_GEMINI_MD="${HOME}/.gemini/GEMINI.md"
+      MANIFEST_ROOT="${HOME}/.gemini"
       SCOPE_LABEL="Antigravity Global Level (~/.gemini)"
 
       mkdir -p "$(dirname "$GLOBAL_GEMINI_MD")"
@@ -219,6 +230,7 @@ setup_scope_paths() {
     TARGET_RULES_DIR="${TARGET_AGENTS_DIR}/rules"
     TARGET_WORKFLOWS_DIR="${TARGET_AGENTS_DIR}/workflows"
     TARGET_PLUGINS_DIR="${TARGET_AGENTS_DIR}/plugins"
+    MANIFEST_ROOT="${TARGET_AGENTS_DIR}"
     SCOPE_LABEL="Workspace Level (${TARGET_DIR}/.agents)"
 
     mkdir -p "${TARGET_SKILLS_DIR}" "${TARGET_RULES_DIR}" "${TARGET_WORKFLOWS_DIR}" "${TARGET_PLUGINS_DIR}"
@@ -270,6 +282,92 @@ validate_item() {
 }
 
 # ------------------------------------------------------------------------------
+# Safe Managed Sync
+# ------------------------------------------------------------------------------
+manifest_status() {
+  local key="$1"
+  local target="$2"
+  local source="$3"
+
+  python3 "$MANIFEST_HELPER" status \
+    --root "$MANIFEST_ROOT" \
+    --key "$key" \
+    --target "$target" \
+    --source "$source" \
+    | python3 -c 'import json, sys; print(json.load(sys.stdin)["status"])'
+}
+
+manifest_record() {
+  local key="$1"
+  local target="$2"
+  local source="$3"
+
+  python3 "$MANIFEST_HELPER" record \
+    --root "$MANIFEST_ROOT" \
+    --key "$key" \
+    --target "$target" \
+    --source "$source" \
+    --toolkit-root "$TOOLKIT_ROOT" >/dev/null
+}
+
+sync_managed_path() {
+  local source="$1"
+  local target="$2"
+  local key="$3"
+  local label="$4"
+  local state
+
+  state="$(manifest_status "$key" "$target" "$source")"
+
+  case "$state" in
+    missing)
+      echo "  [$label] ➕ Adding $(basename "$target")..."
+      ;;
+    adoptable)
+      manifest_record "$key" "$target" "$source"
+      echo "  [$label] ✅ Adopted existing identical $(basename "$target") without rewriting it."
+      return 0
+      ;;
+    clean)
+      echo "  [$label] 🔄 Updating toolkit-managed $(basename "$target")..."
+      ;;
+    unmanaged)
+      if [[ "$FORCE_OVERWRITE" != true ]]; then
+        echo "  [$label] 🛡️  Protected existing unmanaged $(basename "$target"); skipping."
+        echo "           The toolkit will never overwrite user-owned .agents content by default."
+        echo "           Re-run with --force only if you intentionally want the toolkit to take ownership."
+        return 0
+      fi
+      echo "  [$label] ⚠️  --force replacing unmanaged $(basename "$target")..."
+      ;;
+    modified)
+      if [[ "$FORCE_OVERWRITE" != true ]]; then
+        echo "  [$label] 🛡️  Local modifications detected in $(basename "$target"); skipping."
+        echo "           Your changes are preserved. Re-run with --force only to discard them."
+        return 0
+      fi
+      echo "  [$label] ⚠️  --force replacing locally modified $(basename "$target")..."
+      ;;
+    *)
+      echo "Error: Unknown manifest state '$state' for '$target'."
+      exit 1
+      ;;
+  esac
+
+  if [[ -d "$source" ]]; then
+    rm -rf "$target"
+    mkdir -p "$target"
+    cp -r "$source/." "$target/"
+  else
+    mkdir -p "$(dirname "$target")"
+    rm -f "$target"
+    cp "$source" "$target"
+  fi
+
+  manifest_record "$key" "$target" "$source"
+}
+
+# ------------------------------------------------------------------------------
 # Granular Item Sync Handlers
 # ------------------------------------------------------------------------------
 sync_single_skill() {
@@ -281,22 +379,17 @@ sync_single_skill() {
   validate_item "$skill_dir" "skills"
 
   local dest_dir="${TARGET_SKILLS_DIR}/${skill_name}"
-  if [[ -d "$dest_dir" ]]; then
-    echo "  [Skill] 🔄 Replacing existing ${skill_name}..."
-    rm -rf "$dest_dir"
-  else
-    echo "  [Skill] ➕ Adding ${skill_name}..."
+  local manifest_key="skills/${skill_name}"
+
+  if [[ "$IS_GLOBAL" == true && "$TARGET_AGENT" == "antigravity" ]]; then
+    manifest_key="antigravity/skills/${skill_name}"
   fi
-  mkdir -p "$dest_dir"
-  cp -r "${skill_dir}/." "${dest_dir}/"
+
+  sync_managed_path "$skill_dir" "$dest_dir" "$manifest_key" "Skill"
 
   if [[ "$IS_GLOBAL" == true && "$TARGET_AGENT" == "antigravity" ]]; then
     local config_dest="${TARGET_CONFIG_SKILLS_DIR}/${skill_name}"
-    if [[ -d "$config_dest" ]]; then
-      rm -rf "$config_dest"
-    fi
-    mkdir -p "$config_dest"
-    cp -r "${skill_dir}/." "${config_dest}/"
+    sync_managed_path "$skill_dir" "$config_dest" "config/skills/${skill_name}" "Skill"
   fi
 }
 
@@ -313,13 +406,7 @@ sync_single_rule() {
     return 0
   else
     local dest_file="${TARGET_RULES_DIR}/${file_name}"
-    if [[ -f "$dest_file" ]]; then
-      echo "  [Rule] 🔄 Replacing existing ${file_name}..."
-      rm -f "$dest_file"
-    else
-      echo "  [Rule] ➕ Adding ${file_name}..."
-    fi
-    cp "$rule_file" "$dest_file"
+    sync_managed_path "$rule_file" "$dest_file" "rules/${file_name}" "Rule"
   fi
 }
 
@@ -332,20 +419,15 @@ sync_single_workflow() {
   validate_item "$wf_file" "workflows"
 
   local dest_file="${TARGET_WORKFLOWS_DIR}/${file_name}"
-  if [[ -f "$dest_file" ]]; then
-    echo "  [Workflow] 🔄 Replacing existing ${file_name}..."
-    rm -f "$dest_file"
-  else
-    echo "  [Workflow] ➕ Adding ${file_name}..."
+  local workflow_key="workflows/${file_name}"
+  if [[ "$IS_GLOBAL" == true ]]; then
+    workflow_key="config/workflows/${file_name}"
   fi
-  cp "$wf_file" "$dest_file"
+  sync_managed_path "$wf_file" "$dest_file" "$workflow_key" "Workflow"
 
   if [[ "$IS_GLOBAL" == true ]]; then
     local dest_global="${TARGET_GLOBAL_WORKFLOWS_DIR}/${file_name}"
-    if [[ -f "$dest_global" ]]; then
-      rm -f "$dest_global"
-    fi
-    cp "$wf_file" "$dest_global"
+    sync_managed_path "$wf_file" "$dest_global" "config/global_workflows/${file_name}" "Workflow"
   fi
 }
 
@@ -356,14 +438,11 @@ sync_single_plugin() {
 
   local plugin_name="$(basename "$plugin_dir")"
   local dest_dir="${TARGET_PLUGINS_DIR}/${plugin_name}"
-  if [[ -d "$dest_dir" ]]; then
-    echo "  [Plugin] 🔄 Replacing existing ${plugin_name}..."
-    rm -rf "$dest_dir"
-  else
-    echo "  [Plugin] ➕ Adding ${plugin_name}..."
+  local plugin_key="plugins/${plugin_name}"
+  if [[ "$IS_GLOBAL" == true ]]; then
+    plugin_key="config/plugins/${plugin_name}"
   fi
-  mkdir -p "$dest_dir"
-  cp -r "${plugin_dir}/." "${dest_dir}/"
+  sync_managed_path "$plugin_dir" "$dest_dir" "$plugin_key" "Plugin"
 }
 
 # ------------------------------------------------------------------------------
@@ -414,51 +493,13 @@ is_module_dir() {
 }
 
 prune_retired_generator_artifacts() {
-  if [[ "$IS_GLOBAL" == true && "$TARGET_AGENT" == "codex" ]]; then
-    return 0
-  fi
-
-  local retired_wfs=(
-    "audit-agent-toolkit.md"
-    "consolidate-agent-toolkit.md"
-    "eval-skill.md"
-    "generate-agent-suite.md"
-    "generate-prompt.md"
-    "generate-rule.md"
-    "generate-skill.md"
-    "generate-workflow.md"
-  )
-
-  if [[ "$IS_GLOBAL" == true ]]; then
-    for wf in "${retired_wfs[@]}"; do
-      if [[ -f "${TARGET_GLOBAL_WORKFLOWS_DIR}/${wf}" ]]; then
-        rm -f "${TARGET_GLOBAL_WORKFLOWS_DIR}/${wf}"
-        echo "  [Prune] 🗑️ Removed retired global workflow: ${wf}"
-      fi
-      if [[ -f "${TARGET_WORKFLOWS_DIR}/${wf}" ]]; then
-        rm -f "${TARGET_WORKFLOWS_DIR}/${wf}"
-      fi
-    done
-    if [[ -d "${TARGET_CONFIG_SKILLS_DIR}/skill-authoring-standards" ]]; then
-      rm -rf "${TARGET_CONFIG_SKILLS_DIR}/skill-authoring-standards"
-      echo "  [Prune] 🗑️ Removed merged skill: skill-authoring-standards"
-    fi
-    if [[ -d "${TARGET_SKILLS_DIR}/skill-authoring-standards" ]]; then
-      rm -rf "${TARGET_SKILLS_DIR}/skill-authoring-standards"
-    fi
-  else
-    for wf in "${retired_wfs[@]}"; do
-      if [[ -f "${TARGET_WORKFLOWS_DIR}/${wf}" ]]; then
-        rm -f "${TARGET_WORKFLOWS_DIR}/${wf}"
-        echo "  [Prune] 🗑️ Removed retired workspace workflow: ${wf}"
-      fi
-    done
-    if [[ -d "${TARGET_SKILLS_DIR}/skill-authoring-standards" ]]; then
-      rm -rf "${TARGET_SKILLS_DIR}/skill-authoring-standards"
-      echo "  [Prune] 🗑️ Removed merged skill: skill-authoring-standards"
-    fi
-  fi
+  # Legacy versions removed specific files by name. That is unsafe once users may
+  # maintain their own .agents content with the same names. Cleanup is therefore
+  # intentionally non-destructive until an artifact can be proven toolkit-owned
+  # by the ownership manifest.
+  return 0
 }
+
 
 # ------------------------------------------------------------------------------
 # Dynamic Path Resolution & Classifier (Zero Hardcoding)

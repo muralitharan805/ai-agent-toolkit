@@ -104,7 +104,7 @@ Tier 3 deep-dive documentation loaded into the agent's context **only when speci
 #### 3. Pillar 3: Agentic Execution Scripts (`scripts/`)
 Executable tools that agents can run autonomously in the environment:
 - **Agentic Standard**: Emits structured machine-readable JSON to `stdout`, logs human diagnostics to `stderr`, and supports `--help`.
-- **Portability**: Python scripts use inline PEP 723 dependency metadata (`# /// script ... ///`) so they run seamlessly via standard `python3` or `uv`.
+- **Portability**: Python scripts use inline PEP 723 dependency metadata (`# /// script ... ///`). Prefer `uv run <script.py>` so declared dependencies are resolved automatically; plain `python3` works only when required dependencies are already installed.
 - **Black-Box Principle**: Agents execute scripts with flags rather than reading hundreds of lines of implementation code into context.
 
 #### 4. Pillar 4: Assets & Starter Templates (`assets/`)
@@ -197,7 +197,7 @@ ai-agent-toolkit/
 
 ## 🛠️ Built-in AI Generators & Developer Tooling
 
-This repository is self-authoring. It contains a complete suite of agentic power tools under `shared/generators/skills/` to scaffold, validate, and test new skills and rules:
+This repository is self-authoring. It contains agentic authoring tools under `shared/generators/<tool>/skills/` to scaffold, validate, and test new skills and rules:
 
 ```mermaid
 graph TD
@@ -253,6 +253,33 @@ uv run shared/generators/eval-skill/skills/scripts/run_evals.py \
 ```bash
 ./bin/sync-context.sh [scope] [options] [path-or-selector...]
 ```
+
+### Safe Ownership & Conflict Protection
+
+Workspace synchronization is non-destructive by default. The toolkit records only content it owns in:
+
+```text
+<project>/.agents/.toolkit-manifest.json
+```
+
+Existing user-created `.agents/skills/`, rules, workflows, and plugins are **not overwritten** merely because they share a name with toolkit content.
+
+- Missing target → install and record toolkit ownership.
+- Existing unmanaged target → preserve and skip.
+- Existing target identical to the toolkit source → adopt without rewriting it.
+- Toolkit-managed target with no local changes → update safely.
+- Toolkit-managed target with local edits → preserve and report a conflict.
+- `--force` → explicitly replace the conflicting target and let the toolkit take ownership.
+
+```bash
+# Safe default: preserves user-owned or locally modified content
+./bin/sync-context.sh frameworks/angular -w /path/to/project
+
+# Explicit destructive override for matching targets only
+./bin/sync-context.sh frameworks/angular -w /path/to/project --force
+```
+
+The sync engine does not automatically delete legacy files by filename alone because it cannot prove those files belong to the toolkit.
 
 ### Common Sync Workflows
 
