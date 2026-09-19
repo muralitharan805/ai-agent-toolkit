@@ -23,7 +23,7 @@ graph TD
 
 ### Stage 1: Inventory & Semantic Scan
 - Discover all skills and rules across `frameworks/`, `infra/`, `shared/`, and `domains/`.
-- **Protected Directory**: NEVER audit, merge, or delete files inside `shared/generators/`. This is the toolkit's internal factory.
+- **Protected Directory**: NEVER audit, merge, or delete files inside `tooling/`. This is the toolkit's internal factory.
 - Identify semantic clusters (e.g. `angular-forms`, `angular-reactive-forms`, `angular-typed-forms`).
 
 ### Stage 2: Propose Grouping & Review
@@ -57,8 +57,8 @@ When absorbing a secondary skill into a master bundle:
 2. Remove the empty or redundant secondary directory.
 3. Run automated validation:
    ```bash
-   python3 shared/generators/skills/generate-skill/scripts/validate_skill.py <master-skill-path>
-   python3 shared/generators/skills/eval-skill/scripts/run_evals.py <master-skill-path> --save-grading
+   python3 tooling/generate-skill/skills/scripts/validate_skill.py <master-skill-path>
+   python3 tooling/eval-skill/skills/scripts/run_evals.py <master-skill-path> --save-grading
    ```
 4. Sync the updated clean context to `.agents/` and `~/.gemini/`.
 
