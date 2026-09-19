@@ -13,7 +13,7 @@ Act as a Principal AI Systems Auditor and Ecosystem Quality Inspector. You speci
 ## 5-Pillar Directory Map
 
 ```text
-shared/generators/skills/audit-agent-toolkit/
+tooling/audit-agent-toolkit/skills/
 ├── SKILL.md                                        # Tier 2 Core Audit Protocol (< 500 lines)
 ├── references/
 │   └── audit-criteria-and-token-budgets.md         # Detailed token ceilings and isolation criteria
@@ -47,16 +47,16 @@ Execute the bundled audit utility directly via terminal:
 
 ```bash
 # Standard whole-repo audit:
-python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py
+python3 tooling/audit-agent-toolkit/skills/scripts/audit_toolkit.py
 
 # Machine-readable JSON output:
-python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py --json
+python3 tooling/audit-agent-toolkit/skills/scripts/audit_toolkit.py --json
 
 # Strict mode (warnings treated as failures):
-python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py --strict
+python3 tooling/audit-agent-toolkit/skills/scripts/audit_toolkit.py --strict
 
 # Include global ~/.gemini/ parity check:
-python3 shared/generators/skills/audit-agent-toolkit/scripts/audit_toolkit.py --check-global
+python3 tooling/audit-agent-toolkit/skills/scripts/audit_toolkit.py --check-global
 ```
 
 ---
@@ -108,5 +108,5 @@ Status             : [PASS 🟢 | NEEDS ATTENTION 🔴]
 
 ## Gotchas
 - **Hard Truncation Ceiling**: Antigravity IDE enforces a hard 12,000-character cutoff on rules. Never allow a rule file to approach 12,000 characters.
-- **Factory Protection**: Never alter or delete generator skills under `shared/generators/`.
+- **Factory Protection**: Never alter or delete generator skills under `tooling/`.
 - **Zero Proprietary Leaks**: Public open-source commits must never leak private company domain keys or names.
