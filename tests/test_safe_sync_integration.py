@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SYNC_SCRIPT = REPO_ROOT / "bin" / "sync-context.sh"
+CONTEXT_SCRIPT = REPO_ROOT / "bin" / "context.sh"
 
 
 def write_skill(path: Path, body: str) -> None:
@@ -22,7 +22,7 @@ def write_skill(path: Path, body: str) -> None:
 class SafeSyncIntegrationTests(unittest.TestCase):
     def run_sync(self, source: Path, target: Path, *extra: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            ["bash", str(SYNC_SCRIPT), str(source), "-w", str(target), *extra],
+            ["bash", str(CONTEXT_SCRIPT), "-w", str(source), "--target", str(target), *extra],
             cwd=REPO_ROOT,
             check=True,
             text=True,

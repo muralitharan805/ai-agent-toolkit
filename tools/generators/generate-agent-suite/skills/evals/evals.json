@@ -11,7 +11,7 @@
         "Scaffolds or updates an Antigravity Rule under frameworks/nextjs/rules/",
         "Does NOT generate legacy standalone .md workflows",
         "Runs verify_suite.py on the resulting suite directory",
-        "Provides exact bin/sync-context.sh command"
+        "Provides exact bin/context.sh command"
       ],
       "files": []
     },

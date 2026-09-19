@@ -43,7 +43,7 @@
           "remediation": null
         },
         {
-          "assertion": "Provides exact bin/sync-context.sh CLI commands for workspace (-w) and global (-g) sync",
+          "assertion": "Provides bin/context.sh workspace and Antigravity global examples",
           "passed": true,
           "evidence": "Objective criteria verified against specification.",
           "remediation": null

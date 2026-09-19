@@ -81,7 +81,7 @@ Before presenting any generated, consolidated, or edited skill or rule to the us
 All scripts MUST exit cleanly with code `0` (zero errors, zero warnings).
 
 ### 9. Zero-Hardcoding Synchronization Protocol
-- All new synchronization MUST use `bin/context.sh`; `bin/sync-context.sh` is compatibility-only.
+- All synchronization into consumer workspaces or global environments MUST use `bin/context.sh`.
 - Workspace destinations are resolved by `--tool` and `--target`; global destinations are tool-defined.
 - The agent MUST NEVER hardcode destination paths or rely on symlinks.
 

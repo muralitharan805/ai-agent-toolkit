@@ -126,11 +126,11 @@ last_verified_date: "[Current date, e.g., 2026-09-09]"
 
 ### Sync Instructions:
 ```bash
-# Sync to Global level (~/.gemini/config/rules/)
-./bin/sync-context.sh --global [determined-toolkit-path]
+# Sync to Global level (~/.gemini/GEMINI.md)
+./bin/context.sh -g [determined-toolkit-path] --tool antigravity
 
 # Sync to Workspace level (<project>/.agents/rules/)
-./bin/sync-context.sh [determined-toolkit-path] -w /path/to/project
+./bin/context.sh -w [determined-toolkit-path] --target /path/to/project
 ```
 
 ---

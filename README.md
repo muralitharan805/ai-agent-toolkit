@@ -184,8 +184,6 @@ ai-agent-toolkit/
 │
 ├── bin/
 │   ├── context.sh          # Primary tool-aware sync/cleanup CLI
-│   ├── sync-context.sh     # Legacy compatibility wrapper
-│   ├── sync-skills.sh      # Older compatibility wrapper
 │   └── toolkit_manifest.py # Ownership manifest + safe cleanup helper
 │
 ├── tests/
@@ -354,10 +352,6 @@ For Antigravity global cleanup:
 ```
 
 This removes manifest-owned global context and only the toolkit marker block from `GEMINI.md`; unrelated user content remains.
-
-### Legacy Command Compatibility
-
-`bin/sync-context.sh` remains as a compatibility wrapper for the older interface, including the previous `-w <project>` destination syntax. New documentation and new integrations should use `bin/context.sh`.
 
 ---
 
