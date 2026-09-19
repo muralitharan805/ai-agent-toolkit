@@ -13,8 +13,8 @@
         "Strictly excludes shared/generators and internal auxiliary directories from modification"
       ],
       "files": [
-        "tooling/consolidate-agent-toolkit/skills/SKILL.md",
-        "tooling/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py"
+        "tools/generators/consolidate-agent-toolkit/skills/SKILL.md",
+        "tools/generators/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py"
       ]
     },
     {
@@ -28,7 +28,7 @@
         "Validates the master skill bundle with validate_skill.py and runs evals"
       ],
       "files": [
-        "tooling/consolidate-agent-toolkit/skills/references/merging-and-deduplication-playbook.md"
+        "tools/generators/consolidate-agent-toolkit/skills/references/merging-and-deduplication-playbook.md"
       ]
     }
   ]
