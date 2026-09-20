@@ -38,7 +38,8 @@ jobs:
           python -m compileall -q \
             bin \
             tests \
-            tools
+            tools \
+            shared/problem-discovery/skills/scripts
 
       - name: Run unit and integration tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
@@ -49,3 +50,8 @@ jobs:
           # the existing catalog is fully warning-free.
           uv run tools/generators/generate-skill/skills/scripts/validate_skill.py \
             frameworks/angular/angular-enterprise-forms/skills
+
+      - name: Verify Problem Discovery Agent Suite
+        run: |
+          uv run tools/generators/generate-agent-suite/skills/scripts/verify_suite.py \
+            shared/problem-discovery
