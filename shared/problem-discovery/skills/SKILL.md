@@ -34,10 +34,12 @@ Use the existing module (`shared/problem-discovery`) rather than generating a du
 - [Existing-candidate preflight](references/existing-candidate-preflight.md): compare previous CSV rows on repeated domain research; handle solved and duplicate candidates without inventing new IDs.
 - [CSV column guide — all 30 fields](references/discovery-csv-column-guide.md): exact meanings and common interpretation errors; consult it when generating, reviewing or explaining CSV rows.
 - [Semantic query parsing and domain decomposition](references/semantic-query-parsing-and-domain-decomposition.md): slot filling, noise stripping, scope sensing, and the MECE 5-stream value chain for broad or messy prompts.
+- `scripts/mine_problem_dorks.py`: **search & complaint mining engine** — generates 5-stream precision search dorks and fetches live practitioner signals from Hacker News and GitHub Issues APIs.
 - `scripts/discovery_csv.py`: **primary command** — score JSON candidates and upsert one CSV without creating Markdown. It only recognizes duplicate **IDs**, not semantically matching problem titles.
 - `scripts/score_problem_candidate.py`: lower-level scorer; the `--export-obsidian` option writes individual Markdown dossiers **only when explicitly requested**.
 - `scripts/export_discovery_matrix.py`: legacy one-time converter from existing Markdown dossiers to a CSV, not part of the normal CSV-first update path.
 - `assets/scoring-matrix-schema.json`: structured candidate input contract.
+- `assets/problem-mining-schema.json`: structured schema contract for search dorks and live complaint mining output.
 - `assets/discovery-log-template.md`: optional long-form human dossier template.
 - `evals/`: prompts and tests, not proof of actual customer demand.
 
@@ -67,7 +69,11 @@ Each CSV row must retain: stable ID, actor/problem and 14-node mapping, independ
 Run from the skill `scripts/` directory or invoke the script with an absolute path:
 
 ```bash
-# Generate a query list only (no browsing):
+# Mine live practitioner complaints and generate 5-stream precision search dorks:
+python3 mine_problem_dorks.py --domain "textile export" --region in
+python3 mine_problem_dorks.py --domain "invoice reconciliation" --json
+
+# Generate a legacy query list only (no browsing):
 python3 score_problem_candidate.py --dorks "textile reconciliation"
 
 # ONE CSV file for any number of candidates. Run again with the same ID to UPDATE its row:

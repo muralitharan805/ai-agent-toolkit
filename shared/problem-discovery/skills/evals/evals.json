@@ -78,6 +78,19 @@
         "Decomposes into matching adaptive research lenses without inventing unrelated streams"
       ],
       "files": []
+    },
+    {
+      "id": 7,
+      "name": "Automated 5-Stream Search Dorking & Live Complaint Mining",
+      "prompt": "Execute automated complaint mining and precision 5-stream dork generation for an unorganized domain (e.g. textile export merchandiser in Tamil Nadu) across Hacker News, GitHub Issues, public spreadsheets, and regional grievances.",
+      "expected_output": "Emits or validates structured JSON schema compliant with problem-mining-schema.json, executes 5-stream precision search dorking across community, filetypes, job postings, software gaps, and regional grievances, and extracts live practitioner complaint signals without hallucinating user quotes.",
+      "assertions": [
+        "Executes or generates 5-stream precision search dorking across all categories",
+        "Validates output against problem-mining-schema.json schema contract",
+        "Extracts live practitioner complaint signals without hallucinating user quotes",
+        "Anchors search dorks on the Atomic Search Unit (Actor + Task + Workaround + Friction)"
+      ],
+      "files": []
     }
   ]
 }

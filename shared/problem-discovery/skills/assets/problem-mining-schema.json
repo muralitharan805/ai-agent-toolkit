@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentskills.io/schemas/problem-mining-schema.json",
+  "title": "ProblemMiningResult",
+  "description": "Schema contract for structured problem dorking and live practitioner complaint mining output emitted by mine_problem_dorks.py.",
+  "type": "object",
+  "required": ["domain", "operator", "region", "track", "metadata", "live_signals", "dorks"],
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Target domain, workflow, or industry being investigated."
+    },
+    "operator": {
+      "type": "string",
+      "description": "Target persona or operational actor (empty string if general)."
+    },
+    "region": {
+      "type": "string",
+      "description": "Geographic or regulatory region (e.g. 'in', 'uk', 'us', 'any')."
+    },
+    "track": {
+      "type": "string",
+      "enum": ["commercial", "free_utility", "all"],
+      "description": "Target discovery track (commercial WTP vs free utility vs all)."
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["live_fetched_count", "dorks_generated_count"],
+      "properties": {
+        "live_fetched_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of live complaint signals fetched from public APIs."
+        },
+        "dorks_generated_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of precision search dorks generated across all streams."
+        }
+      },
+      "additionalProperties": true
+    },
+    "live_signals": {
+      "type": "array",
+      "description": "List of real practitioner complaints and friction signals fetched from public APIs.",
+      "items": {
+        "type": "object",
+        "required": ["source", "title", "url", "excerpt"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Origin platform (e.g. 'Hacker News (Algolia API)', 'GitHub Issues API', 'Reddit')."
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the post, issue, or discussion thread."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Direct URL to the public comment or issue."
+          },
+          "excerpt": {
+            "type": "string",
+            "description": "Raw unedited text excerpt describing the operational friction or manual workaround."
+          },
+          "author_or_actor": {
+            "type": "string",
+            "description": "Author username or operational role if available."
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "ISO timestamp or publication date if available."
+          },
+          "relevance_hint": {
+            "type": "string",
+            "description": "Contextual hint explaining why this signal represents authentic workflow friction."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "dorks": {
+      "type": "object",
+      "description": "Categorized Google and forum search dorks across 5 distinct research streams.",
+      "required": ["community", "filetypes", "job_postings", "software_gaps", "regional_grievances"],
+      "properties": {
+        "community": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Community and Reddit pain-phrase search queries."
+        },
+        "filetypes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Filetype dorks hunting public SOPs, spreadsheets, checklists, and manual templates."
+        },
+        "job_postings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Job board queries hunting paid human glue-work and manual data-entry salaries."
+        },
+        "software_gaps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Review and support queries hunting competitor limitations and feature gaps."
+        },
+        "regional_grievances": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Regional and hyper-local grievance, tender, and statutory regulation queries."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
