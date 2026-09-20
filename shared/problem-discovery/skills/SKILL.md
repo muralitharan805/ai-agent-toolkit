@@ -1,6 +1,6 @@
 ---
 name: problem-discovery
-description: "Investigates real operational problems with traceable sources, forensic workflow mapping, evidence-gated research scoring, preregistered experiments, and constraint-driven solution scoping."
+description: "Investigates real operational problems with traceable sources, forensic workflow mapping, evidence-gated research scoring, preregistered experiments, and CSV-first persistence."
 metadata:
   dependencies: "Python >=3.10; optional manual field research and web access"
   framework_version: "Universal / Agnostic"
@@ -11,59 +11,69 @@ metadata:
 
 ## Purpose and execution contract
 
-This procedural skill investigates **observed** operational problems, not speculative SaaS ideas. The agent must distinguish (a) candidate discovery, (b) research priority, (c) manual verification of primary evidence and (d) outcomes of small preregistered experiments. A score, search result, spreadsheet, statement by an LLM, or positive interview is **not** market validation. No automatic online search or source-authenticity verification is implemented by the bundled CLI: `--dorks` only prints search queries. Do not describe suggested queries as executed searches.
+Investigate **observed** operational problems, not speculative SaaS ideas. Distinguish candidate discovery, research priority, manually reviewed primary evidence and outcomes of small preregistered experiments. A high score, search result, source URL, spreadsheet, positive interview or LLM statement is **not** market validation. The bundled CLI does not search the internet or authenticate research participants: `--dorks` prints suggested queries only.
 
-Use the existing module (`shared/problem-discovery`) rather than generating a duplicate skill. Work through these seven stages; at every stage state **known facts, unknowns, and the next concrete verification**. A missing stage is recorded as incomplete rather than inferred. A discovery can finish as `UNVERIFIED`, `PARKED`, or `EXPERIMENT_FAILED`; do not force a positive outcome.
+**Default output: one `discovery_matrix.csv` file for all candidates.** Each problem is one row, identified by stable `candidate_id`; update that row on later research instead of creating a dossier file per discovery. CSV stores the essential scoring/status columns and JSON-formatted cells for detailed 14-node workflow, evidence metadata, experiment contract and solution requirements. Record external source URLs and redacted evidence artifact paths; do not copy private research artifacts into the CSV or Git. Do not generate per-candidate Markdown unless the user explicitly asks for a full dossier. Legacy Markdown tools remain opt-in for existing vaults, not the source of truth for the CSV-first workflow.
+
+Use the existing module (`shared/problem-discovery`) rather than generating a duplicate skill. Complete seven stages, recording known facts, unknowns and concrete next verification; leave incomplete stages unresolved. Valid outcomes include `UNVERIFIED`, `PARKED` and `EXPERIMENT_FAILED`.
 
 ## References and supporting tools
 
-- [Evidence audit and structured experiment contract](references/evidence-audit-contract.md): machine-checkable integrity rules, human-review boundary, and CLI examples.
+- [Evidence audit and structured experiment contract](references/evidence-audit-contract.md): machine-checkable integrity rules and human-review boundary.
 - [14-node workflow and glue work](references/14-node-workflow-and-glue-work.md): Actor, Trigger, Input, Steps, Tools, Decisions, Handoffs, Delays, Rework, Errors, Output, Cost, Risk, Audit.
-- [35-point scoring and WTP](references/35-point-evidence-scoring-and-wtp.md): seven 0–5 research dimensions and separate commercial/free-utility tracks.
+- [35-point scoring and WTP](references/35-point-evidence-scoring-and-wtp.md): seven 0–5 research dimensions and two tracks.
 - [Interviewing and root causes](references/discovery-frameworks-and-interviewing.md): TRACE, FOCUS, counterfactuals, and historical behavior.
 - [Complaint mining and query refinement](references/complaint-mining-and-dorking.md): web queries and independent-source corroboration.
-- [Competitor and non-software alternatives](references/anti-opportunities-and-saturation-traps.md): actual workflow, language, device, price, and switching-cost fit.
-- [Solo-builder solution choice](references/solo-builder-micro-saas-strategy.md): avoid starting with SaaS without evidence of shared-state requirements.
-- [Local and offline fieldwork](references/local-and-offline-discovery.md): on-site operator observation, consent, connectivity and language.
-- [Small experiments](references/experiment-design-and-validation.md): preregistration, measured adoption, and explicit failure rules.
-- `scripts/score_problem_candidate.py`: deterministic scoring, local-file integrity audit, experiments, search-query suggestions, dossier export.
-- `scripts/export_discovery_matrix.py`: builds a CSV that never equates a high score with validated demand.
-- `assets/scoring-matrix-schema.json`: current structured input contract.
-- `assets/discovery-log-template.md`: human research dossier template.
-- `evals/`: evaluation prompts, not proof of user demand.
+- [Competitor and non-software alternatives](references/anti-opportunities-and-saturation-traps.md): actual workflow fit and switching cost.
+- [Solo-builder solution choice](references/solo-builder-micro-saas-strategy.md): avoid SaaS without evidence of shared-state requirements.
+- [Local and offline fieldwork](references/local-and-offline-discovery.md): consented observation and local constraints.
+- [Small experiments](references/experiment-design-and-validation.md): preregistration, measured adoption, explicit failure rules.
+- [CSV-first workflow](references/csv-first-workflow.md): one-file contract, commands, stable IDs, and optional legacy migration.
+- `scripts/discovery_csv.py`: **primary command** — score JSON candidates and upsert one CSV without creating Markdown.
+- `scripts/score_problem_candidate.py`: lower-level scorer; the `--export-obsidian` option writes individual Markdown dossiers **only when explicitly requested**.
+- `scripts/export_discovery_matrix.py`: legacy one-time converter from existing Markdown dossiers to a CSV, not part of the normal CSV-first update path.
+- `assets/scoring-matrix-schema.json`: structured candidate input contract.
+- `assets/discovery-log-template.md`: optional long-form human dossier template.
+- `evals/`: prompts and tests, not proof of actual customer demand.
 
 ## Seven-stage procedure
 
-1. **Bound and track.** State target operator, exact workflow, location, frequency, and research budget. Pick `commercial` for economic value/WTP or `free_utility` for repeat usefulness/accessibility; zero WTP is not a defect in a free tool.
-2. **Mine and observe.** Search public complaints and review evidence with provenance and independent sources; refine jargon and local-language terms. In physical environments conduct consented counter shadowing. Suggested Google queries from `--dorks` are not themselves research results.
-3. **Deconstruct.** Trace all fourteen workflow nodes. Isolate the broken handoff and cost of inaction; absence of a workaround can mean either low impact or inaccessible existing products. Do not assign a score until these alternatives are investigated.
-4. **Audit alternatives.** Inspect actual task fit, local constraints, language, device/offline support, switching friction, and non-software fixes. If a checklist/Excel/WhatsApp SOP solves the measured bottleneck adequately, document `non_software_sufficient` and stop at a template.
-5. **Prioritize, do not validate.** Score seven dimensions (0–5 each) and record sources **per claim**. Level 4 secondary reports cap each dimension at 1; Level 5 unsupported hypotheses force zero. Stop checks park candidates before experiments. At 23–27 recommend shadowing; 28–35 recommend a small trial. At any high score without manually audited primary evidence, status must remain `UNVERIFIED`. Run the CLI with a JSON candidate conforming to the evidence contract, not raw flags alone.
-6. **Preregister and measure.** Before starting a trial record a dated hypothesis, metric, direction, success threshold, explicit failure rule and test period. After the trial, collect sample size, observed numeric value, the source artifact and independent manual review details. A textual `--experiment-outcome` is accepted only as a legacy note: it cannot validate. A failing trial yields `EXPERIMENT_FAILED`, not a positive label; an incomplete trial stays research priority.
-7. **Scope and persist.** Record observed requirements explicitly in `solution_constraints`: whether a non-software fix suffices; whether interactive UI, batch automation, browser integration, multi-user sync, server storage, background jobs or offline operation is needed. If the requirements are unknown, leave architecture undecided. Only then select template, static web utility, CLI, extension, or Micro-SaaS; document the rationale and verify with a human. Export to an explicitly chosen writable directory. Rebuild `discovery_matrix.csv` from the notes in the same run; never silently default to a developer's personal Obsidian path.
+1. **Bound and track.** State operator, precise workflow, location, frequency, research budget and stable `candidate_id`. Choose `commercial` for WTP or `free_utility` for observed usefulness/accessibility; zero WTP does not disqualify a free utility.
+2. **Mine and observe.** Search complaints, reviews and operators' actual work with provenance, observation dates and independent sources. Refine industry jargon and local-language queries. Obtain consent before local shadowing. Suggested queries are not executed searches.
+3. **Deconstruct.** Map all fourteen workflow nodes and identify the broken handoff, existing workaround, inaction causes and cost. Keep detail in `workflow_14_nodes` (a JSON-formatted CSV cell); do not drop evidence merely to keep columns short.
+4. **Audit alternatives.** Inspect competitors and non-software fixes against actual tasks, language, devices, offline access, price, and switching cost. If a checklist or spreadsheet adequately resolves the measured problem, record `non_software_sufficient`.
+5. **Prioritize, not validate.** Record seven 0–5 scores and evidence **per claim**. Secondary evidence level 4 caps every score at 1; unvalidated level 5 forces all scores to zero. Stop checks park candidates. At 23–27 prioritize more shadowing; 28–35 prioritize a small trial. Even with 35/35, no manually audited primary evidence means `UNVERIFIED`.
+6. **Preregister and measure.** Before the trial record dated hypothesis, metric, direction, threshold, failure rule and start time; afterwards record sample size, numeric observation, supporting artifact and named dated human review. Free-text `--experiment-outcome` cannot confer validation. A completed failing trial must remain `EXPERIMENT_FAILED`.
+7. **Scope and persist in CSV.** Supply explicit `solution_constraints`: non-software sufficiency, interactive UI, batch automation, browser integration, multi-user sync, server storage, background jobs, and offline use. Unknown requirements mean undecided architecture. Upsert by candidate ID to **the same** `discovery_matrix.csv`; preserve existing candidates and analyst notes. Do not auto-generate Markdown dossiers or silently write to a personal Obsidian path.
 
 ## Output and review gates
 
-Every dossier must contain: problem/actor and fourteen nodes; independent source citations with observation dates; a per-claim evidence ledger with local artifact, SHA-256 and named manual reviewer; seven scores and research priority; alternative audit; experiment contract and measured outcome or explicit `NOT_RUN`; constraints-derived technical option; open questions and next verification. A manual reviewer **must check that underlying files genuinely depict the claimed work**. The tool only checks that reviewed local files exist and match recorded hashes; it cannot detect fabricated interviews, manipulated screenshots or fake engagement data.
+Each CSV row must retain: stable ID, actor/problem and 14-node mapping, independent evidence source URLs and dates, per-claim artifact paths/hashes/manual-review details, all seven scores, evidence and experiment flags, explicit status, alternate solutions, trial contract and result or `NOT_RUN`, requirements-driven solution format, unknowns and next verification. The scorer validates only local file integrity and supplied reviewer metadata, **not** authenticity of a customer, screenshot or experiment; a human must independently review underlying claims.
 
-CLI examples (run from the skill's `scripts/` directory, or use absolute paths):
+Run from the skill `scripts/` directory or invoke the script with an absolute path:
 
 ```bash
+# Generate a query list only (no browsing):
 python3 score_problem_candidate.py --dorks "textile reconciliation"
-python3 score_problem_candidate.py --input-json candidate.json --json --strict \
-  --export-obsidian /path/to/your/discovery_logs
-python3 export_discovery_matrix.py --dir /path/to/your/discovery_logs
+
+# ONE CSV file for any number of candidates. Run again with the same ID to UPDATE its row:
+python3 discovery_csv.py --input-json candidate.json --output ./discovery_matrix.csv
+python3 discovery_csv.py --input-json next_candidates.json --output ./discovery_matrix.csv
+
+# Optional legacy export ONLY when long-form Markdown dossiers are explicitly requested:
+python3 score_problem_candidate.py --input-json candidate.json --export-obsidian ./legacy_dossiers
 ```
 
-For a single candidate, `--evidence-json audit.json` accepts `evidence_records`, `experiment` and `solution_constraints` alongside old scoring flags. In batch mode put these fields on **each** candidate JSON object. Never use `--strict` as a market-proof certification; it only rejects parked, unverified, rejected, or failed candidates.
+For one candidate supply `evidence_records`, `experiment`, `solution_constraints`, and optional `workflow_14_nodes` / `research_notes` in the input JSON. For a batch supply an array of candidate objects with **unique IDs**. `discovery_csv.py` refuses to overwrite a CSV whose header does not match its schema, preserving any pre-existing legacy/hand-edited CSV for explicit migration. It can store JSON-formatted detail cells without generating auxiliary JSON output files; the `--input-json` file is caller-supplied input, not a per-candidate dossier created by the tool.
 
 ## Gotchas and failure paths
 
-- **No evidence, no validation:** score 35/35 + a source URL + "customers love it" is still `UNVERIFIED`. Even a correctly hashed file requires a genuine manual audit of its contents.
-- **Integrity is not truth:** an artifact digest checks bytes, not whether a claim or experiment is authentic. A date and reviewer identity are user-supplied; cross-check them independently.
-- **Score is research priority:** an experiment may fail despite strong pain signals; CSV must retain actual status and never promote a legacy `TIER-1 GOLD` score to validation.
-- **Pre-registration matters:** do not choose the threshold after seeing results. Numeric observed outcomes must map to the recorded metric, sample and test period.
-- **No arbitrary SaaS:** do not infer stack from words in a title. Unknown constraints lead to undecided architecture; documented non-software sufficiency leads to a template, not a subscription.
-- **Offline and private data:** seek consent, redact customer/transaction identifiers in artifacts, store evidence in access-controlled local directories, and avoid committing sensitive artifacts to Git.
-- **Portable paths:** specify `--export-obsidian` or `--dir`; if the vault isn't mounted, show the dossier for manual saving rather than pretending a write succeeded.
-- **Multi-candidate research:** carry surviving candidates into scoring; rank by research score for investigation, but never confuse rank with validated adoption.
+- **CSV is a research register, not a verifier.** Editing status or evidence cells in a spreadsheet cannot establish real-world validation; re-run the evidence-gated scorer and manually audit any claim before publishing it.
+- **No evidence, no validation.** Score 35/35 + one source URL + a positive free-text outcome remains `UNVERIFIED`.
+- **Integrity is not truth.** A file hash verifies bytes only. Reviewer names, observations and dates are supplied data to cross-check independently.
+- **No post-hoc experiment goalposts.** Document thresholds before the trial; compare outcomes against exactly that preregistration.
+- **Rank is research priority.** A trial can fail despite a high score; preserve the actual validation status in the CSV.
+- **No arbitrary SaaS.** Unknown solution constraints leave the format undecided; documented non-software sufficiency points to a template.
+- **Safety of sources.** Obtain consent, redact sensitive identifiers, and store evidence in a secure local folder outside Git. CSV contains pointers and summaries, not raw confidential data.
+- **One candidate, one row.** Keep IDs stable to avoid duplicates; never overwrite an incompatible or legacy CSV without explicit conversion and backup.
+- **Legacy notes are opt-in.** A dossier-generated CSV is not automatically synchronized with the CSV-first register. If old Markdown logs exist, review and migrate them once rather than running both workflows concurrently.
