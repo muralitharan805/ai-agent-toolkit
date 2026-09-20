@@ -1,183 +1,104 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentskills.io/schemas/problem-discovery/scoring-matrix.schema.json",
-  "title": "ProblemDiscoveryCandidateSchema",
-  "description": "JSON Schema modeling grounded problem candidate evaluations, dual-track prioritization scores, evidence verification, and smallest suitable solutions.",
+  "title": "Problem discovery candidate input",
+  "description": "Research scores are not evidence of demand. This schema validates structure only; the CLI checks local-file digest integrity, and a human must review authenticity.",
   "type": "object",
-  "required": [
-    "id",
-    "title",
-    "domain",
-    "track",
-    "validation_status",
-    "evidence_level",
-    "scores",
-    "stop_checks"
-  ],
+  "required": ["id", "title", "domain", "track", "evidence_level", "scores"],
   "properties": {
-    "id": {
-      "type": "string",
-      "pattern": "^PROB-[A-Za-z0-9_-]+$",
-      "description": "Unique identifier for the problem candidate dossier."
-    },
-    "title": {
-      "type": "string",
-      "minLength": 5,
-      "maxLength": 120,
-      "description": "Concise, descriptive title of the operational failure point."
-    },
-    "domain": {
-      "type": "string",
-      "description": "Industry vertical or technical domain (e.g., Construction, Developer Tools, Local Retail)."
-    },
-    "track": {
-      "type": "string",
-      "enum": ["commercial", "free_utility"],
-      "default": "commercial",
-      "description": "Evaluation track: Commercial (SaaS/WTP) or Free Utility (Public benefit / Civic / Offline)."
-    },
-    "validation_status": {
-      "type": "string",
-      "enum": [
-        "unverified",
-        "research_priority",
-        "corroborated",
-        "experiment_validated",
-        "parked",
-        "rejected"
-      ],
-      "description": "Empirical validation status based on observed evidence and experiment outcomes."
-    },
-    "priority_score": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 35,
-      "description": "35-Point Research Prioritization Score (measure of research priority, NOT market proof)."
-    },
-    "evidence_level": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 5,
-      "description": "Evidence Quality Ladder level: 1 (Primary Behavioral), 2 (Primary Verbal), 3 (Corroborated Reviews/Threads), 4 (Secondary Reports), 5 (Unvalidated Hypothesis)."
-    },
-    "evidence_artifacts": {
-      "type": "array",
-      "items": { "type": "string" },
-      "description": "File paths, URLs, or recorded quotes backing the claims."
-    },
+    "id": {"type": "string", "minLength": 1, "maxLength": 120},
+    "title": {"type": "string", "minLength": 5},
+    "domain": {"type": "string", "minLength": 1},
+    "track": {"enum": ["commercial", "free_utility"]},
+    "evidence_level": {"type": "integer", "minimum": 1, "maximum": 5},
     "scores": {
       "type": "object",
-      "required": [
-        "frequency",
-        "severity",
-        "workaround",
-        "track_dimension",
-        "decision_maker",
-        "feasibility",
-        "discrepancy"
-      ],
+      "required": ["frequency", "severity", "workaround", "decision_maker", "feasibility", "discrepancy"],
       "properties": {
-        "frequency": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 5,
-          "description": "Problem recurrence: 0 (Annual/Rare) to 5 (Daily continuous)."
-        },
-        "severity": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 5,
-          "description": "Financial loss, consequence, or penalty: 0 (Cosmetic) to 5 (Direct fines/loss)."
-        },
-        "workaround": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 5,
-          "description": "Existing workaround investment or inaction root cause: 0 (None) to 5 (Dedicated staff/macros)."
-        },
-        "track_dimension": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 5,
-          "description": "Track A: WTP ($29-$199/mo); Track B: Utility, Repeat Adoption & Time Saved."
-        },
-        "decision_maker": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 5,
-          "description": "Adoption friction: 0 (Enterprise RFP) to 5 (Self-serve operator card / instant install)."
-        },
-        "feasibility": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 5,
-          "description": "Solo builder engineering feasibility: 0 (Deep hardware/frontier AI) to 5 (Lean micro-tool)."
-        },
-        "discrepancy": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 5,
-          "description": "Process discrepancy & handoff breakdown: 0 (Clean tool) to 5 (Acute multi-party breakdown)."
-        }
+        "frequency": {"$ref": "#/$defs/score"},
+        "severity": {"$ref": "#/$defs/score"},
+        "workaround": {"$ref": "#/$defs/score"},
+        "wtp": {"$ref": "#/$defs/score"},
+        "track_dimension": {"$ref": "#/$defs/score"},
+        "utility_impact": {"$ref": "#/$defs/score"},
+        "decision_maker": {"$ref": "#/$defs/score"},
+        "feasibility": {"$ref": "#/$defs/score"},
+        "discrepancy": {"$ref": "#/$defs/score"}
       },
+      "anyOf": [{"required": ["wtp"]}, {"required": ["track_dimension"]}, {"required": ["utility_impact"]}],
       "additionalProperties": false
     },
     "stop_checks": {
       "type": "object",
       "properties": {
-        "infrequent_low_impact": { "type": "boolean", "default": false },
-        "no_meaningful_workaround": { "type": "boolean", "default": false },
-        "commercial_alternative_fits_well": { "type": "boolean", "default": false },
-        "single_source_bias": { "type": "boolean", "default": false },
-        "internal_training_issue": { "type": "boolean", "default": false },
-        "unreachable_audience": { "type": "boolean", "default": false }
+        "infrequent_low_impact": {"type": "boolean"},
+        "no_meaningful_workaround": {"type": "boolean"},
+        "commercial_alternative_fits_well": {"type": "boolean"},
+        "single_source_bias": {"type": "boolean"},
+        "internal_training_issue": {"type": "boolean"},
+        "unreachable_audience": {"type": "boolean"}
       },
       "additionalProperties": false
     },
-    "workflow_14_nodes": {
-      "type": "object",
-      "properties": {
-        "actor": { "type": "string" },
-        "trigger": { "type": "string" },
-        "input": { "type": "string" },
-        "steps": { "type": "array", "items": { "type": "string" } },
-        "tools": { "type": "array", "items": { "type": "string" } },
-        "decisions": { "type": "string" },
-        "handoffs": { "type": "string" },
-        "delays": { "type": "string" },
-        "rework": { "type": "string" },
-        "errors": { "type": "string" },
-        "output": { "type": "string" },
-        "cost": { "type": "string" },
-        "risk": { "type": "string" },
-        "audit": { "type": "string" }
-      },
-      "additionalProperties": false
-    },
-    "experiment_outcome": {
-      "type": "object",
-      "properties": {
-        "hypothesis": { "type": "string" },
-        "test_mechanism": { "type": "string" },
-        "success_metric": { "type": "string" },
-        "observed_result": { "type": "string" },
-        "verified": { "type": "boolean" }
-      },
-      "additionalProperties": false
-    },
-    "smallest_suitable_solution": {
-      "type": "object",
-      "properties": {
-        "format": {
-          "type": "string",
-          "enum": ["template_sop", "static_web_utility", "cli_tool", "browser_extension", "micro_saas"]
+    "evidence_sources": {"type": "array", "items": {"type": "string"}},
+    "evidence_artifacts": {"type": "array", "items": {"type": "string"}},
+    "evidence_records": {
+      "type": "array", "items": {
+        "type": "object", "required": ["level", "claim", "observed_on", "artifact_path", "sha256", "reviewed_by", "reviewed_on"],
+        "properties": {
+          "level": {"enum": [1, 2]},
+          "claim": {"type": "string", "minLength": 1},
+          "observed_on": {"$ref": "#/$defs/date"},
+          "artifact_path": {"type": "string", "minLength": 1},
+          "sha256": {"$ref": "#/$defs/digest"},
+          "reviewed_by": {"type": "string", "minLength": 1},
+          "reviewed_on": {"$ref": "#/$defs/date"}
         },
-        "tool_name": { "type": "string" },
-        "description": { "type": "string" },
-        "distribution_channel": { "type": "string" }
+        "additionalProperties": false
+      }
+    },
+    "experiment": {
+      "type": "object",
+      "required": ["hypothesis", "metric", "failure_rule", "success_threshold", "observed_value", "direction", "sample_size", "preregistered_on", "started_on", "ended_on", "artifact_path", "sha256", "reviewed_by", "reviewed_on"],
+      "properties": {
+        "hypothesis": {"type": "string", "minLength": 1},
+        "metric": {"type": "string", "minLength": 1},
+        "failure_rule": {"type": "string", "minLength": 1},
+        "success_threshold": {"type": "number"},
+        "observed_value": {"type": "number"},
+        "direction": {"enum": ["at_least", "at_most"]},
+        "sample_size": {"type": "integer", "minimum": 1},
+        "preregistered_on": {"$ref": "#/$defs/date"},
+        "started_on": {"$ref": "#/$defs/date"},
+        "ended_on": {"$ref": "#/$defs/date"},
+        "artifact_path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "reviewed_by": {"type": "string", "minLength": 1},
+        "reviewed_on": {"$ref": "#/$defs/date"}
+      },
+      "additionalProperties": false
+    },
+    "experiment_outcome": {"type": "string", "description": "Legacy prose is stored for compatibility but never counts as verification."},
+    "solution_constraints": {
+      "type": "object",
+      "properties": {
+        "non_software_sufficient": {"type": "boolean"},
+        "needs_interactive_ui": {"type": "boolean"},
+        "needs_batch_automation": {"type": "boolean"},
+        "needs_browser_integration": {"type": "boolean"},
+        "needs_multi_user_sync": {"type": "boolean"},
+        "needs_server_storage": {"type": "boolean"},
+        "needs_background_jobs": {"type": "boolean"},
+        "offline_required": {"type": "boolean"},
+        "notes": {"type": "string"}
       },
       "additionalProperties": false
     }
+  },
+  "$defs": {
+    "score": {"type": "integer", "minimum": 0, "maximum": 5},
+    "date": {"type": "string", "format": "date"},
+    "digest": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"}
   },
   "additionalProperties": false
 }
