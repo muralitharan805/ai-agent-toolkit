@@ -33,6 +33,7 @@ Use the existing module (`shared/problem-discovery`) rather than generating a du
 - [CSV-first workflow](references/csv-first-workflow.md): one-file contract, commands, stable IDs, and optional legacy migration.
 - [Existing-candidate preflight](references/existing-candidate-preflight.md): compare previous CSV rows on repeated domain research; handle solved and duplicate candidates without inventing new IDs.
 - [CSV column guide — all 30 fields](references/discovery-csv-column-guide.md): exact meanings and common interpretation errors; consult it when generating, reviewing or explaining CSV rows.
+- [Semantic query parsing and domain decomposition](references/semantic-query-parsing-and-domain-decomposition.md): slot filling, noise stripping, scope sensing, and the MECE 5-stream value chain for broad or messy prompts.
 - `scripts/discovery_csv.py`: **primary command** — score JSON candidates and upsert one CSV without creating Markdown. It only recognizes duplicate **IDs**, not semantically matching problem titles.
 - `scripts/score_problem_candidate.py`: lower-level scorer; the `--export-obsidian` option writes individual Markdown dossiers **only when explicitly requested**.
 - `scripts/export_discovery_matrix.py`: legacy one-time converter from existing Markdown dossiers to a CSV, not part of the normal CSV-first update path.
@@ -42,7 +43,16 @@ Use the existing module (`shared/problem-discovery`) rather than generating a du
 
 ## Seven-stage procedure
 
-1. **Bound and track.** State operator, precise workflow, location, frequency, research budget and stable `candidate_id`. **Before assigning an ID for a repeat domain, compare the existing CSV including parked/closed rows**, reusing an ID for an equivalent underlying problem. Choose `commercial` for WTP or `free_utility` for observed usefulness/accessibility; zero WTP does not disqualify a free utility.
+1. **Parse scope, bound and track.** Parse raw prompt input using [semantic query parsing](references/semantic-query-parsing-and-domain-decomposition.md) (Slot Filling: Domain, Geography, Operator, Task, Friction; Provenance Preservation). If input is completely unidentifiable or ambiguous, ask 1 focused clarifying question rather than guessing. For broad or messy domains, emit the **Scope & Decomposition Plan envelope** before mining:
+   ```text
+   === DOMAIN SCOPE & DECOMPOSITION PLAN ===
+   Input Scope      : [Broad | Messy Brain-dump | Narrow]
+   Extracted Slots  : Domain: ..., Geography: ..., Provenance: [First-hand | Second-hand]
+   Explicit Unknowns: [List unresolved operator/task ambiguities]
+   Planned Streams  : [List selected adaptive lenses with candidate queries]
+   =========================================
+   ```
+   State operator, precise workflow, location, frequency, research budget and stable `candidate_id`. **Before assigning an ID for a repeat domain, compare the existing CSV including parked/closed rows**, reusing an ID for an equivalent underlying problem. Choose `commercial` for WTP or `free_utility` for observed usefulness/accessibility; zero WTP does not disqualify a free utility.
 2. **Mine and observe.** Search complaints, reviews and operators' actual work with provenance, observation dates and independent sources. Refine industry jargon and local-language queries. Obtain consent before local shadowing. Suggested queries are not executed searches. A different source/wording about a previously recorded root problem is not automatically a new candidate.
 3. **Deconstruct.** Map all fourteen workflow nodes and identify the broken handoff, existing workaround, inaction causes and cost. Keep detail in `workflow_14_nodes` (a JSON-formatted CSV cell); do not drop evidence merely to keep columns short.
 4. **Audit alternatives.** Inspect competitors and non-software fixes against actual tasks, language, devices, offline access, price, and switching cost. If a checklist or spreadsheet adequately resolves the measured problem, record `non_software_sufficient`. If manual review shows an existing commercial alternative already solves the particular user's task, document the alternative, segment and review date in `research_notes`, set `commercial_alternative_fits_well` when supported, and park the candidate instead of rediscovering it; do not overgeneralize this result to every user.

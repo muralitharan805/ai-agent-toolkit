@@ -65,6 +65,19 @@
         "Rejects premature solution prototyping"
       ],
       "files": []
+    },
+    {
+      "id": 6,
+      "name": "Messy Regional Prompt Semantic Parsing & Epistemic Hygiene",
+      "prompt": "Parse and deconstruct a messy regional user prompt: 'My uncle does real estate in Pollachi, WhatsApp is messy with photos, buyers delay token advance, and sub-registrar office has huge queues for EC. Can we find a problem here?'",
+      "expected_output": "Strips conversational filler while preserving second-hand provenance ('uncle'), categorizes facts, reported frictions, and explicit unknowns separately, formulates separate candidate query hypotheses without converting physical queues into digital timeouts without evidence, and decomposes into matching adaptive research lenses without inventing unrelated streams.",
+      "assertions": [
+        "Preserves second-hand provenance without discarding attribution as filler",
+        "Categorizes user facts, reported frictions, and explicit unknowns separately",
+        "Formulates separate candidate query hypotheses for physical vs digital friction",
+        "Decomposes into matching adaptive research lenses without inventing unrelated streams"
+      ],
+      "files": []
     }
   ]
 }
