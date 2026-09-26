@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -527,6 +528,11 @@ class DiscoveryDB:
             raise ValueError("Experiment contract is missing hypothesis, primary metric, threshold, or sample target")
         if not aggregation_rule:
             raise ValueError("Experiment contract requires an explicit aggregation_rule")
+        metric_key = str(metric_name).strip().lower()
+        if re.search(r"(?:^|_)or(?:_|$)|\\bor\\b|\\band\\b|/", metric_key):
+            raise ValueError(
+                "Experiment primary metric must be atomic; split compound outcomes into separate experiments"
+            )
 
         conn = self._get_connection()
         try:
