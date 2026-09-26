@@ -13,3 +13,5 @@ __pycache__/
 # Ignore Private Project Business Domains (Open-Source Protection)
 domains/*
 !domains/README.md
+.venv/
+venv/
