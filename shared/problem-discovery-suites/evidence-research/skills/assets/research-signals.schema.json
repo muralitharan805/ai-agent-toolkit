@@ -127,7 +127,17 @@
                   "type": "object",
                   "properties": {
                     "role": { "type": ["string", "null"] },
-                    "role_is_self_reported": { "type": ["boolean", "null"] }
+                    "role_is_self_reported": { "type": ["boolean", "null"] },
+                    "role_provenance": {
+                      "type": ["string", "null"],
+                      "enum": ["SELF_REPORTED", "SOURCE_VERIFIED", "INFERRED", "UNKNOWN", null]
+                    }
+                  }
+                },
+                "research_context": {
+                  "type": "object",
+                  "properties": {
+                    "target_operator": { "type": ["string", "null"] }
                   }
                 },
                 "observation": {
@@ -147,6 +157,19 @@
                     "classification": {
                       "type": "string",
                       "enum": ["L1", "L2", "L3", "L4", "L5", "UNASSESSED"]
+                    },
+                    "evidence_kind": {
+                      "type": ["string", "null"],
+                      "enum": [
+                        "BEHAVIORAL_PRIMARY",
+                        "DIRECT_PRACTITIONER",
+                        "INDEPENDENT_CORROBORATION",
+                        "OFFICIAL_POLICY",
+                        "SECONDARY",
+                        "HYPOTHESIS",
+                        "RAW_SEARCH_HIT",
+                        null
+                      ]
                     },
                     "independently_corroborated": { "type": "boolean" },
                     "human_audited_primary_evidence": { "type": "boolean" },
