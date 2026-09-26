@@ -1,0 +1,70 @@
+{
+  "skill_name": "research-planning",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Broad Industry Request Decomposition with Epistemic Unknowns",
+      "prompt": "Create a research plan for discovering unsolved operational problems in textile export manufacturing.",
+      "expected_output": "Decomposes broad request across multiple operational streams (e.g. merchandiser sampling, fabric sourcing, export invoice reconciliation), sets geography to explicit UNKNOWN, avoids inventing observed problem severity, and outputs structured ResearchPlan contract.",
+      "assertions": [
+        "Decomposes broad domain into concrete operator workflows",
+        "Records geography as explicit UNKNOWN without defaulting to India",
+        "Formulates empirical research questions targeting observable workarounds",
+        "Produces valid JSON adhering to research-plan.schema.json"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Messy Brain-Dump Parsing with Strict Attribution Preservation",
+      "prompt": "My friend said customs brokers take 4 days to clear shipments at the port and they use WhatsApp groups to ping officers. I noticed yesterday that truck drivers wait outside the terminal gate with paper slips. Plan research for this.",
+      "expected_output": "Separates the two distinct claims, categorizes the friend's statement as SECONDHAND_REPORT (unverified), preserves the user's firsthand terminal observation, avoids promoting hearsay to confirmed fact, and defines targeted search queries.",
+      "assertions": [
+        "Preserves secondhand vs firsthand source attribution",
+        "Classifies hearsay friction as unverified hypothesis",
+        "Formulates distinct search units for port customs and gate queuing",
+        "Refrains from concluding customs delays are universally 4 days"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "User Solution Bias Neutralization",
+      "prompt": "I want to build an AI SaaS for boutique dental clinics to automate patient intake and insurance verification. Give me the research plan.",
+      "expected_output": "Treats AI SaaS as a user-stated solution preference rather than a validated market need, shifts investigative focus to the intake receptionist and insurance coordinator workflows, audits existing manual workarounds (phone calls, portal logins), and designs queries for software dissatisfaction.",
+      "assertions": [
+        "Categorizes requested software form factor as unverified preference",
+        "Focuses research questions on frontline tasks and manual glue-work",
+        "Generates search queries targeting incumbent software gaps on G2 and Capterra",
+        "Does not assume dental clinics will purchase software"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Narrow Workflow Scoping Boundary Guard",
+      "prompt": "Plan research strictly for radiology clinic report transcription and doctor signature sign-off bottlenecks.",
+      "expected_output": "Restricts scope strictly to radiology report transcription and physician sign-off without expanding into hospital billing, nurse scheduling, or pharmacy inventory.",
+      "assertions": [
+        "Restricts research streams to requested radiology reporting workflow",
+        "Does not expand into unrelated healthcare operations",
+        "Identifies transcriptionist and radiologist as core operators",
+        "Targets specific transcription workarounds and audio-to-text handoffs"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "Deterministic Query Generation & SQLite Contract Verification",
+      "prompt": "Execute research query generation and SQLite run initialization for freight logistics invoice auditing.",
+      "expected_output": "Invokes generate_research_queries.py to generate 5-stream precision queries, checks query deduplication, formats output according to canonical contract, and verifies SQLite run initialization interface.",
+      "assertions": [
+        "Generates queries across 5 distinct search-source categories",
+        "Constructs queries using the Atomic Search Unit formula",
+        "Initializes sequential RUN-YYYY-NNN identifier in research_runs schema",
+        "Returns valid claim-check token for downstream evidence research"
+      ],
+      "files": []
+    }
+  ]
+}

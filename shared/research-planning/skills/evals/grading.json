@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "research-planning",
+  "evaluated_at": "2026-09-26T06:42:11.173755+00:00",
+  "evaluator": "eval-suite-validator v1.1.0",
+  "verdict": "not_evaluated",
+  "deterministic_coverage_percent": 0,
+  "benchmark": null,
+  "summary": {
+    "total_test_cases": 5,
+    "verified_test_cases": 0,
+    "failed_test_cases": 0,
+    "not_evaluated_test_cases": 5,
+    "total_assertions": 20,
+    "verified_assertions": 0,
+    "failed_assertions": 0,
+    "not_evaluated_assertions": 20
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Broad Industry Request Decomposition with Epistemic Unknowns",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Decomposes broad domain into concrete operator workflows",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Records geography as explicit UNKNOWN without defaulting to India",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Formulates empirical research questions targeting observable workarounds",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Produces valid JSON adhering to research-plan.schema.json",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Messy Brain-Dump Parsing with Strict Attribution Preservation",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Preserves secondhand vs firsthand source attribution",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Classifies hearsay friction as unverified hypothesis",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Formulates distinct search units for port customs and gate queuing",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Refrains from concluding customs delays are universally 4 days",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "User Solution Bias Neutralization",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Categorizes requested software form factor as unverified preference",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Focuses research questions on frontline tasks and manual glue-work",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Generates search queries targeting incumbent software gaps on G2 and Capterra",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Does not assume dental clinics will purchase software",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Narrow Workflow Scoping Boundary Guard",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Restricts research streams to requested radiology reporting workflow",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Does not expand into unrelated healthcare operations",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Identifies transcriptionist and radiologist as core operators",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Targets specific transcription workarounds and audio-to-text handoffs",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Deterministic Query Generation & SQLite Contract Verification",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Generates queries across 5 distinct search-source categories",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Constructs queries using the Atomic Search Unit formula",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Initializes sequential RUN-YYYY-NNN identifier in research_runs schema",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Returns valid claim-check token for downstream evidence research",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    }
+  ]
+}

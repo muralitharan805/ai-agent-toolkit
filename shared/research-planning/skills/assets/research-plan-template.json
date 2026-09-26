@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "research_id": "RUN-2026-001",
+  "status": "READY",
+  "original_request": "Ecommerce field la enaku unsolved problems kudu",
+  "objective": "Discover potentially unsolved operational frictions and workarounds in ecommerce logistics and reconciliation",
+  "scope": {
+    "domain": "ecommerce_operations",
+    "scope_type": "BROAD",
+    "geography": null,
+    "in_scope": [
+      "Catalog and inventory visibility",
+      "Warehouse picking and courier handoffs",
+      "Marketplace payout reconciliation"
+    ],
+    "out_of_scope": [
+      "Solution software architecture",
+      "Market demand scoring"
+    ]
+  },
+  "research_streams": [
+    {
+      "stream_id": "RS-001",
+      "name": "Marketplace Settlement & Payout Reconciliation",
+      "operator": {
+        "title": "ecommerce accountant",
+        "epistemic_status": "INFERRED"
+      },
+      "workflow": "settlement reconciliation",
+      "operational_lens": "Back-office Reconciliation",
+      "research_questions": [
+        "What manual methods do online sellers use to cross-verify marketplace settlement reports against bank payouts?",
+        "Where do deductions and chargeback discrepancies get identified in weekly bookkeeping?"
+      ],
+      "hypotheses": [
+        {
+          "claim": "Sellers lose untracked margin due to opaque marketplace deduction codes in CSV settlements.",
+          "status": "UNVERIFIED"
+        }
+      ],
+      "search_strategy": [
+        {
+          "query": "\"marketplace seller\" \"settlement reconciliation\" \"manual\"",
+          "source_category": "community_discussion",
+          "language": "en"
+        },
+        {
+          "query": "filetype:xlsx template \"marketplace reconciliation\" deduction",
+          "source_category": "public_filetype",
+          "language": "en"
+        }
+      ]
+    },
+    {
+      "stream_id": "RS-002",
+      "name": "Warehouse Packing & Courier Handoff Discrepancies",
+      "operator": {
+        "title": "fulfillment executive",
+        "epistemic_status": "INFERRED"
+      },
+      "workflow": "dispatch handoff",
+      "operational_lens": "Multi-party Handoffs",
+      "research_questions": [
+        "How are parcels verified when handed over from merchant warehouse to 3PL couriers?",
+        "What physical dispute records are kept when courier scans fail at intake?"
+      ],
+      "hypotheses": [
+        {
+          "claim": "Warehouse workers maintain paper manifest registers to contest courier lost-in-transit claims.",
+          "status": "UNVERIFIED"
+        }
+      ],
+      "search_strategy": [
+        {
+          "query": "\"ecommerce fulfillment\" \"manifest\" \"discrepancy\" \"manual register\"",
+          "source_category": "community_discussion",
+          "language": "en"
+        },
+        {
+          "query": "site:linkedin.com/jobs \"fulfillment executive\" \"courier reconciliation\"",
+          "source_category": "job_posting",
+          "language": "en"
+        }
+      ]
+    }
+  ],
+  "assumptions": [
+    "Sellers utilize multi-channel marketplaces rather than single proprietary storefronts."
+  ],
+  "unknowns": [
+    "Target geography (unspecified by user; carried forward as unknown)",
+    "Volume tier of sellers being investigated",
+    "Observable monetary value of reconciliation loss"
+  ],
+  "execution_constraints": {
+    "live_search_required": true,
+    "manual_fieldwork_allowed": false,
+    "max_search_depth": "DEEP"
+  }
+}
