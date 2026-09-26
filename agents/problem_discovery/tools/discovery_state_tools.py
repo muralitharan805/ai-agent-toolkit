@@ -56,6 +56,59 @@ class DiscoveryStateTools:
         conn.row_factory = sqlite3.Row
         return conn
 
+    def detect_legacy_synthetic_state(
+        self, candidate_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Detect records produced by the removed synthetic end-to-end demo.
+
+        This is intentionally NOT registered as an Antigravity tool. It is a local
+        safety preflight for databases that may have been written by the historical
+        implementation which fabricated a 6-participant PASS with observed value 4.6.
+        The detector is read-only and only matches the exact legacy fingerprint.
+        """
+        empty_sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        conn = self._get_connection()
+        try:
+            sql = """
+                SELECT
+                    e.experiment_id,
+                    e.candidate_id,
+                    e.metric_name,
+                    e.sample_target,
+                    e.sample_achieved,
+                    e.observed_value,
+                    e.outcome_verdict,
+                    e.artifact_hash,
+                    e.audited_by,
+                    c.solution_class,
+                    c.lifecycle_status
+                FROM experiments e
+                JOIN candidates c ON c.candidate_id = e.candidate_id
+                WHERE e.metric_name = 'weekly_operational_interventions'
+                  AND e.sample_target = 6
+                  AND e.sample_achieved = 6
+                  AND ABS(e.observed_value - 4.6) < 0.000001
+                  AND e.outcome_verdict = 'PASSED'
+                  AND e.artifact_hash = ?
+                  AND e.audited_by = 'Murali (Principal Architect & SeyaliCraft Lead)'
+            """
+            params: List[Any] = [empty_sha256]
+            if candidate_id:
+                sql += " AND e.candidate_id = ?"
+                params.append(candidate_id.strip().upper())
+            rows = [dict(r) for r in conn.execute(sql, params).fetchall()]
+            return {
+                "detected": bool(rows),
+                "records": rows,
+                "reason": (
+                    "EXACT_LEGACY_SYNTHETIC_EXPERIMENT_FINGERPRINT"
+                    if rows
+                    else None
+                ),
+            }
+        finally:
+            conn.close()
+
     # =========================================================================
     # Read-Only Tools
     # =========================================================================
