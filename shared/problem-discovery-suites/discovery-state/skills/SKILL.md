@@ -19,15 +19,6 @@ Act as a Principal Data Infrastructure Architect and State Persistence Specialis
 
 ---
 
-## Authoritative Reference Grounding
-Consult the bundled reference specifications for deep contracts:
-- [Execution & Data Flow Guide](references/execution-and-data-flow-guide.md): Visual stage topology, CLI triggers, and SQLite mutation matrix.
-- [Database Schema Specification](references/database-schema.md): 4-table schema, FTS5 virtual table, and view definitions.
-- [Dynamic Context Pack Specification](references/context-pack-spec.md): JSON schema contracts emitted by `build_agent_context.py`.
-- [Field Semantics & State Lifecycle](references/field-semantics.md): Invariant rules for research stages and candidate lifecycles.
-
----
-
 ## 6-Phase Infrastructure Execution Pipeline
 
 ```text
@@ -84,14 +75,14 @@ Execute mutations through the canonical client [discovery_db.py](scripts/discove
   Persists signals and advances `current_stage` to `PROBLEM_EVALUATION`.
 - **Stage 3 (Candidate Upsert & Signal Linkage)**:
   `DiscoveryDB.upsert_candidate(candidate_id, research_id, title, ..., supporting_signal_ids)`
-  Updates `evidence_signals.candidate_id`, preserves stable candidate identity, and advances `current_stage` to `EXPERIMENT_VALIDATION`.
+  Verifies the supporting signal IDs, derives candidate evidence level from persisted source provenance, recomputes the evidence-gated score, links the signals, preserves stable candidate identity, and refreshes aggregate run state.
 - **Stage 4 (Experiment Contract & Assessment)**:
   `DiscoveryDB.preregister_experiment(experiment_id, candidate_id, contract_dict)`
   `DiscoveryDB.record_experiment_assessment(experiment_id, candidate_id, assessment_dict, artifact_hash, ...)`
   Stores experiment verdict as `PASSED/FAILED/INCOMPLETE/INVALID`; only a passed audited claim advances the run to `SOLUTION_STRATEGY`.
 - **Stage 5 (Solution Finalization)**:
   `DiscoveryDB.finalize_solution(candidate_id, solution_class, solution_dict)`
-  Sets `candidates.lifecycle_status = 'PILOT_READY'` and completes the discovery run (`COMPLETED`) without claiming full market/build validation.
+  Rejects finalization while a preregistered/incomplete experiment remains. A validated candidate may become `PILOT_READY`; the research run becomes `COMPLETED` only when every candidate attached to that run is terminal.
 - Reference: [lifecycle-model.md](references/lifecycle-model.md) and [entity-relationships.md](references/entity-relationships.md).
 
 ---
@@ -104,6 +95,11 @@ Execute mutations through the canonical client [discovery_db.py](scripts/discove
    - Experiment pass/fail totals
 2. **Strict Invariant**: Reasoning agents MUST NEVER be asked to count rows, calculate proportions, or group database categories in prompts.
 3. Reference: [field-semantics.md](references/field-semantics.md).
+4. To repair databases created before these guardrails, run:
+   ```bash
+   python3 scripts/discovery_db.py --db "discovery.sqlite" --repair-integrity
+   ```
+   This recomputes candidate evidence/score/lifecycle, clears unverified inferred actor roles, and refreshes aggregate run stages without deleting historical evidence.
 
 ---
 
@@ -165,3 +161,5 @@ Execute mutations through the canonical client [discovery_db.py](scripts/discove
 | "Hard delete failed experiments or disqualified candidates to keep the database tidy." | **Destruction of Negative Knowledge**: Knowing what *failed* is as valuable as knowing what succeeded. Failed experiments prevent future teams from repeating the same flawed assumptions. |
 | "Rely on long conversational chat histories between agents." | **Context Drift & Degradation**: Chat histories become noisy and exceed context limits. Dynamic Context Packs enable each agent to execute in an isolated, fresh turn. |
 | "Use unindexed JSON queries across large datasets." | **Hybrid Claim-Check Pattern**: High-frequency filtering uses indexed relational columns (`research_score`, `lifecycle_status`), while deep nested maps live in validated JSON document columns. |
+| "Trust the evidence level or score emitted by a reasoning model." | **Persistence Gate**: `discovery-state` derives usable evidence level from linked signal provenance and recomputes the gated score before storing a candidate. |
+| "Use `echo` or an unquoted shell heredoc to create JSON containing currency values." | **Literal Integrity**: Shell expansion can silently turn values such as `$500` into corrupted text. Write JSON through the Python scripts, a real file API, or a quoted heredoc (`<<'EOF'`). |
