@@ -111,7 +111,9 @@ class ProblemDiscoveryConfig(BaseModel):
     """Runtime configuration for ProblemDiscoveryAgent."""
     db_path: str = Field(default_factory=lambda: str(get_default_db_path()))
     skills_paths: List[str] = Field(default_factory=get_canonical_skills_paths)
-    model: Optional[str] = Field(default="gemini-2.5-flash")
+    model: Optional[str] = Field(
+        default_factory=lambda: os.environ.get("GEMINI_MODEL") or "gemini-3.8-flash"
+    )
     api_key: Optional[str] = Field(
         default_factory=lambda: os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     )

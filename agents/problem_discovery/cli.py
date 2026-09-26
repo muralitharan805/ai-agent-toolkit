@@ -130,12 +130,19 @@ async def run_interactive(db_path: Optional[str]) -> int:
 def main(argv: Optional[list[str]] = None) -> int:
     args = parse_args(argv)
 
-    if args.interactive or not args.prompt:
+    if args.interactive or (not args.prompt and not args.until_blocked):
         return asyncio.run(run_interactive(db_path=args.db_path))
+
+    prompt = args.prompt or (
+        "Frontend developers and QA engineers frequently waste hours debugging API schema mismatches "
+        "when backend REST/GraphQL responses deviate from OpenAPI or TypeScript contract types in staging environments. "
+        "Research whether this schema drift is a recurring operational bottleneck, what manual workarounds teams use, "
+        "and whether existing tools solve it without heavy enterprise gateways."
+    )
 
     return asyncio.run(
         run_single(
-            prompt=args.prompt,
+            prompt=prompt,
             db_path=args.db_path,
             output_json=args.json,
             until_blocked=args.until_blocked,
