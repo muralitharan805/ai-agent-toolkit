@@ -435,11 +435,27 @@ class DiscoveryStateMachine:
 
             cid = exp["candidate_id"]
 
-            verdict = self.db.record_experiment_assessment(
-                experiment_id=experiment_id, result_dict=assessment_dict
-            )
+            from agents.problem_discovery.tools.discovery_state_tools import DiscoveryStateTools
 
-            # Determine next action based on assessment outcome
+            tools = DiscoveryStateTools(db_path=self.db_path)
+            try:
+                verdict = tools.record_experiment_assessment(
+                    experiment_id=experiment_id,
+                    assessment_dict=assessment_dict,
+                )
+            except ValueError as exc:
+                return OrchestrationResult(
+                    intent=IntentType.EXPERIMENT_RESULT,
+                    candidate_id=cid,
+                    experiment_id=experiment_id,
+                    current_stage=WorkflowStage.EXPERIMENT_VALIDATION,
+                    action_taken="Experiment assessment was not persisted.",
+                    workflow_status=WorkflowStatus.PAUSED,
+                    pause_reason=PauseReason.HUMAN_INPUT_REQUIRED.value,
+                    next_action="PROVIDE_REQUIRED_EXPERIMENT_EVIDENCE",
+                    message=str(exc),
+                )
+
             next_action_res = self._evaluate_candidate_state(cid)
             next_action_res.intent = IntentType.EXPERIMENT_RESULT
             next_action_res.experiment_id = experiment_id
