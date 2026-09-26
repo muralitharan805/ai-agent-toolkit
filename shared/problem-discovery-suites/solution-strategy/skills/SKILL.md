@@ -50,6 +50,7 @@ This skill acts as an authoritative **solution-shape decision engine**. Its core
    - Ingest target operator persona, core workflow sequence, and observed friction metrics.
 2. Invariant: If the candidate lacks documented friction metrics or has unresolved basic workflow unknowns, abort solutioning and return `status: "NOT_READY"`.
 3. Read the boundary rules in [technical-boundaries.md](references/technical-boundaries.md).
+4. Require explicit non-software sufficiency inputs and an explicit STS contract. Deterministic scripts must not invent percentages, sample sizes, success thresholds, or reviewer identities.
 
 ---
 
@@ -116,11 +117,11 @@ This skill acts as an authoritative **solution-shape decision engine**. Its core
      --db "discovery.sqlite" \
      --output "assessment.json"
    ```
-3. Verify SQLite table updates:
+3. Persist only through `DiscoveryDB.finalize_solution(...)` from `discovery-state`; this reasoning suite does not create or migrate tables. Verify state-layer updates:
    - `candidates.solution_class = :solution_class`
-   - `candidates.lifecycle_status = 'READY_TO_BUILD'`
+   - `candidates.lifecycle_status = 'PILOT_READY'`
    - `candidates.solution_json = :solution_json`
-   - `research_runs.current_stage = 'COMPLETED'`
+   - `research_runs.current_stage = 'COMPLETED'` (completion of the discovery run; not proof that a full product should be built)
    - `research_runs.status = 'COMPLETED'`
 4. Query the single-pane decision view:
    ```bash
