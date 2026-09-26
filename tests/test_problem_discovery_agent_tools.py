@@ -214,5 +214,60 @@ class ProblemDiscoveryAgentToolsTest(unittest.TestCase):
         self.assertEqual(matches[0]["entity_id"], "CAND-001")
 
 
+    def test_missing_assessment_evidence_never_defaults_to_pass(self) -> None:
+        """Missing audit material must leave the experiment PREREGISTERED."""
+        self.tools.create_research_run(
+            research_id="RUN-2026-010",
+            plan_dict={
+                "schema_version": "1.0",
+                "research_id": "RUN-2026-010",
+                "original_request": "Test experiment safety",
+                "scope": {"domain": "ops", "scope_type": "NARROW"},
+                "research_streams": [],
+                "unknowns": [],
+            },
+        )
+        self.tools.upsert_candidate(
+            candidate_id="CAND-010",
+            origin_research_id="RUN-2026-010",
+            title="Manual operational intervention",
+            evaluation_dict={"research_score": {"scores": {}}},
+        )
+        self.tools.preregister_experiment(
+            experiment_id="EXP-010",
+            candidate_id="CAND-010",
+            contract_dict={
+                "hypothesis": "Operators intervene manually.",
+                "metric_name": "manual_interventions",
+                "target_threshold": 3.0,
+                "direction": ">=",
+                "sample_target": 5,
+                "minimum_usable": 5,
+                "aggregation_rule": "MEAN_PER_PARTICIPANT",
+                "artifact_requirements": {"required": True},
+                "review_requirements": {"human_review_required": True},
+            },
+        )
+
+        with self.assertRaises(ValueError):
+            self.tools.record_experiment_assessment(
+                experiment_id="EXP-010",
+                result_dict={
+                    "sample_achieved": 5,
+                    "observed_value": 4.0,
+                },
+            )
+
+        conn = self.tools._get_connection()
+        try:
+            row = conn.execute(
+                "SELECT outcome_verdict, assessment_json FROM experiments WHERE experiment_id='EXP-010'"
+            ).fetchone()
+            self.assertEqual(row["outcome_verdict"], "PREREGISTERED")
+            self.assertIsNone(row["assessment_json"])
+        finally:
+            conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
