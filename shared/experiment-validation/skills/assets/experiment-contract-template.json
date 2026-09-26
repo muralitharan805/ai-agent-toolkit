@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "mode": "DESIGN",
+  "status": "PREREGISTERED",
+  "experiment_id": "EXP-001",
+  "candidate_id": "CAND-001",
+  "validation_target": "BEHAVIOR_FREQUENCY",
+  "hypothesis": "Ecommerce sellers operating across multiple sales channels repeatedly perform manual inventory synchronization.",
+  "population": {
+    "description": "Ecommerce sellers operating at least 2 active sales channels",
+    "inclusion_criteria": [
+      "Actively selling during the observation period",
+      "Uses at least 2 active sales channels",
+      "Directly performs or oversees inventory operations"
+    ],
+    "exclusion_criteria": [
+      "Inactive or unverified storefronts"
+    ]
+  },
+  "sample": {
+    "target": 5,
+    "minimum_usable": 5
+  },
+  "period": {
+    "duration_days": 7,
+    "start_at": "PRE_EXECUTION_LOCKED"
+  },
+  "primary_metric": {
+    "name": "manual_sync_events_per_seller_per_week",
+    "unit": "events"
+  },
+  "success_threshold": {
+    "metric": "manual_sync_events_per_seller_per_week",
+    "operator": ">=",
+    "value": 3.0
+  },
+  "success_rule": "At least 3 of 5 eligible sellers must record >= 3 manual inventory synchronization events during the 7-day observation period.",
+  "failure_rule": "Fail if fewer than 3 of 5 eligible sellers meet the primary threshold or usable sample < 5.",
+  "artifact_requirements": {
+    "required": true,
+    "expected_type": "CSV observation log"
+  },
+  "review_requirements": {
+    "human_review_required": true,
+    "sha256_required": true
+  },
+  "preregistration_locked": true,
+  "next_action": "EXECUTE_REAL_WORLD_EXPERIMENT"
+}

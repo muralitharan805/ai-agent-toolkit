@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExperimentContract",
+  "description": "Standard preregistration contract for empirical experiment design.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "mode",
+    "status",
+    "experiment_id",
+    "candidate_id",
+    "validation_target",
+    "hypothesis",
+    "population",
+    "sample",
+    "period",
+    "primary_metric",
+    "success_threshold",
+    "success_rule",
+    "failure_rule",
+    "preregistration_locked"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0"] },
+    "mode": { "type": "string", "enum": ["DESIGN"] },
+    "status": { "type": "string", "enum": ["PREREGISTERED", "NOT_READY"] },
+    "experiment_id": { "type": "string", "pattern": "^EXP-[0-9A-Z-]+$" },
+    "candidate_id": { "type": "string" },
+    "validation_target": {
+      "type": "string",
+      "enum": [
+        "BEHAVIOR_FREQUENCY", "TIME_COST", "ERROR_RATE", "WORKAROUND_USE",
+        "ADOPTION", "USAGE", "WILLINGNESS_TO_PAY", "RETENTION", "CONVERSION", "PROCESS_IMPROVEMENT"
+      ]
+    },
+    "hypothesis": { "type": "string" },
+    "population": { "type": "object" },
+    "sample": {
+      "type": "object",
+      "required": ["target", "minimum_usable"],
+      "properties": {
+        "target": { "type": "integer", "minimum": 1 },
+        "minimum_usable": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "period": { "type": "object" },
+    "primary_metric": { "type": "object" },
+    "success_threshold": { "type": "object" },
+    "success_rule": { "type": "string" },
+    "failure_rule": { "type": "string" },
+    "preregistration_locked": { "type": "boolean" },
+    "next_action": { "type": "string" }
+  }
+}

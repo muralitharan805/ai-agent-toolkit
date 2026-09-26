@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "experiment-validation",
+  "evaluated_at": "2026-09-26T07:30:33.893869+00:00",
+  "evaluator": "eval-suite-validator v1.1.0",
+  "verdict": "not_evaluated",
+  "deterministic_coverage_percent": 0,
+  "benchmark": null,
+  "summary": {
+    "total_test_cases": 5,
+    "verified_test_cases": 0,
+    "failed_test_cases": 0,
+    "not_evaluated_test_cases": 5,
+    "total_assertions": 20,
+    "verified_assertions": 0,
+    "failed_assertions": 0,
+    "not_evaluated_assertions": 20
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Candidate Not Ready Rejection Gate",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Enforces pre-flight readiness gate",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Refuses to design experiment for poorly defined candidate",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Sets status to NOT_READY with clear diagnostic reason",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Recommends REQUEST_MORE_EVIDENCE next action",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Preregistered Problem Experiment Design",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Defines single primary observable metric",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Specifies explicit numeric threshold and direction",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Formulates symmetrical failure rule prior to execution",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Locks preregistration to prevent post-hoc changes",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Post-Hoc Threshold Modification Rejection",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Rejects retrospective threshold modification",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Enforces contract immutability invariant",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Maintains EXPERIMENT_FAILED status under original contract",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Requires new experiment ID for modified test designs",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Failed Experiment Preservation Without High Score Override",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Declares EXPERIMENT_FAILED when threshold is missed",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Prevents prior high research score from overriding failure",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Updates candidate lifecycle status to PARKED",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Preserves failed record non-destructively in SQLite",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Incomplete Usable Sample Classification",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Distinguishes sample attrition from hypothesis failure",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Sets status to INCOMPLETE when sample falls below minimum",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Sets experiment_completed to false and experiment_passed to false",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Recommends COMPLETE_OR_RESTART_EXPERIMENT",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    }
+  ]
+}
