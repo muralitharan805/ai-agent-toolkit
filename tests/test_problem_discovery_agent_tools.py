@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pickle
 import tempfile
 import unittest
 from pathlib import Path
@@ -55,6 +56,20 @@ class ProblemDiscoveryAgentToolsTest(unittest.TestCase):
         for tool_fn in all_tools:
             self.assertTrue(callable(tool_fn))
             self.assertTrue(bool(tool_fn.__doc__), f"Tool {tool_fn.__name__} must have a docstring")
+
+
+    def test_registered_antigravity_tools_are_pickle_safe(self) -> None:
+        """Antigravity may serialize bound Python tools before runtime execution."""
+        for tool_fn in self.tools.get_all_tools():
+            payload = pickle.dumps(tool_fn)
+            restored = pickle.loads(payload)
+            self.assertTrue(callable(restored))
+            self.assertEqual(restored.__name__, tool_fn.__name__)
+
+        # Prove the unpickled provider lazily reconstructs DiscoveryDB/helpers.
+        restored_get_run = pickle.loads(pickle.dumps(self.tools.get_discovery_run))
+        result = restored_get_run("RUN-DOES-NOT-EXIST")
+        self.assertFalse(result["found"])
 
     def test_scenario_o_compound_experiment_primary_metric_is_rejected(self) -> None:
         """Scenario O: Preregistration rejects compound disjunctive/conjunctive metrics."""
