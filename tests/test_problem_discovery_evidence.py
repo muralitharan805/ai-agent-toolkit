@@ -15,13 +15,17 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "shared/problem-discovery/skills/scripts"
-sys.path.insert(0, str(SCRIPTS))
-from score_problem_candidate import (ScoreDimensions, StopCheckStatus, audit_evidence,
-                                     derive_smallest_solution, evaluate_candidate,
-                                     export_to_obsidian, refresh_discovery_csv)
-from export_discovery_matrix import generate_matrix
+LEGACY_AVAILABLE = SCRIPTS.exists()
+
+if LEGACY_AVAILABLE:
+    sys.path.insert(0, str(SCRIPTS))
+    from score_problem_candidate import (ScoreDimensions, StopCheckStatus, audit_evidence,
+                                         derive_smallest_solution, evaluate_candidate,
+                                         export_to_obsidian, refresh_discovery_csv)
+    from export_discovery_matrix import generate_matrix
 
 
+@unittest.skipUnless(LEGACY_AVAILABLE, "legacy monolithic problem-discovery evidence suite was removed")
 class EvidenceGateTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
