@@ -154,7 +154,9 @@ class ProblemDiscoveryAgent:
         return Agent(self.build_sdk_config())
 
     async def __aenter__(self) -> "ProblemDiscoveryAgent":
-        if not ANTIGRAVITY_AVAILABLE:
+        # Keep read-only SQLite usage available without model credentials.
+        # Reasoning stages will still fail explicitly rather than fabricate data.
+        if not ANTIGRAVITY_AVAILABLE or not self.config.api_key:
             return self
         self._sdk_agent = self.create_sdk_agent()
         await self._sdk_agent.__aenter__()
