@@ -968,16 +968,62 @@ class DiscoveryDB:
             finally:
                 conn.close()
 
+        # Normalize legacy raw signals globally, including currently unlinked search hits.
+        normalized_signals = 0
         conn = self._get_connection()
         try:
+            all_signals = conn.execute(
+                "SELECT signal_id, actor_role, evidence_level, payload_json FROM evidence_signals"
+            ).fetchall()
+            for signal in all_signals:
+                payload = self._loads(signal["payload_json"])
+                source = payload.get("source", {}) if isinstance(payload.get("source"), dict) else {}
+                actor = payload.get("actor", {}) if isinstance(payload.get("actor"), dict) else {}
+                evidence = payload.get("evidence", {}) if isinstance(payload.get("evidence"), dict) else {}
+
+                new_actor_role = signal["actor_role"]
+                new_level = signal["evidence_level"]
+                changed = False
+
+                if (
+                    actor.get("role_is_self_reported") is not True
+                    and actor.get("role_provenance") not in {"SELF_REPORTED", "SOURCE_VERIFIED"}
+                ):
+                    if new_actor_role is not None:
+                        new_actor_role = None
+                        changed = True
+
+                if source.get("inspection_status") != "FULL_SOURCE_REVIEWED":
+                    if new_level != "UNASSESSED":
+                        new_level = "UNASSESSED"
+                        changed = True
+                    if evidence.get("classification") != "UNASSESSED":
+                        payload["evidence"] = dict(evidence)
+                        payload["evidence"]["classification"] = "UNASSESSED"
+                        changed = True
+
+                if changed:
+                    conn.execute(
+                        """
+                        UPDATE evidence_signals
+                        SET actor_role=?, evidence_level=?, payload_json=?
+                        WHERE signal_id=?
+                        """,
+                        (new_actor_role, new_level, self._json(payload), signal["signal_id"]),
+                    )
+                    normalized_signals += 1
+
             run_ids = [r["research_id"] for r in conn.execute("SELECT research_id FROM research_runs").fetchall()]
+            conn.commit()
         finally:
             conn.close()
+
         for run_id in run_ids:
             self.refresh_research_run_state(run_id)
 
         return {
             "repaired_candidates": repaired_candidates,
+            "normalized_signals": normalized_signals,
             "refreshed_runs": len(run_ids),
         }
 
