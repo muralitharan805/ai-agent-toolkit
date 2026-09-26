@@ -39,7 +39,8 @@ jobs:
             bin \
             tests \
             tools \
-            shared/problem-discovery/skills/scripts
+            shared/problem-discovery/skills/scripts \
+            shared/problem-discovery-suites
 
       - name: Run unit and integration tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
@@ -51,7 +52,10 @@ jobs:
           uv run tools/generators/generate-skill/skills/scripts/validate_skill.py \
             frameworks/angular/angular-enterprise-forms/skills
 
-      - name: Verify Problem Discovery Agent Suite
+      - name: Verify Problem Discovery Agent Suites
         run: |
           uv run tools/generators/generate-agent-suite/skills/scripts/verify_suite.py \
             shared/problem-discovery
+          for dir in shared/problem-discovery-suites/*; do
+            [[ -d "$dir" ]] && uv run tools/generators/generate-agent-suite/skills/scripts/verify_suite.py "$dir"
+          done

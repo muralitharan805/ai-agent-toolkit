@@ -71,11 +71,11 @@ graph TD
 
 ### Phase 6: Stop Checks & Evidence-Gated 35-Point Scoring
 - Audit the 6 stop check keys (infrequent impact, no meaningful workaround, alternative fits well, single source bias, internal training issue, unreachable audience).
-- Score candidate across 7 dimensions (0–5 each, 35 max) and enforce evidence caps:
-  - *L1 Evidence*: Capped at 35 PTS.
-  - *L2 Evidence*: Capped at 28 PTS.
-  - *L3 Evidence*: Capped at 20 PTS.
-  - *L4/L5 Evidence*: Capped at 15 PTS.
+- Score candidate across 7 dimensions (0–5 each, 35 max) and enforce the canonical evidence gate:
+  - *L1/L2/L3*: Dimension scores may use the full 0–5 range when the evidence level is genuinely established.
+  - *L4*: Every dimension is capped at 1 point.
+  - *L5 / UNASSESSED*: Every dimension scores 0 until stronger evidence exists.
+  - Research score controls prioritization only; it can never produce a build-ready or validated state.
 - Execute via bundled script:
   ```bash
   python3 scripts/score_problem_candidate.py --frequency 4 --severity 4 --workaround 4 --wtp 3 --decision-maker 3 --feasibility 4 --discrepancy 4 --evidence-level L3
@@ -84,7 +84,7 @@ graph TD
 
 ### Phase 7: Research Gap Generation & SQLite Candidate Persistence
 - Package missing knowledge into structured `research_requests` (`RR-001`, `RR-002`) for upstream re-querying.
-- Persist candidates into SQLite table `candidates`, link underlying signals, and update parent run stage to `EVALUATED`.
+- Persist through the canonical `discovery-state` client. Reuse an existing stable candidate ID when the same root problem is matched; otherwise create a new stable ID. Link supporting signals and let the state layer advance the run to `EXPERIMENT_VALIDATION`.
 - *Detailed Guide*: [references/research-gap-generation.md](references/research-gap-generation.md).
 
 ---
@@ -94,21 +94,7 @@ graph TD
 The Problem Evaluation skill forms candidate problem records and links previously unlinked evidence signals:
 
 ```sql
-INSERT INTO candidates (
-    candidate_id, research_id, title, domain, target_operator, track,
-    research_score, evidence_level, validation_status, lifecycle_status, evaluation_json
-) VALUES (
-    :candidate_id, :research_id, :title, :domain, :target_operator, :track,
-    :research_score, :evidence_level, 'UNVERIFIED', :lifecycle_status, :evaluation_json
-);
-
-UPDATE evidence_signals 
-SET candidate_id = :candidate_id 
-WHERE signal_id IN (:supporting_signal_ids);
-
-UPDATE research_runs 
-SET current_stage = 'EVALUATED', updated_at = CURRENT_TIMESTAMP 
-WHERE research_id = :research_id;
+Do not mutate SQLite directly from this reasoning suite. Call `DiscoveryDB.upsert_candidate(...)` from `discovery-state`. The canonical state client preserves the candidate's original research run, avoids destructive `INSERT OR REPLACE`, links only signals from the active run, updates FTS, and advances lifecycle state.
 ```
 
 ---

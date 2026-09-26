@@ -1,62 +1,28 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "AgentContextPackSchema",
-  "description": "Validation schema for Dynamic Context Packs assembled by the Discovery State capability.",
+  "description": "Validation schema for bounded Dynamic Context Packs assembled from persisted discovery state.",
   "type": "object",
-  "required": [
-    "schema_version",
-    "task",
-    "assembled_at",
-    "deterministic_summary",
-    "constraints"
-  ],
+  "required": ["schema_version", "task", "assembled_at", "deterministic_summary", "constraints"],
   "properties": {
-    "schema_version": {
-      "type": "string",
-      "enum": ["1.0"]
-    },
+    "schema_version": { "type": "string", "enum": ["1.0"] },
     "task": {
       "type": "string",
-      "enum": ["PROBLEM_EVALUATION", "EXPERIMENT_VALIDATION", "SOLUTION_STRATEGY"]
+      "enum": ["PROBLEM_EVALUATION", "EXPERIMENT_VALIDATION", "SOLUTION_STRATEGY", "DISCOVERY_QUERY"]
     },
-    "assembled_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "research_run": {
-      "type": "object",
-      "properties": {
-        "research_id": { "type": "string" },
-        "domain": { "type": "string" },
-        "scope_type": { "type": "string" },
-        "original_request": { "type": "string" }
-      }
-    },
-    "research_plan": {
-      "type": "object",
-      "properties": {
-        "streams": { "type": "array" },
-        "unknowns": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "candidate": {
-      "type": "object",
-      "properties": {
-        "candidate_id": { "type": "string" },
-        "research_id": { "type": "string" },
-        "title": { "type": "string" },
-        "domain": { "type": "string" },
-        "target_operator": { "type": "string" },
-        "research_score": { "type": "integer" },
-        "evidence_level": { "type": "string" },
-        "validation_status": { "type": "string" },
-        "lifecycle_status": { "type": "string" }
-      }
-    },
-    "signals": {
-      "type": "array",
-      "items": { "type": "object" }
-    },
+    "assembled_at": { "type": "string", "format": "date-time" },
+    "mode": { "type": "string", "enum": ["DESIGN", "ASSESS"] },
+    "query": { "type": "string" },
+    "research_run": { "type": "object" },
+    "research_plan": { "type": "object" },
+    "candidate": { "type": "object" },
+    "evaluation": { "type": "object" },
+    "validation_scope": { "type": "object" },
+    "experiment_contract": { "type": "object" },
+    "experiments_summary": { "type": "object" },
+    "signals": { "type": "array", "items": { "type": "object" } },
+    "matches": { "type": "array", "items": { "type": "object" } },
+    "search_hits": { "type": "array", "items": { "type": "object" } },
     "deterministic_summary": {
       "type": "object",
       "required": ["total_signals"],
@@ -64,12 +30,13 @@
         "total_signals": { "type": "integer", "minimum": 0 },
         "platform_breakdown": { "type": "object" },
         "evidence_level_distribution": { "type": "object" },
-        "existing_candidate_matches": { "type": "array" }
-      }
+        "existing_candidate_matches": { "type": "array" },
+        "prior_experiments_count": { "type": "integer", "minimum": 0 },
+        "matched_candidates": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
     },
-    "constraints": {
-      "type": "object"
-    }
+    "constraints": { "type": "object" }
   },
   "additionalProperties": true
 }

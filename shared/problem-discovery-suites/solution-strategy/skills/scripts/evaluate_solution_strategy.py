@@ -11,6 +11,7 @@ and persists the final architecture to SQLite, maintaining the master discovery 
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import sqlite3
 import sys
@@ -57,97 +58,15 @@ SOLUTION_CLASSES = [
 ]
 
 
-def create_or_update_database_schema(conn: sqlite3.Connection) -> None:
-    """Ensures candidates table has solution columns and exposes v_discovery_dashboard."""
-    cursor = conn.cursor()
-    # Check if candidates table exists
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='candidates'")
-    if not cursor.fetchone():
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS candidates (
-                candidate_id        TEXT PRIMARY KEY,
-                research_id         TEXT NOT NULL,
-                title               TEXT NOT NULL,
-                domain              TEXT NOT NULL,
-                target_operator     TEXT,
-                track               TEXT DEFAULT 'COMMERCIAL',
-                research_score      INTEGER DEFAULT 0,
-                evidence_level      TEXT DEFAULT 'UNASSESSED',
-                validation_status   TEXT DEFAULT 'UNVERIFIED',
-                lifecycle_status    TEXT DEFAULT 'ACTIVE',
-                evaluation_json     TEXT,
-                solution_class      TEXT,
-                solution_json       TEXT,
-                created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-    else:
-        # Check if solution_class column exists
-        cursor.execute("PRAGMA table_info(candidates)")
-        columns = [row[1] for row in cursor.fetchall()]
-        if "solution_class" not in columns:
-            cursor.execute("ALTER TABLE candidates ADD COLUMN solution_class TEXT;")
-        if "solution_json" not in columns:
-            cursor.execute("ALTER TABLE candidates ADD COLUMN solution_json TEXT;")
-
-    # Ensure research_runs table exists
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS research_runs (
-            research_id         TEXT PRIMARY KEY,
-            title               TEXT NOT NULL,
-            domain              TEXT NOT NULL,
-            current_stage       TEXT DEFAULT 'PLANNED',
-            status              TEXT DEFAULT 'ACTIVE',
-            created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
-
-    # Ensure evidence_signals table exists
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS evidence_signals (
-            signal_id           TEXT PRIMARY KEY,
-            research_id         TEXT NOT NULL,
-            candidate_id        TEXT,
-            created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
-
-    # Ensure experiments table exists
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS experiments (
-            experiment_id       TEXT PRIMARY KEY,
-            candidate_id        TEXT NOT NULL,
-            outcome_verdict     TEXT DEFAULT 'NOT_RUN',
-            created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
-
-    # Create canonical flattened decision view
-    cursor.execute("""
-        CREATE VIEW IF NOT EXISTS v_discovery_dashboard AS
-        SELECT 
-            c.candidate_id,
-            c.title,
-            c.domain,
-            c.target_operator,
-            c.track,
-            c.research_score,
-            c.evidence_level,
-            c.validation_status,
-            c.solution_class,
-            c.lifecycle_status,
-            COUNT(DISTINCT s.signal_id) AS total_evidence_count,
-            COALESCE(MAX(e.outcome_verdict), 'NOT_RUN') AS latest_experiment_verdict,
-            c.updated_at
-        FROM candidates c
-        LEFT JOIN evidence_signals s ON c.candidate_id = s.candidate_id
-        LEFT JOIN experiments e ON c.candidate_id = e.candidate_id
-        GROUP BY c.candidate_id;
-    """)
-    conn.commit()
-
+def _load_discovery_db_class():
+    """Load the canonical discovery-state client."""
+    db_module_path = Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py"
+    spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load discovery-state client from {db_module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.DiscoveryDB
 
 def evaluate_solution_strategy(
     candidate_id: str,
@@ -155,7 +74,13 @@ def evaluate_solution_strategy(
     non_software_input: Optional[Dict[str, Any]] = None,
     sts_input: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """Applies non-software gating, constraint matching, SaaS justification, and STS design."""
+    """Apply solution-shape gates only to explicit, evidence-backed inputs."""
+    if non_software_input is None:
+        raise ValueError("non_software_input is required; do not invent non-software sufficiency metrics")
+    if sts_input is None:
+        raise ValueError("sts_input is required; the reasoning agent must preregister STS metrics instead of using generic defaults")
+    if "friction_reduction_percentage" not in non_software_input:
+        raise ValueError("non_software_input requires friction_reduction_percentage")
     
     # 1. Non-Software Sufficiency Evaluation
     if non_software_input and non_software_input.get("is_sufficient"):
@@ -168,7 +93,7 @@ def evaluate_solution_strategy(
             "assessment_id": f"sol_{candidate_id.replace('-', '_')}",
             "candidate_id": candidate_id,
             "evaluation_date": date.today().isoformat(),
-            "assessed_by": "Murali (Principal Systems Architect)",
+            "assessed_by": "solution-strategy-agent",
             "non_software_evaluation": {
                 "is_sufficient": True,
                 "recommended_non_software_class": non_soft_class,
@@ -372,11 +297,11 @@ def evaluate_solution_strategy(
         "assessment_id": f"sol_{candidate_id.replace('-', '_')}",
         "candidate_id": candidate_id,
         "evaluation_date": date.today().isoformat(),
-        "assessed_by": "Murali (Principal Systems Architect)",
+        "assessed_by": "solution-strategy-agent",
         "non_software_evaluation": {
             "is_sufficient": False,
             "recommended_non_software_class": None,
-            "friction_reduction_percentage": non_software_input.get("friction_reduction_percentage", 30) if non_software_input else 30,
+            "friction_reduction_percentage": non_software_input["friction_reduction_percentage"],
             "justification": "Manual spreadsheets or SOPs fail under observed transaction frequency, speed, and accuracy requirements.",
             "software_transition_triggers": [
                 "Execution volume exceeds manual capacity (> 2 hours/day)",
@@ -403,79 +328,18 @@ def save_solution_strategy(
     solution_class: str,
     solution_dict: Dict[str, Any]
 ) -> str:
-    """Updates candidate with solution architecture, completes research run, and ensures view."""
-    conn = sqlite3.connect(db_path)
-    try:
-        create_or_update_database_schema(conn)
-        cursor = conn.cursor()
-        
-        sol_json = json.dumps(solution_dict, indent=2)
-        cursor.execute("""
-            UPDATE candidates 
-            SET solution_class = ?,
-                lifecycle_status = 'READY_TO_BUILD',
-                solution_json = ?,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE candidate_id = ?;
-        """, (solution_class, sol_json, candidate_id))
-
-        if cursor.rowcount == 0:
-            # Candidate did not exist, insert stub record
-            cursor.execute("""
-                INSERT INTO candidates (
-                    candidate_id, research_id, title, domain, target_operator,
-                    solution_class, lifecycle_status, solution_json, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, 'READY_TO_BUILD', ?, CURRENT_TIMESTAMP)
-            """, (
-                candidate_id,
-                f"run_{candidate_id}",
-                candidate_id.replace("_", " ").title(),
-                "Software Operations",
-                "Technical Operator",
-                solution_class,
-                sol_json
-            ))
-
-        # Complete parent research run
-        cursor.execute("""
-            UPDATE research_runs 
-            SET current_stage = 'COMPLETED',
-                status = 'COMPLETED',
-                updated_at = CURRENT_TIMESTAMP
-            WHERE research_id = (SELECT research_id FROM candidates WHERE candidate_id = ?);
-        """, (candidate_id,))
-
-        conn.commit()
-        sys.stderr.write(f"[INFO] Successfully finalized candidate '{candidate_id}' as '{solution_class}' in {db_path}\n")
-        return candidate_id
-    finally:
-        conn.close()
+    """Persist through the canonical discovery-state client; missing candidates are errors."""
+    DiscoveryDB = _load_discovery_db_class()
+    return DiscoveryDB(db_path).finalize_solution(candidate_id, solution_class, solution_dict)
 
 
 def get_discovery_dashboard(
     db_path: str,
     status_filter: Optional[str] = None
 ) -> List[Dict[str, Any]]:
-    """Queries v_discovery_dashboard for single-screen decision making."""
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    try:
-        create_or_update_database_schema(conn)
-        cursor = conn.cursor()
-        if status_filter:
-            cursor.execute("""
-                SELECT * FROM v_discovery_dashboard
-                WHERE lifecycle_status = ? OR validation_status = ?
-                ORDER BY updated_at DESC
-            """, (status_filter, status_filter))
-        else:
-            cursor.execute("SELECT * FROM v_discovery_dashboard ORDER BY updated_at DESC")
-        
-        rows = [dict(r) for r in cursor.fetchall()]
-        return rows
-    finally:
-        conn.close()
-
+    """Read the canonical flattened dashboard from discovery-state."""
+    DiscoveryDB = _load_discovery_db_class()
+    return DiscoveryDB(db_path).get_discovery_dashboard(status_filter)
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -483,8 +347,8 @@ def main() -> None:
     )
     parser.add_argument("--candidate-id", help="Candidate ID being evaluated")
     parser.add_argument("--constraints", help="Path to JSON file containing 15 operational constraints")
-    parser.add_argument("--non-software-file", help="Optional JSON file with non-software sufficiency details")
-    parser.add_argument("--sts-file", help="Optional JSON file with custom STS specification")
+    parser.add_argument("--non-software-file", required=True, help="JSON file with evidence-backed non-software sufficiency details")
+    parser.add_argument("--sts-file", required=True, help="JSON file with preregistered Smallest Testable Solution details")
     parser.add_argument("--db", help="Path to SQLite database")
     parser.add_argument("--output", help="Optional output path for SolutionAssessment JSON")
     parser.add_argument("--dashboard", action="store_true", help="Print v_discovery_dashboard table")

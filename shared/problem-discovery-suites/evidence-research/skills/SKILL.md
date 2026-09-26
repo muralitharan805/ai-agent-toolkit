@@ -65,13 +65,15 @@ graph TD
 
 ### Phase 4: Observation Extraction & Epistemic Attribution
 - Extract what the author actually stated: actor role (and whether self-reported), concrete friction, current workaround, and reported frequency.
-- Qualify evidence on the objective scale:
-  - `L1`: Primary financial/system data (logs, spreadsheets, invoices).
-  - `L2`: Authenticated practitioner interview transcript.
-  - `L3`: Organic public forum post (Reddit, HN, GitHub).
-  - `L4`: Vendor marketing blog or sponsored case study.
-  - `L5`: Speculative editorial or generic commentary.
-- Mark all claims as `UNVERIFIED` until corroborated by downstream evaluation.
+- Qualify evidence on the evidence ladder only after source inspection and corroboration:
+  - `L1`: Primary behavioral/system evidence (logs, spreadsheets, invoices, recordings).
+  - `L2`: Verifiable direct practitioner testimony with concrete workflow details.
+  - `L3`: Independent corroboration of the same failure pattern across multiple unconnected sources.
+  - `L4`: Secondary interpretation such as vendor/analyst/consultant material.
+  - `L5`: Unvalidated hypothesis or speculative commentary.
+  - `UNASSESSED`: Default for raw search/API hits and single public posts until the above standard is met.
+- A Reddit/HN/GitHub result is **not automatically L3**. Preserve `UNASSESSED` until corroboration is demonstrated.
+- Mark all claims as `UNVERIFIED` until the evidence standard for corroboration or primary proof is met.
 
 ### Phase 5: Deduplication, Corroboration & Alternatives Audit
 - When multiple queries return the same URL, create a single canonical signal linking all matching `query_ids`.
@@ -81,7 +83,7 @@ graph TD
 
 ### Phase 6: Output Assembly & SQLite Persistence
 - Assemble finalized [assets/research-signals.schema.json](assets/research-signals.schema.json) contract (sample in [assets/research-signals-template.json](assets/research-signals-template.json)).
-- Persist signals to SQLite table `evidence_signals` with `candidate_id = NULL` and set parent run `current_stage = 'RESEARCHED'`.
+- Persist signals through the canonical `discovery-state` client with `candidate_id = NULL`; raw or snippet-only signals default to `UNASSESSED`. The state layer advances the run to `PROBLEM_EVALUATION`.
 - Emit `next_action: "EVALUATE_RESEARCH_SIGNALS"` for handoff to `problem-evaluation`.
 - *Detailed Guide*: [references/failure-and-coverage-policy.md](references/failure-and-coverage-policy.md).
 
@@ -92,17 +94,7 @@ graph TD
 Evidence signals are persisted with `candidate_id = NULL` because problem candidates are formed and evaluated downstream:
 
 ```sql
-INSERT INTO evidence_signals (
-    signal_id, research_id, candidate_id, stream_id, platform, source_url,
-    actor_role, reported_issue, reported_workaround, evidence_level, payload_json
-) VALUES (
-    :signal_id, :research_id, NULL, :stream_id, :platform, :source_url,
-    :actor_role, :reported_issue, :reported_workaround, :evidence_level, :payload_json
-);
-
-UPDATE research_runs 
-SET current_stage = 'RESEARCHED', updated_at = CURRENT_TIMESTAMP 
-WHERE research_id = :research_id;
+Do not issue direct DDL or mutation SQL from this reasoning suite. Call `DiscoveryDB.save_evidence_signals(research_id, signals)` from `discovery-state`. The canonical state client owns schema, transactions, FTS synchronization, and stage transitions.
 ```
 
 ---

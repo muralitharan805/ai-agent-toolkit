@@ -21,15 +21,15 @@ Defines the 7 evaluation dimensions, stop check triggers, and strict evidence-le
 
 ## 2. Evidence-Level Score Caps
 
-To prevent unverified internet claims from generating inflated priorities, hard caps are applied based on the highest verified evidence level:
+To prevent unverified internet claims from generating inflated priorities, apply evidence at the dimension level. A single public post is not automatically L3; L3 requires independent corroboration of the same failure pattern.
 
 | Highest Verified Evidence Level | Maximum Allowed Total Score | Permitted Candidate Lifecycle Status |
 |---|---|---|
-| **L1** (Primary system / financial logs) | **35 / 35** | `READY_TO_BUILD` (if experiment also passes) |
-| **L2** (Direct authenticated interview) | **28 / 35** | `RESEARCH_PRIORITY` |
-| **L3** (Public forum post / Reddit / HN) | **20 / 35** | `RESEARCH_PRIORITY` (Capped) |
-| **L4** (Vendor blog / marketing) | **15 / 35** | `PARKED` (Requires primary evidence) |
-| **L5** (Speculative opinion) | **10 / 35** | `ARCHIVED` |
+| **L1** (Primary behavioral/system evidence) | Full 0–5 dimension range | `RESEARCH_PRIORITY` at qualifying scores |
+| **L2** (Direct authenticated practitioner testimony) | Full 0–5 dimension range | `RESEARCH_PRIORITY` at qualifying scores |
+| **L3** (Independent corroboration across unconnected sources) | Full 0–5 dimension range | `RESEARCH_PRIORITY` at qualifying scores |
+| **L4** (Secondary interpretation) | **Max 1 point per dimension (7/35 total)** | `PARKED` / gather primary evidence |
+| **L5 / UNASSESSED** | **0 points** | `PARKED` until stronger evidence exists |
 
 ---
 

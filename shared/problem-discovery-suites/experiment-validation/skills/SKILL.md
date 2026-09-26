@@ -66,7 +66,7 @@ graph TD
 3. **Apply Original Threshold**: Compare observed numbers against the locked rule.
 4. **Decouple Validation Scopes**: Separate `problem_behavior_observed` from `market_demand_validated` and `willingness_to_pay_validated`.
    - *Detailed Guide*: [references/validation-scope.md](references/validation-scope.md).
-5. **SQLite Outcome Update**: Promote candidate to `READY_FOR_SOLUTION` (if passed) or `PARKED` (if failed).
+5. **SQLite Outcome Update**: Persist experiment outcome as `PASSED`, `FAILED`, `INCOMPLETE`, or `INVALID`. A passed experiment moves the candidate to `PARTIALLY_VALIDATED / READY_FOR_SOLUTION`; it does **not** make the whole candidate `VALIDATED`. A failed experiment remains negative knowledge and returns the candidate to research/validation review rather than deleting it.
 
 ---
 
@@ -109,13 +109,10 @@ INSERT INTO experiments (
 );
 UPDATE candidates SET lifecycle_status = 'EXPERIMENT_DESIGNED', updated_at = CURRENT_TIMESTAMP WHERE candidate_id = :candidate_id;
 
--- ASSESS Mode (On Pass):
-UPDATE experiments 
-SET sample_achieved = :sample_achieved, observed_value = :observed_value, outcome_verdict = 'VALIDATED',
-    assessment_json = :assessment_json, artifact_hash = :artifact_hash, audited_by = :audited_by, audit_date = :audit_date
-WHERE experiment_id = :experiment_id;
-
-UPDATE candidates SET validation_status = 'VALIDATED', lifecycle_status = 'READY_FOR_SOLUTION', updated_at = CURRENT_TIMESTAMP WHERE candidate_id = :candidate_id;
+Persistence is delegated to `discovery-state`:
+- DESIGN calls `DiscoveryDB.preregister_experiment(...)`, which stores `outcome_verdict='PREREGISTERED'`.
+- ASSESS calls `DiscoveryDB.record_experiment_assessment(...)`, which maps `EXPERIMENT_PASSED` → `PASSED`, `EXPERIMENT_FAILED` → `FAILED`, and preserves `INCOMPLETE` / `INVALID`.
+- Candidate validation remains claim-scoped. One passed trial produces `PARTIALLY_VALIDATED`, never automatic overall `VALIDATED`.
 ```
 
 ---
@@ -134,5 +131,5 @@ python3 tools/generators/eval-skill/skills/scripts/run_evals.py shared/problem-d
 - **Zero Post-Hoc Adjustments**: Never lower or modify a threshold after observing data. If a rule changes, create a new experiment ID.
 - **Incomplete $\neq$ Failed**: An experiment that achieves 3 participants out of a required 5 is `INCOMPLETE`, not failed.
 - **Behavior $\neq$ Willingness to Pay**: Observing that merchants repeatedly suffer manual friction does NOT prove they will pay for software.
-- **Hash $\neq$ Truth**: A SHA-256 digest verifies only byte integrity; factual authenticity requires named human review metadata.
+- **Hash $\neq$ Truth**: A SHA-256 digest verifies only byte integrity; factual authenticity requires named human review metadata. Missing preregistered artifact/review requirements make the assessment `INVALID_EXPERIMENT`, not a pass.
 - **Negative Evidence Preservation**: Never delete or ignore failed experiments; honest failure is permanent evidence that prevents repeated wasted effort.

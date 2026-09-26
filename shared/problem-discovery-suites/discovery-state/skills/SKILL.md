@@ -39,7 +39,8 @@ Act as a Principal Data Infrastructure Architect and State Persistence Specialis
 [Phase 4: Dynamic Task Context Pack Assembly]
      ├── problem-evaluation Context Pack
      ├── experiment-validation Context Pack
-     └── solution-strategy Context Pack
+     ├── solution-strategy Context Pack
+     └── discovery-query Context Pack
                      │
                      ▼
 [Phase 5: Full-Text Search (FTS5) & Deduplication]
@@ -68,20 +69,20 @@ Act as a Principal Data Infrastructure Architect and State Persistence Specialis
 Execute mutations through the canonical client [discovery_db.py](scripts/discovery_db.py):
 - **Stage 1 (Research Run)**:
   `DiscoveryDB.create_research_run(research_id, request, domain, scope_type, geography, plan_dict)`
-  Advances `current_stage` to `PLANNED`.
+  Persists the plan and advances `current_stage` to `EVIDENCE_RESEARCH`.
 - **Stage 2 (Evidence Signals)**:
   `DiscoveryDB.save_evidence_signals(research_id, signals)`
-  Advances `current_stage` to `RESEARCHED`.
+  Persists signals and advances `current_stage` to `PROBLEM_EVALUATION`.
 - **Stage 3 (Candidate Upsert & Signal Linkage)**:
   `DiscoveryDB.upsert_candidate(candidate_id, research_id, title, ..., supporting_signal_ids)`
-  Updates `evidence_signals.candidate_id` and advances `current_stage` to `EVALUATED`.
+  Updates `evidence_signals.candidate_id`, preserves stable candidate identity, and advances `current_stage` to `EXPERIMENT_VALIDATION`.
 - **Stage 4 (Experiment Contract & Assessment)**:
   `DiscoveryDB.preregister_experiment(experiment_id, candidate_id, contract_dict)`
   `DiscoveryDB.record_experiment_assessment(experiment_id, candidate_id, assessment_dict, artifact_hash, ...)`
-  Advances `current_stage` to `VALIDATED`.
+  Stores experiment verdict as `PASSED/FAILED/INCOMPLETE/INVALID`; only a passed audited claim advances the run to `SOLUTION_STRATEGY`.
 - **Stage 5 (Solution Finalization)**:
   `DiscoveryDB.finalize_solution(candidate_id, solution_class, solution_dict)`
-  Sets `candidates.lifecycle_status = 'READY_TO_BUILD'` and completes parent run (`COMPLETED`).
+  Sets `candidates.lifecycle_status = 'PILOT_READY'` and completes the discovery run (`COMPLETED`) without claiming full market/build validation.
 - Reference: [lifecycle-model.md](references/lifecycle-model.md) and [entity-relationships.md](references/entity-relationships.md).
 
 ---
@@ -108,6 +109,9 @@ Execute mutations through the canonical client [discovery_db.py](scripts/discove
 
    # For solution-strategy
    python3 scripts/build_agent_context.py --task solution-strategy --candidate-id "cand_001" --db "discovery.sqlite"
+
+   # For a fresh-chat question grounded in persisted discovery state
+   python3 scripts/build_agent_context.py --task discovery-query --query "inventory sync current status" --db "discovery.sqlite"
    ```
 2. Validate assembled context against [agent-context-pack.schema.json](assets/agent-context-pack.schema.json).
 3. Sample packs: [context-pack-problem-evaluation-sample.json](assets/context-pack-problem-evaluation-sample.json) and [context-pack-solution-strategy-sample.json](assets/context-pack-solution-strategy-sample.json).
@@ -128,8 +132,8 @@ Execute mutations through the canonical client [discovery_db.py](scripts/discove
 ### Phase 6: Soft Deletion, Negative Knowledge & Single-Pane Dashboard
 1. **Zero Hard Deletes**: Never execute `DELETE FROM candidates` or `DELETE FROM evidence_signals`.
 2. **Negative Knowledge Preservation**:
-   - Failed experiments retain `outcome_verdict = 'EXPERIMENT_FAILED'`.
-   - Associated candidates transition to `validation_status = 'EXPERIMENT_FAILED'` and `lifecycle_status = 'PARKED'`.
+   - Failed experiments retain `outcome_verdict = 'FAILED'` as permanent negative knowledge.
+   - A failed individual experiment does not erase the candidate or automatically claim candidate-wide failure; the candidate returns to `validation_status = 'IN_PROGRESS'` and research/validation review.
 3. **Query the Single-Pane Decision View**:
    ```bash
    python3 scripts/discovery_db.py --db "discovery.sqlite" --dashboard
@@ -138,7 +142,7 @@ Execute mutations through the canonical client [discovery_db.py](scripts/discove
    ```sql
    SELECT candidate_id, title, solution_class, research_score 
    FROM v_discovery_dashboard 
-   WHERE validation_status = 'VALIDATED' AND lifecycle_status = 'READY_TO_BUILD';
+   WHERE lifecycle_status = 'PILOT_READY';
    ```
 
 ---
