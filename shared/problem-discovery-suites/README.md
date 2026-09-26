@@ -60,3 +60,5 @@ done
 - Planned target operators are research context, not observed actor identity.
 - Write JSON through the Python/file APIs. Avoid `echo` or unquoted heredocs for payloads containing `$`, backticks, or backslashes because shell expansion can silently corrupt literals.
 - For databases created before these guardrails, run `discovery_db.py --repair-integrity` once after upgrading.
+
+Regression coverage includes persisted evidence gating, actor provenance, aggregate run completion, experiment audit integrity, and atomic-metric enforcement.
