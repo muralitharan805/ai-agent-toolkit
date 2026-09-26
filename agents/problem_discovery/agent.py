@@ -433,6 +433,31 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
                     message="State machine returned no executable stage.",
                 )
 
+            if state.candidate_id:
+                legacy = self.tools_provider.detect_legacy_synthetic_state(state.candidate_id)
+                if legacy.get("detected"):
+                    records = legacy.get("records", [])
+                    experiment_ids = ", ".join(
+                        str(record.get("experiment_id")) for record in records
+                    )
+                    return OrchestrationResult(
+                        intent=state.intent,
+                        research_id=state.research_id,
+                        candidate_id=state.candidate_id,
+                        experiment_id=state.experiment_id,
+                        current_stage=state.current_stage,
+                        action_taken="Blocked execution because legacy synthetic state was detected.",
+                        workflow_status=WorkflowStatus.ERROR,
+                        next_action="AUDIT_OR_RESET_LEGACY_SYNTHETIC_STATE",
+                        message=(
+                            "This candidate contains the exact fingerprint of the removed synthetic "
+                            f"end-to-end demo experiment ({experiment_ids}). No further reasoning or "
+                            "solution finalization was executed. Audit/reset that legacy test data, "
+                            "then resume the candidate."
+                        ),
+                        data={"legacy_synthetic_state": legacy},
+                    )
+
             before = self._state_signature(state)
             if callback:
                 callback(
