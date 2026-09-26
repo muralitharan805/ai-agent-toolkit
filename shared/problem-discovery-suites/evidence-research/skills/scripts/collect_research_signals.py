@@ -17,13 +17,25 @@ import re
 import json
 import sqlite3
 import argparse
+import importlib.util
 import urllib.request
 import urllib.parse
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 DEFAULT_USER_AGENT = "ai-agent-toolkit/1.0 (ResearchEvidenceCollector; +https://github.com/muralitharan805/ai-agent-toolkit)"
 REQUEST_TIMEOUT_SECONDS = 10
+
+def _load_discovery_db_class():
+    """Load the canonical discovery-state client without making suite directories import packages."""
+    db_module_path = Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py"
+    spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load discovery-state client from {db_module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.DiscoveryDB
 
 def clean_html_text(text: str) -> str:
     """Removes HTML tags and normalizes whitespace."""
@@ -185,10 +197,11 @@ def execute_plan_searches(
                     provider_runs.append({
                         "provider": prov,
                         "executed_query": original_query,
-                        "status": "COMPLETED",
+                        "status": "SKIPPED_UNAVAILABLE",
                         "result_count": 0,
-                        "error": None
+                        "error": "Live fetch disabled"
                     })
+                    run_status = "COMPLETED_WITH_GAPS"
                     continue
 
                 res: Dict[str, Any] = {"status": "SKIPPED_UNAVAILABLE", "executed_query": original_query, "results": [], "error": "Provider not configured"}
@@ -224,7 +237,7 @@ def execute_plan_searches(
                         if raw_res["raw_result_id"] not in canonical["raw_result_ids"]:
                             canonical["raw_result_ids"].append(raw_res["raw_result_id"])
                     else:
-                        sig_id = f"SIG-{signal_counter:03d}"
+                        sig_id = f"SIG-{research_run_id}-{signal_counter:03d}"
                         signal_counter += 1
                         canonical = {
                             "signal_id": sig_id,
@@ -250,7 +263,7 @@ def execute_plan_searches(
                                 "reported_impact": None
                             },
                             "evidence": {
-                                "classification": "L3",
+                                "classification": "UNASSESSED",
                                 "independently_corroborated": False,
                                 "human_audited_primary_evidence": False,
                                 "verification_status": "UNVERIFIED"
@@ -292,58 +305,19 @@ def execute_plan_searches(
     }
 
 def save_signals_to_sqlite(db_path: str, signals_payload: Dict[str, Any]) -> int:
-    """Batch inserts signals into SQLite table evidence_signals with candidate_id=NULL."""
+    """Persist normalized signals through the canonical discovery-state client."""
     research_id = signals_payload.get("research_run_id", "RUN-DEFAULT-001")
-    conn = sqlite3.connect(db_path)
-    count = 0
-    try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS evidence_signals (
-                signal_id           TEXT PRIMARY KEY,
-                research_id         TEXT NOT NULL,
-                candidate_id        TEXT,
-                stream_id           TEXT,
-                platform            TEXT,
-                source_url          TEXT,
-                actor_role          TEXT,
-                reported_issue      TEXT NOT NULL,
-                reported_workaround TEXT,
-                evidence_level      TEXT NOT NULL DEFAULT 'L3',
-                payload_json        TEXT,
-                retrieved_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        for stream in signals_payload.get("research_results", []):
-            stream_id = stream.get("stream_id")
-            for sig in stream.get("signals", []):
-                sig_id = sig.get("signal_id")
-                source = sig.get("source", {})
-                obs = sig.get("observation", {})
-                ev = sig.get("evidence", {})
-                cursor.execute("""
-                    INSERT OR REPLACE INTO evidence_signals (
-                        signal_id, research_id, candidate_id, stream_id, platform, source_url,
-                        actor_role, reported_issue, reported_workaround, evidence_level, payload_json, retrieved_at
-                    ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                """, (
-                    sig_id, research_id, stream_id, source.get("platform"), source.get("url"),
-                    sig.get("actor", {}).get("role"), obs.get("reported_issue", ""),
-                    obs.get("reported_workaround"), ev.get("classification", "L3"),
-                    json.dumps(sig)
-                ))
-                count += 1
+    signals: List[Dict[str, Any]] = []
+    for stream in signals_payload.get("research_results", []):
+        for sig in stream.get("signals", []):
+            normalized = dict(sig)
+            normalized["stream_id"] = stream.get("stream_id")
+            signals.append(normalized)
 
-        cursor.execute("""
-            UPDATE research_runs
-            SET current_stage = 'RESEARCHED', updated_at = CURRENT_TIMESTAMP
-            WHERE research_id = ?
-        """, (research_id,))
-
-        conn.commit()
-        sys.stderr.write(f"[INFO] Persisted {count} signals for {research_id} in {db_path}\n")
-    finally:
-        conn.close()
+    DiscoveryDB = _load_discovery_db_class()
+    db = DiscoveryDB(db_path)
+    count = db.save_evidence_signals(research_id, signals)
+    sys.stderr.write(f"[INFO] Persisted {count} signals for {research_id} through discovery-state\n")
     return count
 
 def main():
