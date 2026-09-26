@@ -299,6 +299,14 @@ def build_solution_strategy_context(conn: sqlite3.Connection, candidate_id: str)
 def build_discovery_query_context(conn: sqlite3.Connection, query: str, limit: int = 5) -> Dict[str, Any]:
     candidate_ids: List[str] = []
     direct_hits: List[Dict[str, Any]] = []
+
+    exact = conn.execute(
+        "SELECT candidate_id FROM candidates WHERE candidate_id=?",
+        (query.strip(),),
+    ).fetchone()
+    if exact:
+        candidate_ids.append(exact["candidate_id"])
+
     try:
         rows = conn.execute(
             """
@@ -317,10 +325,11 @@ def build_discovery_query_context(conn: sqlite3.Connection, query: str, limit: i
             """
             SELECT candidate_id AS entity_id, 'CANDIDATE' AS entity_type,
                    title AS title_or_issue, domain AS body_text, 0 AS rank
-            FROM candidates WHERE title LIKE ? OR domain LIKE ?
+            FROM candidates
+            WHERE candidate_id LIKE ? OR title LIKE ? OR domain LIKE ?
             LIMIT ?
             """,
-            (like, like, max(limit * 4, 20)),
+            (like, like, like, max(limit * 4, 20)),
         ).fetchall()
         direct_hits = [dict(r) for r in rows]
 
