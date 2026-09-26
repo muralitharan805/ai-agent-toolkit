@@ -185,7 +185,7 @@ def determine_next_stage(
                 (candidate_id,),
             ).fetchall()
 
-            if val_status == "UNVERIFIED":
+            if val_status in ("UNVERIFIED", "IN_PROGRESS"):
                 if not exps:
                     return {
                         "action": "INVOKE_SKILL",
@@ -276,7 +276,7 @@ def determine_next_stage(
             current_stage = run["current_stage"]
             plan_json = run["plan_json"]
 
-            if current_stage == "RESEARCH_PLANNING":
+            if current_stage in ("RESEARCH_PLANNING", "EVIDENCE_RESEARCH"):
                 if not plan_json:
                     return {
                         "action": "INVOKE_SKILL",
@@ -318,7 +318,7 @@ def determine_next_stage(
                         "next_step_hint": f"Run build_agent_context.py --task problem-evaluation --research-id {run_id}",
                     }
 
-            if current_stage == "RESEARCHED":
+            if current_stage in ("RESEARCHED", "PROBLEM_EVALUATION"):
                 cands = conn.execute(
                     "SELECT candidate_id FROM candidates WHERE origin_research_id = ?",
                     (run_id,),
@@ -331,7 +331,7 @@ def determine_next_stage(
                         "target_task": "problem-evaluation",
                         "entity_id": run_id,
                         "status": "READY",
-                        "reason": f"Research run {run_id} is RESEARCHED but has no evaluated candidates.",
+                        "reason": f"Research run {run_id} is in stage '{current_stage}' with signals collected, but has no evaluated candidates.",
                         "pause_reason": None,
                         "next_step_hint": f"Run build_agent_context.py --task problem-evaluation --research-id {run_id}",
                     }
@@ -339,7 +339,7 @@ def determine_next_stage(
                 # Evaluate first candidate that needs progress
                 return determine_next_stage(db_path, request=req_text, candidate_id=cands[0]["candidate_id"])
 
-            if current_stage in ("EVALUATED", "VALIDATING"):
+            if current_stage in ("EVALUATED", "VALIDATING", "EXPERIMENT_VALIDATION", "SOLUTION_STRATEGY"):
                 cands = conn.execute(
                     "SELECT candidate_id FROM candidates WHERE origin_research_id = ? ORDER BY candidate_id ASC",
                     (run_id,),
