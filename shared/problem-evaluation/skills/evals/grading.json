@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "problem-evaluation",
+  "evaluated_at": "2026-09-26T07:05:49.349880+00:00",
+  "evaluator": "eval-suite-validator v1.1.0",
+  "verdict": "not_evaluated",
+  "deterministic_coverage_percent": 0,
+  "benchmark": null,
+  "summary": {
+    "total_test_cases": 5,
+    "verified_test_cases": 0,
+    "failed_test_cases": 0,
+    "not_evaluated_test_cases": 5,
+    "total_assertions": 20,
+    "verified_assertions": 0,
+    "failed_assertions": 0,
+    "not_evaluated_assertions": 20
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Signal Clustering across Varied Source Phrasing",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Clusters synonymous signals into a single candidate problem",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Links all supporting signal IDs without dropping sources",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Constructs 14-node workflow mapping with explicit unknown labeling",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Produces valid ProblemEvaluation JSON conforming to schema",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Distinct Workflow Separation Despite Shared Industry Keywords",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Separates disparate operational tasks into distinct candidates",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Prevents artificial problem merging based on generic ecommerce keywords",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Maps independent 14-node workflows for each candidate",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Assigns distinct candidate references PC-001 and PC-002",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Contradictory Evidence Preservation & Nuanced Interpretation",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Preserves supporting and contradicting signal IDs separately",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Explains discrepancy through segment or volume differences",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Refrains from discarding opposing evidence to inflate priority",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Evaluates workflow fit of incumbent alternative",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Insufficient Evidence Gate & Research Request Generation",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Sets evidence_sufficiency to INSUFFICIENT",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Sets research_score to null with INSUFFICIENT_EVIDENCE status",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Generates actionable research_requests with targeted questions",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Recommends REQUEST_MORE_EVIDENCE next action",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "SQLite Candidate Persistence & Signal Linking Contract",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Inserts candidate into SQLite candidates table with candidate_id",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Updates evidence_signals linking supporting signal IDs",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Updates research_runs current_stage to EVALUATED",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Ensures soft-delete / non-destructive persistence invariant",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    }
+  ]
+}

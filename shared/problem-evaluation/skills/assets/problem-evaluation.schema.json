@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProblemEvaluation",
+  "description": "Standard output contract for the Problem Evaluation Skill containing clustered candidates, 14-node workflows, evidence-gated scores, and research requests.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "research_id",
+    "status",
+    "candidates",
+    "next_action"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0"]
+    },
+    "research_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-Z-]+$",
+      "description": "Sequential research run identifier, e.g. RUN-2026-001"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["EVALUATED", "EVALUATED_WITH_GAPS", "INSUFFICIENT_EVIDENCE", "REJECTED"]
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "candidate_ref",
+          "problem_title",
+          "actors",
+          "supporting_signal_ids",
+          "problem_statement",
+          "evidence_sufficiency",
+          "workflow_14_nodes",
+          "root_cause",
+          "alternatives_audit",
+          "stop_checks",
+          "research_score",
+          "validation_status",
+          "unknowns",
+          "research_requests"
+        ],
+        "properties": {
+          "candidate_ref": {
+            "type": "string",
+            "pattern": "^PC-[0-9]{3}$"
+          },
+          "problem_title": {
+            "type": "string"
+          },
+          "actors": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "supporting_signal_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "contradicting_signal_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "problem_statement": {
+            "type": "string"
+          },
+          "evidence_sufficiency": {
+            "type": "string",
+            "enum": ["SUFFICIENT", "PARTIAL", "INSUFFICIENT"]
+          },
+          "workflow_14_nodes": {
+            "type": "object",
+            "required": [
+              "actor", "trigger", "input", "steps", "tools", "decisions",
+              "handoffs", "delays", "rework", "errors", "output", "cost", "risk", "audit"
+            ]
+          },
+          "root_cause": {
+            "type": "object",
+            "required": ["status", "hypotheses"],
+            "properties": {
+              "status": { "type": "string", "enum": ["CONFIRMED", "UNVERIFIED"] },
+              "hypotheses": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "alternatives_audit": {
+            "type": "object",
+            "required": ["status", "existing_alternative_found", "workflow_fit"],
+            "properties": {
+              "status": { "type": "string", "enum": ["COMPLETE", "PARTIAL", "NOT_RESEARCHED"] },
+              "existing_alternative_found": { "type": "boolean" },
+              "workflow_fit": { "type": "string", "enum": ["ADEQUATE", "POOR", "UNKNOWN"] },
+              "commercial_alternative_fits_well": { "type": ["boolean", "null"] },
+              "non_software_sufficient": { "type": ["boolean", "null"] }
+            }
+          },
+          "stop_checks": {
+            "type": "object",
+            "required": ["triggered", "reasons"],
+            "properties": {
+              "triggered": { "type": "boolean" },
+              "reasons": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "research_score": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {
+              "status": { "type": "string", "enum": ["SCORED", "INSUFFICIENT_EVIDENCE", "NOT_ASSESSED"] },
+              "total": { "type": ["integer", "null"], "minimum": 0, "maximum": 35 },
+              "maximum": { "type": "integer", "enum": [35] },
+              "scores": { "type": "object" }
+            }
+          },
+          "validation_status": {
+            "type": "string",
+            "enum": ["UNVERIFIED", "VALIDATED", "EXPERIMENT_FAILED"]
+          },
+          "unknowns": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "research_requests": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["request_id", "priority", "reason", "question"],
+              "properties": {
+                "request_id": { "type": "string" },
+                "priority": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+                "reason": { "type": "string" },
+                "question": { "type": "string" },
+                "target_evidence": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "recommended_next_action": {
+            "type": "string",
+            "enum": ["REQUEST_MORE_EVIDENCE", "VALIDATE_VIA_EXPERIMENT", "PARK_CANDIDATE"]
+          }
+        }
+      }
+    },
+    "next_action": {
+      "type": "string",
+      "enum": ["REQUEST_MORE_EVIDENCE", "SCOPING_EXPERIMENTS", "PARK_CANDIDATES"]
+    }
+  }
+}
