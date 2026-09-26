@@ -46,7 +46,9 @@ This skill acts as an authoritative **solution-shape decision engine**. Its core
 
 ### Phase 1: Input Ingestion & Evidence Validation
 1. Verify candidate pre-flight state:
-   - Ensure `candidate_id` exists with either an empirical `ValidationAssessment` or a scored `ProblemEvaluation`.
+   - Ensure `candidate_id` exists and inspect `solution_readiness` from the context pack.
+   - If any experiment is `PREREGISTERED` or `INCOMPLETE`, return `status: "NOT_READY"`; do not finalize a solution while empirical work is unfinished.
+   - For final `PILOT_READY` persistence, require candidate `validation_status` to be `PARTIALLY_VALIDATED` or `VALIDATED`.
    - Ingest target operator persona, core workflow sequence, and observed friction metrics.
 2. Invariant: If the candidate lacks documented friction metrics or has unresolved basic workflow unknowns, abort solutioning and return `status: "NOT_READY"`.
 3. Read the boundary rules in [technical-boundaries.md](references/technical-boundaries.md).
@@ -112,17 +114,17 @@ This skill acts as an authoritative **solution-shape decision engine**. Its core
 2. Execute the CLI automation tool [evaluate_solution_strategy.py](scripts/evaluate_solution_strategy.py):
    ```bash
    python3 scripts/evaluate_solution_strategy.py \
-     --candidate-id "cand_001" \
+     --candidate-id "CAND-001" \
      --constraints "constraints.json" \
+     --non-software-file "non-software.json" \
+     --sts-file "sts.json" \
      --db "discovery.sqlite" \
      --output "assessment.json"
    ```
-3. Persist only through `DiscoveryDB.finalize_solution(...)` from `discovery-state`; this reasoning suite does not create or migrate tables. Verify state-layer updates:
-   - `candidates.solution_class = :solution_class`
-   - `candidates.lifecycle_status = 'PILOT_READY'`
-   - `candidates.solution_json = :solution_json`
-   - `research_runs.current_stage = 'COMPLETED'` (completion of the discovery run; not proof that a full product should be built)
-   - `research_runs.status = 'COMPLETED'`
+3. Persist only through `DiscoveryDB.finalize_solution(...)` from `discovery-state`; this reasoning suite does not create or migrate tables.
+   - The state layer rejects finalization while a `PREREGISTERED` or `INCOMPLETE` experiment exists.
+   - Validated candidates become `PILOT_READY`; unvalidated draft assessments can only be `SOLUTION_PROPOSED`.
+   - A research run becomes `COMPLETED` only when **all** candidates attached to that run are terminal (`PILOT_READY`, `PARKED`, `ARCHIVED`, or `BUILT`) and no unfinished experiment remains.
 4. Query the single-pane decision view:
    ```bash
    python3 scripts/evaluate_solution_strategy.py --db "discovery.sqlite" --dashboard
