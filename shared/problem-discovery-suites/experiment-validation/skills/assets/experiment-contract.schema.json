@@ -15,6 +15,7 @@
     "sample",
     "period",
     "primary_metric",
+    "aggregation_rule",
     "success_threshold",
     "success_rule",
     "failure_rule",
@@ -44,7 +45,23 @@
       }
     },
     "period": { "type": "object" },
-    "primary_metric": { "type": "object" },
+    "primary_metric": {
+      "type": "object",
+      "required": ["name", "unit"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^(?!.*(?:_or_|\\bor\\b|\\band\\b|/)).+$" },
+        "unit": { "type": "string" }
+      }
+    },
+    "aggregation_rule": {
+      "type": "string",
+      "enum": [
+        "MEAN_PER_PARTICIPANT",
+        "MEDIAN_PER_PARTICIPANT",
+        "TOTAL_EVENTS",
+        "COUNT_PARTICIPANTS_MEETING_THRESHOLD"
+      ]
+    },
     "success_threshold": { "type": "object" },
     "success_rule": { "type": "string" },
     "failure_rule": { "type": "string" },
