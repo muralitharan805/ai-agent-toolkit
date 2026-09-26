@@ -185,7 +185,11 @@ class DiscoveryDB:
                     track = excluded.track,
                     research_score = excluded.research_score,
                     evidence_level = excluded.evidence_level,
-                    lifecycle_status = excluded.lifecycle_status,
+                    lifecycle_status = CASE
+                        WHEN candidates.lifecycle_status IN ('ACTIVE', 'RESEARCH_PRIORITY', 'PARKED')
+                            THEN excluded.lifecycle_status
+                        ELSE candidates.lifecycle_status
+                    END,
                     evaluation_json = excluded.evaluation_json,
                     updated_at = CURRENT_TIMESTAMP
                 """,
@@ -376,19 +380,24 @@ class DiscoveryDB:
         conn = self._get_connection()
         try:
             candidate = conn.execute(
-                "SELECT origin_research_id FROM candidates WHERE candidate_id=?", (candidate_id,)
+                "SELECT origin_research_id, validation_status FROM candidates WHERE candidate_id=?", (candidate_id,)
             ).fetchone()
             if not candidate:
                 raise ValueError(f"Candidate '{candidate_id}' not found; refusing to fabricate a stub candidate")
 
+            lifecycle = (
+                "PILOT_READY"
+                if candidate["validation_status"] in {"PARTIALLY_VALIDATED", "VALIDATED"}
+                else "SOLUTION_PROPOSED"
+            )
             conn.execute(
                 """
                 UPDATE candidates
-                SET solution_class=?, lifecycle_status='PILOT_READY',
+                SET solution_class=?, lifecycle_status=?,
                     solution_json=?, updated_at=CURRENT_TIMESTAMP
                 WHERE candidate_id=?
                 """,
-                (solution_class, self._json(solution_dict), candidate_id),
+                (solution_class, lifecycle, self._json(solution_dict), candidate_id),
             )
             active_run = conn.execute(
                 """
