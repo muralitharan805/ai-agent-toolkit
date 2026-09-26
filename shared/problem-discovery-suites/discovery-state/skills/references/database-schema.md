@@ -80,7 +80,7 @@ Experiment outcome is intentionally separate from candidate validation status.
 - pass/fail counts
 - actual latest experiment verdict by `created_at`
 
-Callers should start with this view and drill into evidence/experiment detail only when needed.
+Callers should start with this view and drill into evidence/experiment detail only when needed. The view also exposes invalid and incomplete experiment counts so an invalid result is not silently hidden inside a zero failed-experiment count.
 
 ## Persistence Rules
 
@@ -90,3 +90,6 @@ Callers should start with this view and drill into evidence/experiment detail on
 4. `updated_at` is explicitly updated by the state client on mutations.
 5. Stable candidate identity is preserved across runs.
 6. JSON snapshots must pass SQLite `json_valid(...)` constraints.
+7. Candidate evidence level and research score are derived from linked persisted signals; caller-provided labels are proposals only.
+8. Research runs complete only after aggregate candidate state is terminal; finalizing one candidate must not complete a multi-candidate run.
+9. Raw stream target roles are not written as observed `actor_role` values without source-backed provenance.
