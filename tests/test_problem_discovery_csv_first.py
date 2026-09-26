@@ -14,7 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "shared/problem-discovery/skills/scripts/discovery_csv.py"
 
 
-@unittest.skipUnless(SCRIPT.exists(), "legacy monolithic problem-discovery CSV suite was removed")\nclass CsvFirstTest(unittest.TestCase):
+@unittest.skipUnless(SCRIPT.exists(), "legacy monolithic problem-discovery CSV suite was removed")
+class CsvFirstTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
