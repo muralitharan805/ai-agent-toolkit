@@ -41,7 +41,7 @@ graph TD
 
 ### Phase 1: Input Validation & Evidence Sufficiency Gate
 - Verify incoming `ResearchSignals`: ensure signals trace to authentic source URLs and permalinks.
-- Apply the **Evidence Sufficiency Gate**: if evidence consists only of a single uninspected post or vague complaint, mark `evidence_sufficiency: INSUFFICIENT` and do NOT calculate an arbitrary score.
+- Apply the **Evidence Sufficiency Gate**: if supporting evidence is uninspected/snippet-only, mark `evidence_sufficiency: INSUFFICIENT`. The final persisted evidence level and score are recomputed by `discovery-state` from the actual linked signals; model-proposed `L3`/`L1` labels cannot override persisted provenance.
 
 ### Phase 2: Signal Clustering & Candidate Formation
 - Cluster signals based on the 4 operational anchors: Target Actor, Trigger, Core Task, and Mechanism Failure.
@@ -84,7 +84,7 @@ graph TD
 
 ### Phase 7: Research Gap Generation & SQLite Candidate Persistence
 - Package missing knowledge into structured `research_requests` (`RR-001`, `RR-002`) for upstream re-querying.
-- Persist through the canonical `discovery-state` client. Reuse an existing stable candidate ID when the same root problem is matched; otherwise create a new stable ID. Link supporting signals and let the state layer advance the run to `EXPERIMENT_VALIDATION`.
+- Persist through the canonical `discovery-state` client. Reuse an existing stable candidate ID when the same root problem is matched; otherwise create a new stable ID. The state layer verifies that every supporting signal exists in the active run, derives the usable evidence level, recomputes the gated 35-point score, and only then links the signals.
 - *Detailed Guide*: [references/research-gap-generation.md](references/research-gap-generation.md).
 
 ---
@@ -111,6 +111,8 @@ python3 tools/generators/eval-skill/skills/scripts/run_evals.py shared/problem-d
 ## 5. Gotchas
 
 - **No Secret Web Searches**: Never fetch new URLs or query the web inside evaluation. When evidence is missing, generate `research_requests`.
+- **Persisted Evidence Wins**: Never trust a candidate-level evidence label that conflicts with the linked signal records. Snippet-only `UNASSESSED` signals force a zero research score.
+- **Official Policy $\neq$ Behavioral L1**: An authoritative policy page may prove a rule or consequence, but it does not by itself prove operator behavior/frequency. Candidate-level L1 requires audited behavioral primary evidence.
 - **Score $\neq$ Validation**: A 35-point score indicates research priority, NOT commercial validation. Validation requires `experiment-validation`.
 - **Workaround $\neq$ Root Cause**: An Excel spreadsheet is an observable workaround, not the architectural root cause.
 - **Workflow Fit Invariant**: An incumbent SaaS tool existing does NOT prove the problem is solved; audit whether it supports the target operator's constraints.

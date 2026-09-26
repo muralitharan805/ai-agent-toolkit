@@ -40,23 +40,14 @@ EVIDENCE_CAPS = {
 }
 
 def _load_discovery_db_class():
-    """Load the canonical discovery-state client across shared and .agents layouts."""
-    candidates = [
-        Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path(__file__).resolve().parents[2] / "discovery-state" / "scripts" / "discovery_db.py",
-        Path(__file__).resolve().parents[3] / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path(__file__).resolve().parents[4] / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path.cwd() / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path.cwd() / ".agents" / "skills" / "discovery-state" / "scripts" / "discovery_db.py",
-    ]
-    for db_module_path in candidates:
-        if db_module_path.exists():
-            spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
-            if spec and spec.loader:
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                return module.DiscoveryDB
-    raise RuntimeError(f"Unable to load discovery-state client from candidates: {[str(p) for p in candidates]}")
+    """Load the canonical discovery-state client."""
+    db_module_path = Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py"
+    spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load discovery-state client from {db_module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.DiscoveryDB
 
 def calculate_candidate_score(
     scores: Dict[str, int],
@@ -169,10 +160,9 @@ def main():
     parser.add_argument("--stop-check", action="append", default=[], help="Triggered stop check keys")
 
     # Evaluation JSON file input
-    parser.add_argument("--input", help="Path to input ProblemEvaluation JSON file or inline JSON string")
+    parser.add_argument("--input", help="Path to input ProblemEvaluation JSON file")
     parser.add_argument("--output", help="Path to output JSON file")
-    parser.add_argument("--sqlite-db", "--db", default=os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite"), help="Path to SQLite database to persist candidate")
-    parser.add_argument("--save-db", action="store_true", help="Persist candidate into SQLite database")
+    parser.add_argument("--sqlite-db", help="Path to SQLite database to persist candidate")
     parser.add_argument("--supporting-signals", help="Comma-separated supporting signal IDs (e.g. SIG-001,SIG-002)")
 
     args = parser.parse_args()
@@ -189,53 +179,51 @@ def main():
 
     evidence_level = args.evidence_level
     stop_checks = args.stop_check
-    candidate_payload: Dict[str, Any] = {}
 
-    # If input JSON is provided, load from file or string
+    # If input JSON is provided, load from file
     if args.input:
         try:
-            if os.path.isfile(args.input):
-                with open(args.input, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-            else:
-                data = json.loads(args.input)
+            with open(args.input, "r", encoding="utf-8") as f:
+                data = json.load(f)
             candidate = data.get("candidates", [{}])[0] if "candidates" in data else data
-            candidate_payload = candidate
             c_scores = candidate.get("research_score", {}).get("scores", {})
             for d in DIMENSIONS:
                 if d in c_scores:
                     scores[d] = c_scores[d]
             evidence_level = candidate.get("evidence_level") or evidence_level
             stop_checks = candidate.get("stop_checks", {}).get("reasons", []) or stop_checks
-
-            # Populate slots from candidate payload if provided
-            args.candidate_id = candidate.get("candidate_id") or candidate.get("candidate_ref") or args.candidate_id
-            args.research_id = candidate.get("research_id") or candidate.get("origin_research_id") or args.research_id
-            args.title = candidate.get("problem_title") or candidate.get("title") or args.title
-            args.domain = candidate.get("domain") or args.domain
-            args.operator = candidate.get("target_operator") or (candidate.get("actors", [None])[0] if candidate.get("actors") else None) or args.operator
-            args.track = candidate.get("track") or args.track
-            if not args.supporting_signals and candidate.get("supporting_signal_ids"):
-                args.supporting_signals = ",".join(candidate["supporting_signal_ids"])
         except Exception as e:
             sys.stderr.write(f"[ERROR] Failed to read --input: {e}\n")
             sys.exit(1)
 
+    signals = [s.strip() for s in args.supporting_signals.split(",") if s.strip()] if args.supporting_signals else []
+    evidence_gate = None
+    if args.sqlite_db:
+        DiscoveryDB = _load_discovery_db_class()
+        evidence_gate = DiscoveryDB(args.sqlite_db).derive_candidate_evidence_gate(
+            args.research_id,
+            signals,
+            {"research_score": {"scores": scores}},
+        )
+        # Persistence evidence is authoritative; never let an AI/CLI declaration
+        # upgrade the candidate above the persisted supporting signals.
+        evidence_level = evidence_gate["evidence_level"]
+
     result = calculate_candidate_score(scores, evidence_level, stop_checks)
 
-    # Preserve full candidate payload if available, else construct standard envelope
-    output = dict(candidate_payload) if candidate_payload else {
+    output = {
         "candidate_id": args.candidate_id,
         "research_id": args.research_id,
         "title": args.title,
         "domain": args.domain,
         "operator": args.operator,
         "track": args.track,
+        "evaluation": result
     }
-    output["calculated_score"] = result
+    if evidence_gate is not None:
+        output["deterministic_evidence_gate"] = evidence_gate
 
-    if args.save_db or (args.input and args.sqlite_db and os.path.exists(args.sqlite_db)):
-        signals = [s.strip() for s in args.supporting_signals.split(",") if s.strip()] if args.supporting_signals else []
+    if args.sqlite_db:
         persist_candidate_to_sqlite(
             db_path=args.sqlite_db,
             candidate_id=args.candidate_id,

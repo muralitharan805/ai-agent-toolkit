@@ -12,6 +12,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import sys
 import uuid
 from datetime import date
@@ -20,22 +21,13 @@ from typing import Any, Dict, Optional
 
 
 def _load_discovery_db_class():
-    candidates = [
-        Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path(__file__).resolve().parents[2] / "discovery-state" / "scripts" / "discovery_db.py",
-        Path(__file__).resolve().parents[3] / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path(__file__).resolve().parents[4] / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path.cwd() / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path.cwd() / ".agents" / "skills" / "discovery-state" / "scripts" / "discovery_db.py",
-    ]
-    for db_module_path in candidates:
-        if db_module_path.exists():
-            spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
-            if spec and spec.loader:
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                return module.DiscoveryDB
-    raise RuntimeError(f"Unable to load discovery-state client from candidates: {candidates}")
+    db_module_path = Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py"
+    spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load discovery-state client from {db_module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.DiscoveryDB
 
 
 def compute_file_sha256(file_path: Optional[str]) -> Optional[str]:
@@ -59,10 +51,18 @@ def design_experiment(
     minimum_usable: int = 5,
     duration_days: int = 7,
     artifact_type: str = "CSV observation log",
+    aggregation_rule: Optional[str] = None,
     experiment_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     if minimum_usable > sample_target:
         raise ValueError("minimum_usable cannot exceed sample_target")
+    if not aggregation_rule:
+        raise ValueError("aggregation_rule is required and must be locked before execution")
+    metric_key = primary_metric.strip().lower()
+    if re.search(r"(?:^|_)or(?:_|$)|\\bor\\b|\\band\\b|/", metric_key):
+        raise ValueError(
+            "primary_metric must measure one atomic outcome; split compound metrics into separate experiments"
+        )
     exp_id = experiment_id or f"EXP-{uuid.uuid4().hex[:12].upper()}"
     return {
         "schema_version": "1.0",
@@ -80,6 +80,7 @@ def design_experiment(
         "sample": {"target": sample_target, "minimum_usable": minimum_usable},
         "period": {"duration_days": duration_days, "start_at": "TO_BE_LOCKED_BEFORE_EXECUTION"},
         "primary_metric": {"name": primary_metric, "unit": "events"},
+        "aggregation_rule": aggregation_rule,
         "success_threshold": {"metric": primary_metric, "operator": direction, "value": target_threshold},
         "success_rule": f"Primary metric must satisfy {direction} {target_threshold} under the preregistered aggregation rule.",
         "failure_rule": f"Fail when the completed usable sample does not satisfy {direction} {target_threshold}.",
@@ -139,6 +140,35 @@ def assess_experiment(
     threshold = float(contract.get("success_threshold", {}).get("value"))
     direction = contract.get("success_threshold", {}).get("operator")
     validation_target = contract.get("validation_target", "BEHAVIOR_FREQUENCY")
+
+    if not contract.get("aggregation_rule"):
+        return {
+            "schema_version": "1.0",
+            "mode": "ASSESS",
+            "experiment_id": exp_id,
+            "candidate_id": candidate_id,
+            "status": "INVALID_EXPERIMENT",
+            "experiment_completed": False,
+            "experiment_passed": False,
+            "observed_result": {
+                "sample_achieved": sample_achieved,
+                "observed_value": observed_value,
+                "target_threshold": threshold,
+                "direction": direction,
+            },
+            "artifact_review": {
+                "artifact_path": artifact_path,
+                "sha256": artifact_hash,
+                "human_review_completed": False,
+                "audited_by": audited_by,
+                "audit_date": audit_date,
+            },
+            "validation_assessment": _validation_scope(validation_target, False),
+            "supported_claims": [],
+            "unsupported_claims": ["The preregistered contract did not define how participant observations are aggregated."],
+            "remaining_unknowns": ["Experiment aggregation semantics"],
+            "next_action": "RESTART_WITH_EXPLICIT_AGGREGATION_RULE",
+        }
 
     computed_hash = compute_file_sha256(artifact_path)
     final_hash = computed_hash or artifact_hash
@@ -239,6 +269,11 @@ def main() -> None:
     parser.add_argument("--hypothesis")
     parser.add_argument("--metric")
     parser.add_argument("--threshold", type=float)
+    parser.add_argument(
+        "--aggregation-rule",
+        choices=["MEAN_PER_PARTICIPANT", "MEDIAN_PER_PARTICIPANT", "TOTAL_EVENTS", "COUNT_PARTICIPANTS_MEETING_THRESHOLD"],
+        help="Locked rule for reducing participant observations to the primary observed value",
+    )
     parser.add_argument("--direction", default=">=", choices=[">=", "<=", ">", "<", "=="])
     parser.add_argument("--sample-target", type=int, default=5)
     parser.add_argument("--minimum-usable", type=int, default=5)
@@ -251,15 +286,15 @@ def main() -> None:
     parser.add_argument("--audit-date")
     parser.add_argument("--input", help="ExperimentContract JSON path for ASSESS")
     parser.add_argument("--output")
-    parser.add_argument("--sqlite-db", "--db", default=os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite"), help="Path to SQLite database")
+    parser.add_argument("--sqlite-db")
     args = parser.parse_args()
 
-    DiscoveryDB = _load_discovery_db_class() if (args.sqlite_db and os.path.exists(args.sqlite_db)) else None
+    DiscoveryDB = _load_discovery_db_class() if args.sqlite_db else None
     db = DiscoveryDB(args.sqlite_db) if DiscoveryDB else None
 
     if args.mode == "design":
-        if not all([args.candidate_id, args.hypothesis, args.metric, args.threshold is not None]):
-            raise SystemExit("design requires --candidate-id --hypothesis --metric --threshold")
+        if not all([args.candidate_id, args.hypothesis, args.metric, args.threshold is not None, args.aggregation_rule]):
+            raise SystemExit("design requires --candidate-id --hypothesis --metric --threshold --aggregation-rule")
         contract = design_experiment(
             candidate_id=args.candidate_id,
             hypothesis=args.hypothesis,
@@ -270,6 +305,7 @@ def main() -> None:
             sample_target=args.sample_target,
             minimum_usable=args.minimum_usable,
             duration_days=args.duration_days,
+            aggregation_rule=args.aggregation_rule,
             experiment_id=args.experiment_id,
         )
         if db:

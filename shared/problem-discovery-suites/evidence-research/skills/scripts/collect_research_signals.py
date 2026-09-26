@@ -29,22 +29,13 @@ REQUEST_TIMEOUT_SECONDS = 10
 
 def _load_discovery_db_class():
     """Load the canonical discovery-state client without making suite directories import packages."""
-    candidates = [
-        Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path(__file__).resolve().parents[2] / "discovery-state" / "scripts" / "discovery_db.py",
-        Path(__file__).resolve().parents[3] / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path(__file__).resolve().parents[4] / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path.cwd() / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
-        Path.cwd() / ".agents" / "skills" / "discovery-state" / "scripts" / "discovery_db.py",
-    ]
-    for db_module_path in candidates:
-        if db_module_path.exists():
-            spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
-            if spec and spec.loader:
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                return module.DiscoveryDB
-    raise RuntimeError(f"Unable to load discovery-state client from candidates: {[str(p) for p in candidates]}")
+    db_module_path = Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py"
+    spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load discovery-state client from {db_module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.DiscoveryDB
 
 def clean_html_text(text: str) -> str:
     """Removes HTML tags and normalizes whitespace."""
@@ -262,8 +253,12 @@ def execute_plan_searches(
                                 "inspection_status": raw_res.get("inspection_status", "SNIPPET_ONLY")
                             },
                             "actor": {
-                                "role": stream.get("operator", {}).get("title") if isinstance(stream.get("operator"), dict) else None,
-                                "role_is_self_reported": False
+                                "role": None,
+                                "role_is_self_reported": False,
+                                "role_provenance": "UNKNOWN"
+                            },
+                            "research_context": {
+                                "target_operator": stream.get("operator", {}).get("title") if isinstance(stream.get("operator"), dict) else None
                             },
                             "observation": {
                                 "reported_issue": raw_res.get("excerpt", ""),
@@ -273,6 +268,7 @@ def execute_plan_searches(
                             },
                             "evidence": {
                                 "classification": "UNASSESSED",
+                                "evidence_kind": "RAW_SEARCH_HIT",
                                 "independently_corroborated": False,
                                 "human_audited_primary_evidence": False,
                                 "verification_status": "UNVERIFIED"
@@ -336,7 +332,7 @@ def main():
     )
     parser.add_argument("--input", help="Path to input ResearchPlan JSON file or inline string")
     parser.add_argument("--output", help="Path to output ResearchSignals JSON file")
-    parser.add_argument("--sqlite-db", "--db", default=os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite"), help="Path to SQLite database to read plan or persist signals")
+    parser.add_argument("--sqlite-db", help="Path to SQLite database to read plan or persist signals")
     parser.add_argument("--run-id", help="Research run identifier")
     parser.add_argument("--providers", default="hackernews,github,reddit", help="Comma-separated provider adapters")
     parser.add_argument("--no-live-fetch", action="store_true", help="Execute in offline/mock mode without network calls")
@@ -347,15 +343,14 @@ def main():
     plan: Optional[Dict[str, Any]] = None
 
     # Load from SQLite or input file
-    db_path = args.sqlite_db
-    if args.run_id and not args.input and db_path and os.path.exists(db_path):
-        conn = sqlite3.connect(db_path)
+    if args.sqlite_db and args.run_id and not args.input:
+        conn = sqlite3.connect(args.sqlite_db)
         try:
             cursor = conn.cursor()
             cursor.execute("SELECT plan_json FROM research_runs WHERE research_id = ?", (args.run_id,))
             row = cursor.fetchone()
             if not row or not row[0]:
-                sys.stderr.write(f"[ERROR] No plan_json found for run {args.run_id} in {db_path}\n")
+                sys.stderr.write(f"[ERROR] No plan_json found for run {args.run_id} in {args.sqlite_db}\n")
                 sys.exit(1)
             plan = json.loads(row[0])
         finally:
@@ -371,14 +366,14 @@ def main():
             sys.stderr.write(f"[ERROR] Failed to load --input: {e}\n")
             sys.exit(1)
     else:
-        sys.stderr.write("[ERROR] Either --input or both --sqlite-db (valid db file) and --run-id must be provided.\n")
+        sys.stderr.write("[ERROR] Either --input or both --sqlite-db and --run-id must be provided.\n")
         sys.exit(1)
 
     providers = [p.strip().lower() for p in args.providers.split(",") if p.strip()]
     signals_output = execute_plan_searches(plan, providers, no_live_fetch=args.no_live_fetch)
 
-    if db_path and os.path.exists(db_path):
-        save_signals_to_sqlite(db_path, signals_output)
+    if args.sqlite_db:
+        save_signals_to_sqlite(args.sqlite_db, signals_output)
 
     formatted_json = json.dumps(signals_output, indent=2)
 

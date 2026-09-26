@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import collections
 import json
-import os
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -252,6 +251,13 @@ def build_solution_strategy_context(conn: sqlite3.Connection, candidate_id: str)
 
     passed = sum(1 for r in experiments if r["outcome_verdict"] == "PASSED")
     failed = sum(1 for r in experiments if r["outcome_verdict"] == "FAILED")
+    invalid = sum(1 for r in experiments if r["outcome_verdict"] == "INVALID")
+    incomplete = sum(1 for r in experiments if r["outcome_verdict"] == "INCOMPLETE")
+    unfinished = sum(1 for r in experiments if r["outcome_verdict"] in {"PREREGISTERED", "INCOMPLETE"})
+    solution_ready = (
+        cand["validation_status"] in {"PARTIALLY_VALIDATED", "VALIDATED"}
+        and unfinished == 0
+    )
     total_signals = conn.execute(
         "SELECT COUNT(*) AS cnt FROM evidence_signals WHERE candidate_id=?", (candidate_id,)
     ).fetchone()["cnt"]
@@ -282,7 +288,18 @@ def build_solution_strategy_context(conn: sqlite3.Connection, candidate_id: str)
             "total_trials": len(experiments),
             "passed": passed,
             "failed": failed,
+            "invalid": invalid,
+            "incomplete": incomplete,
+            "unfinished": unfinished,
             "latest_trial": experiments[0] if experiments else None,
+        },
+        "solution_readiness": {
+            "ready": solution_ready,
+            "reason": (
+                "VALIDATED_CLAIM_AVAILABLE"
+                if solution_ready
+                else "UNFINISHED_EXPERIMENT_OR_NO_PASSED_VALIDATION"
+            ),
         },
         "deterministic_summary": {
             "total_signals": total_signals,
@@ -293,6 +310,7 @@ def build_solution_strategy_context(conn: sqlite3.Connection, candidate_id: str)
             "unknown_requirements_cannot_justify_complexity": True,
             "gate_saas_speculation": True,
             "do_not_invent_pricing_or_wtp": True,
+            "do_not_finalize_solution_when_solution_readiness_is_false": True,
         },
     }
 
@@ -424,7 +442,7 @@ def main() -> None:
         required=True,
         choices=["problem-evaluation", "experiment-validation", "solution-strategy", "discovery-query"],
     )
-    parser.add_argument("--db", default=os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite"), help="Path to SQLite database")
+    parser.add_argument("--db", default="discovery.sqlite")
     parser.add_argument("--research-id")
     parser.add_argument("--candidate-id")
     parser.add_argument("--experiment-id")
