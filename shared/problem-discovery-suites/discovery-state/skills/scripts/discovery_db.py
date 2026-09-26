@@ -434,7 +434,8 @@ class DiscoveryDB:
         try:
             existing = conn.execute(
                 """
-                SELECT origin_research_id, research_score, evidence_level, lifecycle_status
+                SELECT origin_research_id, research_score, evidence_level, lifecycle_status,
+                       evaluation_json
                 FROM candidates WHERE candidate_id=?
                 """,
                 (candidate_id,),
@@ -443,6 +444,7 @@ class DiscoveryDB:
             final_score = gate["research_score"]
             final_level = gate["evidence_level"]
             final_lifecycle = gated_lifecycle
+            final_evaluation_json = self._json(gated_evaluation)
 
             # A later weak rediscovery may add evidence to a stable candidate, but must not
             # erase stronger evidence or regress a more advanced lifecycle state.
@@ -450,6 +452,7 @@ class DiscoveryDB:
                 if EVIDENCE_RANK.get(existing["evidence_level"], 0) > EVIDENCE_RANK.get(final_level, 0):
                     final_level = existing["evidence_level"]
                     final_score = existing["research_score"]
+                    final_evaluation_json = existing["evaluation_json"]
                 if existing["lifecycle_status"] not in {"ACTIVE", "RESEARCH_PRIORITY", "PARKED"}:
                     final_lifecycle = existing["lifecycle_status"]
 
@@ -481,7 +484,7 @@ class DiscoveryDB:
                     final_score,
                     final_level,
                     final_lifecycle,
-                    self._json(gated_evaluation),
+                    final_evaluation_json,
                 ),
             )
 
@@ -621,11 +624,52 @@ class DiscoveryDB:
         conn = self._get_connection()
         try:
             exp = conn.execute(
-                "SELECT candidate_id FROM experiments WHERE experiment_id=?", (experiment_id,)
+                "SELECT candidate_id, contract_json FROM experiments WHERE experiment_id=?", (experiment_id,)
             ).fetchone()
             if not exp:
                 raise ValueError(f"Experiment '{experiment_id}' not found")
             candidate_id = exp["candidate_id"]
+            contract = self._loads(exp["contract_json"])
+            sample = contract.get("sample", {}) if isinstance(contract.get("sample"), dict) else {}
+            threshold = contract.get("success_threshold", {}) if isinstance(contract.get("success_threshold"), dict) else {}
+            artifact_requirements = contract.get("artifact_requirements", {}) if isinstance(contract.get("artifact_requirements"), dict) else {}
+            review_requirements = contract.get("review_requirements", {}) if isinstance(contract.get("review_requirements"), dict) else {}
+
+            sample_achieved = observed.get("sample_achieved")
+            observed_value = observed.get("observed_value")
+            min_usable = int(sample.get("minimum_usable", 0) or 0)
+            locked_threshold = threshold.get("value")
+            direction = threshold.get("operator")
+            final_hash = artifact_hash or review.get("sha256")
+            final_auditor = audited_by or review.get("audited_by")
+            final_audit_date = audit_date or review.get("audit_date")
+
+            if sample_achieved is not None and int(sample_achieved) < min_usable and verdict != "INCOMPLETE":
+                raise ValueError("Assessment verdict conflicts with preregistered minimum usable sample")
+
+            if verdict in {"PASSED", "FAILED"}:
+                if artifact_requirements.get("required") and not final_hash:
+                    raise ValueError("Audited PASS/FAIL requires the preregistered evidence artifact hash")
+                if review_requirements.get("human_review_required") and not (final_auditor and final_audit_date):
+                    raise ValueError("Audited PASS/FAIL requires named reviewer and review date")
+                if observed_value is None or locked_threshold is None or not direction:
+                    raise ValueError("Audited PASS/FAIL requires observed value and locked threshold")
+                observed_num = float(observed_value)
+                threshold_num = float(locked_threshold)
+                comparison = {
+                    ">=": observed_num >= threshold_num,
+                    "<=": observed_num <= threshold_num,
+                    ">": observed_num > threshold_num,
+                    "<": observed_num < threshold_num,
+                    "==": observed_num == threshold_num,
+                }.get(direction)
+                if comparison is None:
+                    raise ValueError(f"Unsupported experiment direction: {direction}")
+                expected = "PASSED" if comparison else "FAILED"
+                if verdict != expected:
+                    raise ValueError(
+                        f"Assessment verdict {verdict} conflicts with locked threshold; expected {expected}"
+                    )
 
             conn.execute(
                 """
@@ -640,9 +684,9 @@ class DiscoveryDB:
                     observed.get("observed_value"),
                     verdict,
                     self._json(assessment_dict),
-                    artifact_hash or review.get("sha256"),
-                    audited_by or review.get("audited_by"),
-                    audit_date or review.get("audit_date"),
+                    final_hash,
+                    final_auditor,
+                    final_audit_date,
                     experiment_id,
                 ),
             )
