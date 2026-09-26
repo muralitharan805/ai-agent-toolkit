@@ -73,7 +73,9 @@ graph TD
   - `L5`: Unvalidated hypothesis or speculative commentary.
   - `UNASSESSED`: Default for raw search/API hits and single public posts until the above standard is met.
 - A Reddit/HN/GitHub result is **not automatically L3**. Preserve `UNASSESSED` until corroboration is demonstrated.
+- Search-stream target operator is research context, not observed source identity. For raw search hits store `actor.role = null`, `role_provenance = UNKNOWN`, and keep the planned operator separately under `research_context.target_operator`.
 - Mark all claims as `UNVERIFIED` until the evidence standard for corroboration or primary proof is met.
+- Set `evidence.evidence_kind` so downstream scoring can distinguish behavioral primary evidence, practitioner testimony, corroboration, official policy, secondary interpretation, hypotheses, and raw search hits.
 
 ### Phase 5: Deduplication, Corroboration & Alternatives Audit
 - When multiple queries return the same URL, create a single canonical signal linking all matching `query_ids`.
