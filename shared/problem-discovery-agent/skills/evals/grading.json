@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "problem-discovery-agent",
+  "evaluated_at": "2026-09-26T14:11:04.752213+00:00",
+  "evaluator": "eval-suite-validator v1.1.0",
+  "verdict": "not_evaluated",
+  "deterministic_coverage_percent": 0,
+  "benchmark": null,
+  "summary": {
+    "total_test_cases": 5,
+    "verified_test_cases": 0,
+    "failed_test_cases": 0,
+    "not_evaluated_test_cases": 5,
+    "total_assertions": 21,
+    "verified_assertions": 0,
+    "failed_assertions": 0,
+    "not_evaluated_assertions": 21
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "New Research Request Routing to Research Planning",
+      "status": "not_evaluated",
+      "assertions_total": 5,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 5,
+      "details": [
+        {
+          "assertion": "Identifies prompt as a new research request",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Invokes determine_next_stage.py with the user request",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Selects research-planning as the target skill",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Reserves a valid RUN identifier without creating synthetic evidence",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Emits clear stage progression output to the user",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Read-Only Status Query without Database Mutation",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Classifies prompt as a read-only query",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Routes to discovery-state capability for dashboard query",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Preserves existing SQLite state without mutation",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Presents candidate score, evidence level, and experiment summary",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Mandatory Workflow Pause at Preregistered Experiment",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Preregisters the experiment contract in SQLite",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Enforces the pause invariant upon encountering outcome_verdict = 'PREREGISTERED'",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Refuses to simulate or hallucinate participant trial observations",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Emits concrete instructions for conducting trial and resuming later",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Trial Artifact Ingestion and Assessment Routing",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Parses observed metrics, sample size, SHA-256 digest, and auditor metadata",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Invokes experiment-validation in ASSESS mode",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Evaluates observed value against preregistered contract threshold",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Updates candidate validation_status in SQLite upon verified trial pass",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Solution Strategy Gating for Validated Problem",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Verifies candidate validation prerequisite before solution design",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Delegates to solution-strategy capability",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Evaluates non-software sufficiency before approving software",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        },
+        {
+          "assertion": "Persists solution class and finalizes candidate record in SQLite",
+          "status": "not_evaluated",
+          "evidence": "Dry-run mode validates suite structure only.",
+          "remediation": null
+        }
+      ]
+    }
+  ]
+}

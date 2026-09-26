@@ -1,0 +1,71 @@
+{
+  "skill_name": "problem-discovery-agent",
+  "evals": [
+    {
+      "id": 1,
+      "name": "New Research Request Routing to Research Planning",
+      "prompt": "/problem-discovery Research whether boutique apparel brands face recurring inventory reconciliation discrepancies across Shopify and Faire.",
+      "expected_output": "Inspects state via determine_next_stage.py, identifies a fresh domain request, reserves a stable RUN-YYYY-NNN identifier, and delegates to the research-planning capability to produce a structured ResearchPlan contract.",
+      "assertions": [
+        "Identifies prompt as a new research request",
+        "Invokes determine_next_stage.py with the user request",
+        "Selects research-planning as the target skill",
+        "Reserves a valid RUN identifier without creating synthetic evidence",
+        "Emits clear stage progression output to the user"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Read-Only Status Query without Database Mutation",
+      "prompt": "/problem-discovery status CAND-001",
+      "expected_output": "Classifies the intent as READ_ONLY_QUERY, queries SQLite for candidate status and linked metrics, and displays the single-pane dashboard view without advancing lifecycle stages or modifying records.",
+      "assertions": [
+        "Classifies prompt as a read-only query",
+        "Routes to discovery-state capability for dashboard query",
+        "Preserves existing SQLite state without mutation",
+        "Presents candidate score, evidence level, and experiment summary"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Mandatory Workflow Pause at Preregistered Experiment",
+      "prompt": "Evaluate candidate CAND-002, complete experiment design, and determine the next action.",
+      "expected_output": "Delegates to experiment-validation in DESIGN mode, records an immutable ExperimentContract in SQLite with outcome_verdict = 'PREREGISTERED', and immediately pauses the workflow, instructing the user to collect real-world trial data.",
+      "assertions": [
+        "Preregisters the experiment contract in SQLite",
+        "Enforces the pause invariant upon encountering outcome_verdict = 'PREREGISTERED'",
+        "Refuses to simulate or hallucinate participant trial observations",
+        "Emits concrete instructions for conducting trial and resuming later"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Trial Artifact Ingestion and Assessment Routing",
+      "prompt": "/problem-discovery continue CAND-002 with trial results: sample_achieved=18, observed_value=0.015, artifact_hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855, audited_by=murali, audit_date=2026-09-26",
+      "expected_output": "Recognizes observed trial results and cryptographic artifact digest, invokes experiment-validation in ASSESS mode, checks observed values against the immutable contract threshold, and records the assessed verdict.",
+      "assertions": [
+        "Parses observed metrics, sample size, SHA-256 digest, and auditor metadata",
+        "Invokes experiment-validation in ASSESS mode",
+        "Evaluates observed value against preregistered contract threshold",
+        "Updates candidate validation_status in SQLite upon verified trial pass"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "Solution Strategy Gating for Validated Problem",
+      "prompt": "Continue CAND-002 after successful trial validation.",
+      "expected_output": "Inspects SQLite state, verifies candidate validation_status is PARTIALLY_VALIDATED or VALIDATED, and delegates to solution-strategy to execute the non-software sufficiency gate, 15-point constraint audit, and Smallest Testable Solution (STS) design.",
+      "assertions": [
+        "Verifies candidate validation prerequisite before solution design",
+        "Delegates to solution-strategy capability",
+        "Evaluates non-software sufficiency before approving software",
+        "Persists solution class and finalizes candidate record in SQLite"
+      ],
+      "files": []
+    }
+  ]
+}

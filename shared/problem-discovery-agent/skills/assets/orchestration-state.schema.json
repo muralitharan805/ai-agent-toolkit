@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentskills.io/schemas/problem-discovery-orchestration-state.json",
+  "title": "ProblemDiscoveryOrchestrationState",
+  "description": "Deterministic lifecycle inspection and routing state contract for Problem Discovery.",
+  "type": "object",
+  "required": [
+    "action",
+    "status",
+    "reason"
+  ],
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": [
+        "INVOKE_SKILL",
+        "PAUSE_FOR_HUMAN",
+        "QUERY_DATABASE",
+        "COMPLETE",
+        "ERROR"
+      ],
+      "description": "The determined operational action for the workflow."
+    },
+    "target_skill": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "research-planning",
+        "evidence-research",
+        "problem-evaluation",
+        "experiment-validation",
+        "solution-strategy",
+        "discovery-state",
+        null
+      ],
+      "description": "The authorized downstream skill capability to execute."
+    },
+    "target_task": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "research-planning",
+        "evidence-research",
+        "problem-evaluation",
+        "experiment-validation",
+        "solution-strategy",
+        "discovery-query",
+        null
+      ],
+      "description": "Task name for build_agent_context.py context pack generation."
+    },
+    "mode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "DESIGN",
+        "ASSESS",
+        null
+      ],
+      "description": "Operating mode for experiment-validation skill."
+    },
+    "entity_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Active research run ID (RUN-YYYY-NNN) or candidate ID (CAND-NNN)."
+    },
+    "candidate_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Associated candidate ID when context pack requires it."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "READY",
+        "PAUSED",
+        "COMPLETED",
+        "ERROR"
+      ],
+      "description": "Execution status of the orchestration step."
+    },
+    "pause_reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "WAITING_FOR_REAL_WORLD_EXPERIMENT",
+        "WAITING_FOR_USER_INPUT",
+        null
+      ],
+      "description": "Explanation for human-in-the-loop pause."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Objective rationale for the determined action."
+    },
+    "next_step_hint": {
+      "type": "string",
+      "description": "Actionable instruction or CLI command to execute the next step."
+    }
+  },
+  "additionalProperties": false
+}
