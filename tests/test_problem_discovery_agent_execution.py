@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 from agents.problem_discovery.agent import ProblemDiscoveryAgent
 from agents.problem_discovery.config import ProblemDiscoveryConfig
@@ -208,6 +210,86 @@ class ProblemDiscoveryRealExecutionTest(unittest.TestCase):
             self.assertIsNone(candidate["solution_json"])
         finally:
             conn.close()
+
+    def test_exact_legacy_synthetic_fingerprint_blocks_further_reasoning(self) -> None:
+        run_id = "RUN-2026-099"
+        candidate_id = "CAND-099"
+        experiment_id = "EXP-099"
+
+        self.agent.tools_provider.create_research_run(
+            research_id=run_id,
+            request="Legacy synthetic demo state",
+            domain="ops",
+            plan_dict={
+                "schema_version": "1.0",
+                "research_id": run_id,
+                "original_request": "Legacy synthetic demo state",
+                "scope": {"domain": "ops", "scope_type": "NARROW", "geography": None},
+                "research_streams": [],
+                "unknowns": [],
+            },
+        )
+        self.agent.tools_provider.upsert_candidate(
+            candidate_id=candidate_id,
+            research_id=run_id,
+            title="Recurring Operational Friction & Manual Workarounds in Ops",
+            domain="ops",
+            evaluation_dict={"research_score": {"scores": {}}},
+            supporting_signal_ids=[],
+        )
+
+        conn = sqlite3.connect(self.db_path)
+        try:
+            conn.execute(
+                """
+                INSERT INTO experiments (
+                    experiment_id, candidate_id, hypothesis, metric_name,
+                    target_threshold, direction, sample_target, sample_achieved,
+                    observed_value, outcome_verdict, contract_json,
+                    assessment_json, artifact_hash, audited_by, audit_date
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    experiment_id,
+                    candidate_id,
+                    "Synthetic legacy hypothesis",
+                    "weekly_operational_interventions",
+                    3.0,
+                    ">=",
+                    6,
+                    6,
+                    4.6,
+                    "PASSED",
+                    json.dumps({"aggregation_rule": "MEAN_PER_PARTICIPANT"}),
+                    json.dumps({"status": "EXPERIMENT_PASSED"}),
+                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "Murali (Principal Architect & SeyaliCraft Lead)",
+                    "2026-09-26",
+                ),
+            )
+            conn.execute(
+                """
+                UPDATE candidates
+                SET validation_status='PARTIALLY_VALIDATED',
+                    lifecycle_status='READY_FOR_SOLUTION'
+                WHERE candidate_id=?
+                """,
+                (candidate_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        self.agent._chat_sdk = AsyncMock(return_value="should not run")
+        initial = self.agent.state_machine.evaluate_next_action(candidate_id)
+        self.assertEqual(initial.current_stage.value, "SOLUTION_STRATEGY")
+
+        result = asyncio.run(self.agent._run_existing_state_until_blocked(initial))
+
+        self.assertEqual(result.workflow_status.value, "ERROR")
+        self.assertEqual(result.next_action, "AUDIT_OR_RESET_LEGACY_SYNTHETIC_STATE")
+        self.assertIn("removed synthetic end-to-end demo", result.message)
+        self.agent._chat_sdk.assert_not_awaited()
 
     def test_backward_compatible_full_lifecycle_alias_also_pauses(self) -> None:
         self.agent._chat_sdk = self._fake_stage_agent
