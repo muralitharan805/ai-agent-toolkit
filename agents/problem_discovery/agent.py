@@ -209,17 +209,31 @@ class ProblemDiscoveryAgent:
         timeout_seconds = 120.0
         for attempt in range(max_retries):
             try:
+                async def _invoke(target_agent: Any) -> tuple[str, Any]:
+                    resp = await target_agent.chat(prompt)
+                    text_parts = []
+                    async for chunk in resp.chunks:
+                        if types and isinstance(chunk, types.ToolCall):
+                            now_ts = datetime.now().strftime("%H:%M:%S")
+                            print(
+                                f"[{now_ts}]   [Stage Tool Dispatched] Invoking `{chunk.name}`...",
+                                flush=True,
+                            )
+                        elif types and isinstance(chunk, types.Text):
+                            text_parts.append(chunk.text)
+                    txt = "".join(text_parts) if text_parts else await resp.text()
+                    return txt, getattr(resp, "usage_metadata", None)
+
                 if self._sdk_agent is not None:
-                    response = await asyncio.wait_for(
-                        self._sdk_agent.chat(prompt), timeout=timeout_seconds
+                    text_content, meta = await asyncio.wait_for(
+                        _invoke(self._sdk_agent), timeout=timeout_seconds
                     )
                 else:
                     async with self.create_sdk_agent(stage=stage, mode=mode) as agent:
-                        response = await asyncio.wait_for(
-                            agent.chat(prompt), timeout=timeout_seconds
+                        text_content, meta = await asyncio.wait_for(
+                            _invoke(agent), timeout=timeout_seconds
                         )
 
-                meta = getattr(response, "usage_metadata", None)
                 if meta is not None:
                     inp = getattr(meta, "prompt_token_count", 0) or 0
                     out = getattr(meta, "candidates_token_count", 0) or 0
@@ -234,7 +248,7 @@ class ProblemDiscoveryAgent:
                         flush=True,
                     )
 
-                return await response.text()
+                return text_content
             except (asyncio.TimeoutError, TimeoutError):
                 now_ts = datetime.now().strftime("%H:%M:%S")
                 if attempt < max_retries - 1:
