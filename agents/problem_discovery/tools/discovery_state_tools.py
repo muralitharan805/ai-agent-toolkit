@@ -468,23 +468,93 @@ class DiscoveryStateTools:
         audited_by: Optional[str] = None,
         audit_date: Optional[str] = None,
     ) -> str:
-        """Audit and record empirical experiment results against the locked contract in SQLite.
+        """Persist a real experiment assessment against the locked contract.
 
-        Args:
-            experiment_id: Target experiment identifier.
-            result_dict: Audited ValidationAssessment dictionary (or alias for assessment_dict).
-            assessment_dict: Structured assessment dictionary adhering to validation-assessment.schema.json.
-            artifact_hash: SHA-256 evidence digest.
-            audited_by: Named human reviewer.
-            audit_date: Audit date string (YYYY-MM-DD).
-
-        Returns:
-            Experiment outcome verdict string ('PASSED', 'FAILED', 'INCOMPLETE', 'INVALID').
+        No default PASS exists. When status is omitted, this wrapper may derive
+        PASS/FAIL/INCOMPLETE only from supplied observations and the immutable
+        persisted contract. Missing required evidence raises ValueError and does
+        not mutate the experiment.
         """
         data = dict(assessment_dict or result_dict or {})
-        raw_status = data.get("status") or data.get("outcome_verdict") or "EXPERIMENT_PASSED"
+        a_hash = artifact_hash or data.get("artifact_hash")
+        auditor = audited_by or data.get("audited_by")
+        a_date = audit_date or data.get("audit_date")
 
-        # Normalize status to DiscoveryDB expected values
+        observed = data.get("observed_result")
+        if not isinstance(observed, dict):
+            observed = {
+                "sample_achieved": data.get("sample_achieved"),
+                "observed_value": data.get("observed_value"),
+            }
+            data["observed_result"] = observed
+
+        if "artifact_review" not in data:
+            data["artifact_review"] = {
+                "sha256": a_hash,
+                "audited_by": auditor,
+                "audit_date": a_date,
+            }
+
+        raw_status = data.get("status") or data.get("outcome_verdict")
+        if not raw_status:
+            contract = self.db.get_experiment_contract(experiment_id)
+            sample = contract.get("sample", {}) if isinstance(contract.get("sample"), dict) else {}
+            threshold = (
+                contract.get("success_threshold", {})
+                if isinstance(contract.get("success_threshold"), dict)
+                else {}
+            )
+            artifact_req = (
+                contract.get("artifact_requirements", {})
+                if isinstance(contract.get("artifact_requirements"), dict)
+                else {}
+            )
+            review_req = (
+                contract.get("review_requirements", {})
+                if isinstance(contract.get("review_requirements"), dict)
+                else {}
+            )
+
+            sample_achieved = observed.get("sample_achieved")
+            observed_value = observed.get("observed_value")
+            min_usable = int(sample.get("minimum_usable", sample.get("target", 0)) or 0)
+
+            if sample_achieved is None or observed_value is None:
+                raise ValueError(
+                    "Assessment requires real sample_achieved and observed_value; "
+                    "no default experiment outcome is permitted."
+                )
+
+            if int(sample_achieved) < min_usable:
+                raw_status = "INCOMPLETE"
+            else:
+                if artifact_req.get("required") and not a_hash:
+                    raise ValueError(
+                        "Assessment artifact/hash is required by the locked experiment contract."
+                    )
+                if review_req.get("human_review_required") and not (auditor and a_date):
+                    raise ValueError(
+                        "Named human reviewer and audit date are required by the locked contract."
+                    )
+
+                locked_value = threshold.get("value", contract.get("target_threshold"))
+                direction = threshold.get("operator", contract.get("direction", ">="))
+                if locked_value is None:
+                    raise ValueError("Locked experiment contract has no target threshold.")
+
+                value = float(observed_value)
+                target = float(locked_value)
+                comparisons = {
+                    ">=": value >= target,
+                    "<=": value <= target,
+                    ">": value > target,
+                    "<": value < target,
+                    "==": value == target,
+                }
+                if direction not in comparisons:
+                    raise ValueError(f"Unsupported locked threshold direction: {direction}")
+                raw_status = "EXPERIMENT_PASSED" if comparisons[direction] else "EXPERIMENT_FAILED"
+
         status_norm_map = {
             "PASSED": "EXPERIMENT_PASSED",
             "FAILED": "EXPERIMENT_FAILED",
@@ -494,31 +564,30 @@ class DiscoveryStateTools:
             "EXPERIMENT_PASSED": "EXPERIMENT_PASSED",
             "EXPERIMENT_FAILED": "EXPERIMENT_FAILED",
         }
-        data["status"] = status_norm_map.get(raw_status.upper(), raw_status)
+        normalized = status_norm_map.get(str(raw_status).upper())
+        if normalized is None:
+            raise ValueError(f"Unsupported experiment assessment status: {raw_status}")
+        data["status"] = normalized
 
-        a_hash = artifact_hash or data.get("artifact_hash")
-        auditor = audited_by or data.get("audited_by")
-        a_date = audit_date or data.get("audit_date")
-
-        if "observed_result" not in data:
-            data["observed_result"] = {
-                "sample_achieved": data.get("sample_achieved"),
-                "observed_value": data.get("observed_value"),
-            }
-        if "artifact_review" not in data:
-            data["artifact_review"] = {
-                "sha256": a_hash,
-                "audited_by": auditor,
-                "audit_date": a_date,
-            }
-
-        return self.db.record_experiment_assessment(
+        self.db.record_experiment_assessment(
             experiment_id=experiment_id,
             assessment_dict=data,
             artifact_hash=a_hash,
             audited_by=auditor,
             audit_date=a_date,
         )
+
+        conn = self._get_connection()
+        try:
+            row = conn.execute(
+                "SELECT outcome_verdict FROM experiments WHERE experiment_id=?",
+                (experiment_id,),
+            ).fetchone()
+            if not row:
+                raise ValueError(f"Experiment '{experiment_id}' not found after assessment")
+            return row["outcome_verdict"]
+        finally:
+            conn.close()
 
     def finalize_solution(
         self, candidate_id: str, solution_class: str, solution_dict: Dict[str, Any]
