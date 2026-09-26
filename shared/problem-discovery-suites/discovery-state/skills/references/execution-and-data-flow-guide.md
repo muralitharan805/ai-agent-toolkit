@@ -379,7 +379,7 @@ db = DiscoveryDB()  # Automatically resolves DISCOVERY_DB_PATH or ./discovery.sq
      ```
    - **Filter Dashboard by Status:**
      ```bash
-     python3 shared/problem-discovery-suites/discovery-state/skills/scripts/discovery_db.py --dashboard --filter-status READY_TO_BUILD
+     python3 shared/problem-discovery-suites/discovery-state/skills/scripts/discovery_db.py --dashboard --filter-status PILOT_READY
      ```
    - **FTS5 Keyword Search:**
      ```bash
