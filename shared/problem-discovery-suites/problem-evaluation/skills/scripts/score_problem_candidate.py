@@ -196,6 +196,19 @@ def main():
             sys.stderr.write(f"[ERROR] Failed to read --input: {e}\n")
             sys.exit(1)
 
+    signals = [s.strip() for s in args.supporting_signals.split(",") if s.strip()] if args.supporting_signals else []
+    evidence_gate = None
+    if args.sqlite_db:
+        DiscoveryDB = _load_discovery_db_class()
+        evidence_gate = DiscoveryDB(args.sqlite_db).derive_candidate_evidence_gate(
+            args.research_id,
+            signals,
+            {"research_score": {"scores": scores}},
+        )
+        # Persistence evidence is authoritative; never let an AI/CLI declaration
+        # upgrade the candidate above the persisted supporting signals.
+        evidence_level = evidence_gate["evidence_level"]
+
     result = calculate_candidate_score(scores, evidence_level, stop_checks)
 
     output = {
@@ -207,9 +220,10 @@ def main():
         "track": args.track,
         "evaluation": result
     }
+    if evidence_gate is not None:
+        output["deterministic_evidence_gate"] = evidence_gate
 
     if args.sqlite_db:
-        signals = [s.strip() for s in args.supporting_signals.split(",") if s.strip()] if args.supporting_signals else []
         persist_candidate_to_sqlite(
             db_path=args.sqlite_db,
             candidate_id=args.candidate_id,
