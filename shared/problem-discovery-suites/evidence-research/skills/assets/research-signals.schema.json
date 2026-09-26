@@ -99,7 +99,7 @@
               "properties": {
                 "signal_id": {
                   "type": "string",
-                  "pattern": "^SIG-[0-9]{3,}$"
+                  "pattern": "^SIG-[0-9A-Z-]+$"
                 },
                 "raw_result_ids": {
                   "type": "array",
