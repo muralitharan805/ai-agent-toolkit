@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "solution-strategy",
+  "evaluated_at": "2026-09-26T07:38:12.927346+00:00",
+  "evaluator": "eval-suite-validator v1.1.0",
+  "verdict": "not_evaluated",
+  "deterministic_coverage_percent": 0,
+  "benchmark": null,
+  "summary": {
+    "total_test_cases": 5,
+    "verified_test_cases": 0,
+    "failed_test_cases": 0,
+    "not_evaluated_test_cases": 5,
+    "total_assertions": 20,
+    "verified_assertions": 0,
+    "failed_assertions": 0,
+    "not_evaluated_assertions": 20
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Non-Software Spreadsheet Sufficiency Gate",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Evaluates non-software sufficiency first",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Selects STRUCTURED_SPREADSHEET class",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Rejects unnecessary software development",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Marks SaaS status REJECTED",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Single-User Local Script Selection",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Identifies single_user_only and local_data_only constraints",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Selects LOCAL_SCRIPT class",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Rejects SaaS development as over-engineering",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Defines local script STS pilot",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Browser Workflow Surface Selection",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Identifies browser-only surface constraint",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Selects BROWSER_EXTENSION class",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Documents third-party DOM fragility risks",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Avoids full SaaS platform over-engineering",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Headless Integration Service Selection",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Recognizes API availability and background execution requirements",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Selects INTEGRATION_SERVICE class",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Gates SaaS UI as NOT_YET_JUSTIFIED",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Defines headless worker STS",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "SaaS Justification Gate Passing",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Applies 7-point SaaS justification scorecard",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Validates multi-user and commercial WTP requirements",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Classifies SaaS as STRONG_CANDIDATE",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Designates TYPE_1 reversibility tier and concierge STS",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    }
+  ]
+}

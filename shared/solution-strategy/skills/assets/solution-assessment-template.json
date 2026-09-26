@@ -1,0 +1,64 @@
+{
+  "assessment_id": "sol_inv_sync_001",
+  "candidate_id": "cand_shopify_quickbooks_sync",
+  "evaluation_date": "2026-09-26",
+  "assessed_by": "Murali (Principal Systems Architect)",
+  "non_software_evaluation": {
+    "is_sufficient": false,
+    "recommended_non_software_class": null,
+    "friction_reduction_percentage": 35,
+    "justification": "Manual spreadsheets and copy-pasting order details across 150 daily transactions takes over 3 hours daily and introduces 4.2% inventory discrepancy errors. Non-software cannot satisfy sub-hourly stock synchronization.",
+    "software_transition_triggers": [
+      "Daily order volume > 50 orders",
+      "Stock-out error rate exceeds 1% causing customer cancellations"
+    ]
+  },
+  "constraints": {
+    "single_user_only": false,
+    "multi_user_required": false,
+    "local_data_only": false,
+    "cloud_sync_required": true,
+    "offline_capable_required": false,
+    "browser_only_surface": false,
+    "desktop_os_access_required": false,
+    "mobile_surface_required": false,
+    "scheduled_background_execution_required": true,
+    "event_driven_trigger_required": true,
+    "api_integrations_available": true,
+    "realtime_latency_sensitive": false,
+    "audit_trail_or_compliance_required": true,
+    "recurring_commercial_wtp_validated": true,
+    "high_domain_complexity_rules": false
+  },
+  "solution_class": "INTEGRATION_SERVICE",
+  "saas_justification": {
+    "verdict": "NOT_YET_JUSTIFIED",
+    "multi_user_status": "NOT_APPLICABLE",
+    "commercial_wtp_status": "PROVEN",
+    "justification": "The core requirement is automated headless synchronization between Shopify webhooks and QuickBooks REST API with an audit trail. A full multi-tenant SaaS UI is not yet justified; a dedicated headless integration service completely solves the problem with 80% less code."
+  },
+  "smallest_testable_solution": {
+    "archetype": "NO_CODE_WORKFLOW",
+    "target_hypothesis": "Automating Shopify order paid webhooks directly to QuickBooks via a stateless integration worker eliminates 95% of manual inventory reconciliation time.",
+    "estimated_build_days": 4,
+    "pilot_population": "3 e-commerce store operators with 50-200 daily orders",
+    "observation_duration_days": 14,
+    "success_threshold": "Zero inventory stock-out discrepancies and >= 90% reduction in manual reconciliation hours across 14 trial days",
+    "falsification_rule": "Frequent API rate limit throttles or complex tax calculation discrepancies requiring manual human intervention on > 5% of orders",
+    "next_step_if_passed": "Package worker as a robust, containerized headless integration service with dead-letter queue",
+    "next_step_if_failed": "Investigate tax edge cases or fall back to daily batch CSV reconciliation script"
+  },
+  "technical_operational_profile": {
+    "execution_surface": "Headless background worker / webhook consumer",
+    "state_locality": "Transactional database for idempotency keys, OAuth tokens, and audit logs",
+    "network_topography": "Inbound HTTPS webhook receiver + outbound REST API client with exponential backoff",
+    "concurrency_model": "Sequential queue per store tenant to prevent inventory race conditions",
+    "failure_modes": [
+      "Third-party API rate limits (HTTP 429)",
+      "Webhook signature replay or validation failures",
+      "Stale OAuth refresh token expiration",
+      "Unmapped SKU variations causing validation rejections"
+    ]
+  },
+  "reversibility_tier": "TYPE_2"
+}
