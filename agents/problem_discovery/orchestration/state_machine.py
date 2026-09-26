@@ -102,12 +102,18 @@ class DiscoveryStateMachine:
 
             candidates = conn.execute(
                 """
-                SELECT candidate_id, title, validation_status, lifecycle_status,
-                       research_score, evidence_level, solution_class
-                FROM candidates WHERE origin_research_id = ?
-                ORDER BY candidate_id ASC
+                SELECT DISTINCT c.candidate_id, c.title, c.validation_status, c.lifecycle_status,
+                       c.research_score, c.evidence_level, c.solution_class
+                FROM candidates c
+                WHERE c.origin_research_id = ?
+                   OR c.candidate_id IN (
+                       SELECT DISTINCT candidate_id
+                       FROM evidence_signals
+                       WHERE research_id = ? AND candidate_id IS NOT NULL
+                   )
+                ORDER BY c.candidate_id ASC
                 """,
-                (research_id,),
+                (research_id, research_id),
             ).fetchall()
 
             if unassigned_count > 0 and len(candidates) == 0:
@@ -154,7 +160,7 @@ class DiscoveryStateMachine:
 
             # Check aggregate run completion across all candidates
             refreshed = self.db.refresh_research_run_state(research_id)
-            if refreshed.get("run_status") == "COMPLETED":
+            if refreshed.get("status") == "COMPLETED":
                 return OrchestrationResult(
                     intent=IntentType.RESUME_RUN,
                     research_id=research_id,
@@ -435,11 +441,27 @@ class DiscoveryStateMachine:
 
             cid = exp["candidate_id"]
 
-            verdict = self.db.record_experiment_assessment(
-                experiment_id=experiment_id, result_dict=assessment_dict
-            )
+            from agents.problem_discovery.tools.discovery_state_tools import DiscoveryStateTools
 
-            # Determine next action based on assessment outcome
+            tools = DiscoveryStateTools(db_path=self.db_path)
+            try:
+                verdict = tools.record_experiment_assessment(
+                    experiment_id=experiment_id,
+                    assessment_dict=assessment_dict,
+                )
+            except ValueError as exc:
+                return OrchestrationResult(
+                    intent=IntentType.EXPERIMENT_RESULT,
+                    candidate_id=cid,
+                    experiment_id=experiment_id,
+                    current_stage=WorkflowStage.EXPERIMENT_VALIDATION,
+                    action_taken="Experiment assessment was not persisted.",
+                    workflow_status=WorkflowStatus.PAUSED,
+                    pause_reason=PauseReason.HUMAN_INPUT_REQUIRED.value,
+                    next_action="PROVIDE_REQUIRED_EXPERIMENT_EVIDENCE",
+                    message=str(exc),
+                )
+
             next_action_res = self._evaluate_candidate_state(cid)
             next_action_res.intent = IntentType.EXPERIMENT_RESULT
             next_action_res.experiment_id = experiment_id

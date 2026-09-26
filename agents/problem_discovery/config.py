@@ -31,18 +31,16 @@ def get_default_db_path() -> Path:
 
     Precedence:
     1. DISCOVERY_DB_PATH environment variable if set.
-    2. ./discovery.sqlite at repository root if it exists.
-    3. shared/problem-discovery-suites/discovery-state/data/discovery.sqlite
+    2. shared/problem-discovery-suites/discovery-state/data/discovery.sqlite
+
+    The path is intentionally independent of the process working directory so the
+    agent cannot silently create multiple discovery databases.
     """
     env_path = os.environ.get("DISCOVERY_DB_PATH")
     if env_path:
         return Path(env_path).expanduser().resolve()
 
     root = get_repo_root()
-    root_db = root / "discovery.sqlite"
-    if root_db.exists():
-        return root_db
-
     return root / "shared" / "problem-discovery-suites" / "discovery-state" / "data" / "discovery.sqlite"
 
 

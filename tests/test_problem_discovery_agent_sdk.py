@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 from agents.problem_discovery.agent import ProblemDiscoveryAgent
-from agents.problem_discovery.config import (
-    ProblemDiscoveryConfig,
-    get_canonical_skills_paths,
-    get_repo_root,
-)
+from agents.problem_discovery.config import ProblemDiscoveryConfig, get_canonical_skills_paths
 
 
 class ProblemDiscoveryAgentSDKTest(unittest.TestCase):
@@ -25,54 +23,57 @@ class ProblemDiscoveryAgentSDKTest(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_canonical_skill_paths_exist_and_resolve(self) -> None:
-        """Verify that all 6 Problem Discovery modular skills resolve to real directories."""
         skill_paths = get_canonical_skills_paths()
         self.assertEqual(len(skill_paths), 6)
-        for p in skill_paths:
-            path_obj = Path(p)
-            self.assertTrue(path_obj.exists(), f"Skill path does not exist: {p}")
-            self.assertTrue(path_obj.is_dir(), f"Skill path must be a directory: {p}")
-            skill_md = path_obj / "SKILL.md"
-            self.assertTrue(skill_md.exists(), f"SKILL.md missing in {p}")
+        for path in skill_paths:
+            skill_dir = Path(path)
+            self.assertTrue(skill_dir.exists(), f"Skill path does not exist: {path}")
+            self.assertTrue((skill_dir / "SKILL.md").exists(), f"SKILL.md missing in {path}")
 
     def test_antigravity_sdk_import_and_local_agent_config(self) -> None:
-        """Verify google-antigravity imports, LocalAgentConfig builds, and tools register."""
         try:
-            from google.antigravity import Agent, LocalAgentConfig
+            from google.antigravity import LocalAgentConfig
         except ImportError:
             self.skipTest("google-antigravity is not installed in the active environment.")
 
-        config = ProblemDiscoveryConfig(db_path=self.db_path)
-        agent = ProblemDiscoveryAgent(config=config)
-
+        agent = ProblemDiscoveryAgent(
+            config=ProblemDiscoveryConfig(db_path=self.db_path)
+        )
         sdk_config = agent.build_sdk_config()
         self.assertIsInstance(sdk_config, LocalAgentConfig)
         self.assertEqual(len(sdk_config.skills_paths), 6)
         self.assertEqual(len(sdk_config._get_all_custom_tools()), 15)
 
-    def test_offline_agent_run_execution(self) -> None:
-        """Verify ProblemDiscoveryAgent handles offline state machine runs cleanly."""
-        config = ProblemDiscoveryConfig(db_path=self.db_path)
-        agent = ProblemDiscoveryAgent(config=config)
+    def test_runtime_failure_never_creates_synthetic_research(self) -> None:
+        """If Antigravity cannot execute planning, no fake plan/evidence is persisted."""
+        agent = ProblemDiscoveryAgent(
+            config=ProblemDiscoveryConfig(db_path=self.db_path)
+        )
+        agent._chat_sdk = AsyncMock(side_effect=RuntimeError("offline for test"))
 
-        # Run natural language new research
-        res = asyncio.run(
+        result = asyncio.run(
             agent.run("Research whether accounting reconciliation is an operational bottleneck.")
         )
-        self.assertEqual(res.workflow_status.value, "CONTINUED")
-        self.assertIn("RUN-", res.research_id or "")
+        self.assertEqual(result.workflow_status.value, "ERROR")
+        self.assertIn("not synthetically advanced", result.message)
 
-        # Run query on empty state
-        query_res = asyncio.run(agent.run("CAND-001 status enna?"))
-        self.assertEqual(query_res.workflow_status.value, "READ_ONLY")
+        conn = sqlite3.connect(self.db_path)
+        try:
+            self.assertEqual(conn.execute("SELECT COUNT(*) FROM research_runs").fetchone()[0], 0)
+            self.assertEqual(conn.execute("SELECT COUNT(*) FROM evidence_signals").fetchone()[0], 0)
+            self.assertEqual(conn.execute("SELECT COUNT(*) FROM experiments").fetchone()[0], 0)
+        finally:
+            conn.close()
 
-    def test_live_agent_chat_smoke(self) -> None:
-        """Run live Gemini agent chat only if GEMINI_API_KEY is explicitly configured.
+    def test_read_only_query_works_without_live_model(self) -> None:
+        agent = ProblemDiscoveryAgent(
+            config=ProblemDiscoveryConfig(db_path=self.db_path)
+        )
+        result = asyncio.run(agent.run("CAND-001 status enna?"))
+        self.assertEqual(result.workflow_status.value, "READ_ONLY")
 
-        To run live:
-            export GEMINI_API_KEY="your-api-key"
-            python -m unittest tests/test_problem_discovery_agent_sdk.py -k test_live_agent_chat_smoke
-        """
+    def test_live_antigravity_chat_smoke(self) -> None:
+        """Exercise the actual SDK ChatResponse API only when a key is configured."""
         api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             self.skipTest("Skipping live integration test: GEMINI_API_KEY not set.")
@@ -80,8 +81,10 @@ class ProblemDiscoveryAgentSDKTest(unittest.TestCase):
         async def run_live() -> None:
             config = ProblemDiscoveryConfig(db_path=self.db_path, api_key=api_key)
             async with ProblemDiscoveryAgent(config=config) as agent:
-                resp = await agent.chat("CAND-001 status enna?")
-                self.assertTrue(len(resp) > 0)
+                text = await agent._chat_sdk(
+                    "Reply with exactly READY. Do not call any tools for this smoke test."
+                )
+                self.assertTrue(text.strip())
 
         asyncio.run(run_live())
 
