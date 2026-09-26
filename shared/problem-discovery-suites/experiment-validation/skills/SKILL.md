@@ -52,7 +52,7 @@ graph TD
    - *Detailed Guide*: [references/experiment-readiness.md](references/experiment-readiness.md).
 2. **Select Target & Formulate Hypothesis**: Choose 1 of 10 validation targets (e.g. `BEHAVIOR_FREQUENCY`, `WILLINGNESS_TO_PAY`).
    - *Detailed Guide*: [references/hypothesis-design.md](references/hypothesis-design.md).
-3. **Define Single Primary Metric & Direction**: Designate one observable metric and operator (`>=`, `<=`, etc.).
+3. **Define Single Primary Metric, Aggregation & Direction**: Designate one atomic observable metric, one explicit aggregation rule (for example mean per participant or count of participants meeting threshold), and one operator (`>=`, `<=`, etc.). Compound metrics such as `manual_sync_or_stockout_events` are forbidden; split them into separate experiments.
    - *Detailed Guide*: [references/metric-and-threshold-design.md](references/metric-and-threshold-design.md).
 4. **Define Symmetrical Failure Rule**: Formulate explicit rejection criteria.
 5. **Lock Preregistration**: Freeze contract fields and insert into SQLite with `outcome_verdict = 'NOT_RUN'`.
@@ -80,6 +80,7 @@ python3 scripts/run_experiment_validation.py --mode design \
   --candidate-id CAND-001 \
   --hypothesis "Ecommerce sellers perform manual sync" \
   --metric "manual_sync_events" \
+  --aggregation-rule "MEAN_PER_PARTICIPANT" \
   --threshold 3.0 \
   --sqlite-db "data/discovery.db"
 
@@ -128,6 +129,8 @@ python3 tools/generators/eval-skill/skills/scripts/run_evals.py shared/problem-d
 
 ## 6. Gotchas
 
+- **Atomic Metric Invariant**: One experiment has one primary outcome. Do not combine behavior and consequence into a single `A_or_B` metric.
+- **Aggregation Must Be Locked**: A threshold is meaningless unless the participant-to-observed-value aggregation rule is preregistered.
 - **Zero Post-Hoc Adjustments**: Never lower or modify a threshold after observing data. If a rule changes, create a new experiment ID.
 - **Incomplete $\neq$ Failed**: An experiment that achieves 3 participants out of a required 5 is `INCOMPLETE`, not failed.
 - **Behavior $\neq$ Willingness to Pay**: Observing that merchants repeatedly suffer manual friction does NOT prove they will pay for software.
