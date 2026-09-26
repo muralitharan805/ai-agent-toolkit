@@ -108,7 +108,7 @@ Downstream agents fetch query targets directly via `WHERE research_id = :researc
 
 Validate skill behavior against realistic test cases in [evals/evals.json](evals/evals.json):
 ```bash
-python3 tools/generators/eval-skill/skills/scripts/run_evals.py shared/research-planning/skills --save-grading
+python3 tools/generators/eval-skill/skills/scripts/run_evals.py shared/problem-discovery-suites/research-planning/skills --save-grading
 ```
 
 ---

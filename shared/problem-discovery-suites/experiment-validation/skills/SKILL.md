@@ -124,7 +124,7 @@ UPDATE candidates SET validation_status = 'VALIDATED', lifecycle_status = 'READY
 
 Validate skill behavior against realistic test cases in [evals/evals.json](evals/evals.json):
 ```bash
-python3 tools/generators/eval-skill/skills/scripts/run_evals.py shared/experiment-validation/skills --save-grading
+python3 tools/generators/eval-skill/skills/scripts/run_evals.py shared/problem-discovery-suites/experiment-validation/skills --save-grading
 ```
 
 ---

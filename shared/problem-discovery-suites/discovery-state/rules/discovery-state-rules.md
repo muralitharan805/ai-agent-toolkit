@@ -8,7 +8,7 @@ last_verified_date: "2026-09-26"
 # Discovery State & Context Builder Rules
 
 ## Description
-This rule governs the dedicated infrastructure capability (`shared/discovery-state`) for the modular problem discovery ecosystem. It enforces strict SQLite schema integrity, the hybrid relational + JSON document architecture, deterministic Python aggregation (eliminating LLM counting hallucinations), task-specific Dynamic Context Pack generation, full-text search (FTS5) deduplication, zero hard deletes, negative knowledge preservation, and the canonical `v_discovery_dashboard` decision view.
+This rule governs the dedicated infrastructure capability (`shared/problem-discovery-suites/discovery-state`) for the modular problem discovery ecosystem. It enforces strict SQLite schema integrity, the hybrid relational + JSON document architecture, deterministic Python aggregation (eliminating LLM counting hallucinations), task-specific Dynamic Context Pack generation, full-text search (FTS5) deduplication, zero hard deletes, negative knowledge preservation, and the canonical `v_discovery_dashboard` decision view.
 
 ## Constraints
 

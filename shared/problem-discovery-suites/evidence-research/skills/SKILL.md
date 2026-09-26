@@ -111,7 +111,7 @@ WHERE research_id = :research_id;
 
 Validate skill behavior against realistic test cases in [evals/evals.json](evals/evals.json):
 ```bash
-python3 tools/generators/eval-skill/skills/scripts/run_evals.py shared/evidence-research/skills --save-grading
+python3 tools/generators/eval-skill/skills/scripts/run_evals.py shared/problem-discovery-suites/evidence-research/skills --save-grading
 ```
 
 ---
