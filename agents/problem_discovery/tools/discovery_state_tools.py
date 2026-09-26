@@ -4,9 +4,15 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 from agents.problem_discovery.config import get_default_db_path, get_discovery_db_class, get_build_agent_context_module
 from agents.problem_discovery.orchestration.models import ExperimentContractValidation
+
+
+def _log_db_tool(message: str) -> None:
+    ts = datetime.now().strftime("%H:%M:%S")
+    print(f"[{ts}]   {message}", flush=True)
 
 
 class DiscoveryStateTools:
@@ -354,11 +360,13 @@ class DiscoveryStateTools:
         self,
         research_id: str,
         prompt: Optional[str] = None,
-        plan_dict: Optional[Dict[str, Any]] = None,
+        plan_dict: Optional[Any] = None,
         request: Optional[str] = None,
         domain: Optional[str] = None,
         scope_type: str = "BROAD",
         geography: Optional[str] = None,
+        plan: Optional[Any] = None,
+        **kwargs: Any,
     ) -> str:
         """Initialize a new research run in SQLite with a validated ResearchPlan.
 
@@ -370,35 +378,60 @@ class DiscoveryStateTools:
             domain: Problem domain (e.g. 'ecommerce').
             scope_type: Scope classification ('BROAD', 'NARROW', etc.).
             geography: Target geography or None.
+            plan: Alias for plan_dict.
 
         Returns:
             Created research_id token.
         """
-        plan = plan_dict or {}
-        req = request or prompt or plan.get("original_request") or ""
-        dom = domain or plan.get("scope", {}).get("domain") or plan.get("domain") or "general"
-        scope = plan.get("scope", {}).get("scope_type") or scope_type or "BROAD"
-        geo = geography or plan.get("scope", {}).get("geography")
-        return self.db.create_research_run(
+        raw_plan = plan_dict if plan_dict is not None else (plan if plan is not None else kwargs.get("plan_json"))
+        if isinstance(raw_plan, str):
+            try:
+                plan_val = json.loads(raw_plan)
+            except Exception:
+                plan_val = {}
+        elif isinstance(raw_plan, dict):
+            plan_val = raw_plan
+        else:
+            plan_val = {}
+
+        req = request or prompt or kwargs.get("original_request") or plan_val.get("original_request") or ""
+        dom = domain or kwargs.get("domain") or plan_val.get("scope", {}).get("domain") or plan_val.get("domain") or "general"
+        scope = plan_val.get("scope", {}).get("scope_type") or scope_type or "BROAD"
+        geo = geography or plan_val.get("scope", {}).get("geography")
+        res = self.db.create_research_run(
             research_id=research_id,
             request=req,
             domain=dom,
             scope_type=scope,
             geography=geo,
-            plan_dict=plan,
+            plan_dict=plan_val,
         )
+        _log_db_tool(f"[DB Tool] create_research_run -> Created plan for {research_id} ({dom})")
+        return res
 
-    def save_evidence_signals(self, research_id: str, signals: List[Dict[str, Any]]) -> int:
+    def save_evidence_signals(self, research_id: str, signals: Any = None, **kwargs: Any) -> int:
         """Batch persist qualified evidence signals into evidence_signals table.
 
         Args:
             research_id: Parent research run ID.
-            signals: List of normalized ResearchSignal dictionaries.
+            signals: List of normalized ResearchSignal dictionaries or JSON string.
 
         Returns:
             Count of signals successfully persisted.
         """
-        return self.db.save_evidence_signals(research_id=research_id, signals=signals)
+        raw = signals if signals is not None else kwargs.get("signal_list", [])
+        if isinstance(raw, str):
+            try:
+                raw = json.loads(raw)
+            except Exception:
+                raw = []
+        elif isinstance(raw, dict):
+            raw = [raw]
+        elif not isinstance(raw, list):
+            raw = []
+        res = self.db.save_evidence_signals(research_id=research_id, signals=raw)
+        _log_db_tool(f"[DB Tool] save_evidence_signals -> Persisted {res} qualified signals for {research_id}")
+        return res
 
     def upsert_candidate(
         self,
@@ -450,7 +483,7 @@ class DiscoveryStateTools:
 
         s_ids = supporting_signal_ids if supporting_signal_ids is not None else (signal_ids or [])
 
-        return self.db.upsert_candidate(
+        res = self.db.upsert_candidate(
             candidate_id=candidate_id,
             research_id=rid,
             title=t,
@@ -461,6 +494,8 @@ class DiscoveryStateTools:
             evaluation_dict=evaluation_dict,
             supporting_signal_ids=s_ids,
         )
+        _log_db_tool(f"[DB Tool] upsert_candidate -> Saved candidate {res}: '{t[:60]}'")
+        return res
 
     def preregister_experiment(
         self, experiment_id: str, candidate_id: str, contract_dict: Dict[str, Any]
@@ -533,9 +568,11 @@ class DiscoveryStateTools:
                 "human_review_required": True,
             }
 
-        return self.db.preregister_experiment(
+        res = self.db.preregister_experiment(
             experiment_id=experiment_id, candidate_id=candidate_id, contract_dict=contract_copy
         )
+        _log_db_tool(f"[DB Tool] preregister_experiment -> Registered experiment {res} for candidate {candidate_id}")
+        return res
 
     def record_experiment_assessment(
         self,
@@ -735,3 +772,33 @@ class DiscoveryStateTools:
     def get_all_tools(self) -> List[Callable[..., Any]]:
         """Return all registered discovery tools."""
         return self.get_read_tools() + self.get_write_tools()
+
+    def get_stage_tools(
+        self,
+        stage: Optional[Any] = None,
+        mode: Optional[str] = None,
+    ) -> List[Callable[..., Any]]:
+        """Return read tools plus ONLY the specific write tool authorized for the active stage.
+
+        This enforces deterministic code-level mutation boundaries so that an agent executing
+        research planning cannot call finalize_solution or record_experiment_assessment.
+        """
+        read_tools = self.get_read_tools()
+        stage_val = stage.value if hasattr(stage, "value") else str(stage) if stage else None
+
+        if stage_val == "RESEARCH_PLANNING":
+            return read_tools + [self.create_research_run]
+        elif stage_val == "EVIDENCE_RESEARCH":
+            return read_tools + [self.save_evidence_signals]
+        elif stage_val == "PROBLEM_EVALUATION":
+            return read_tools + [self.upsert_candidate]
+        elif stage_val == "EXPERIMENT_VALIDATION":
+            if mode == "ASSESS":
+                return read_tools + [self.record_experiment_assessment]
+            return read_tools + [self.preregister_experiment]
+        elif stage_val == "SOLUTION_STRATEGY":
+            return read_tools + [self.finalize_solution]
+        elif stage_val in ("READ_ONLY", "COMPLETED", "PAUSED"):
+            return read_tools
+
+        return self.get_all_tools()

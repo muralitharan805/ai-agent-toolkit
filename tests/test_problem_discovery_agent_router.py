@@ -65,6 +65,9 @@ class ProblemDiscoveryAgentRouterTest(unittest.TestCase):
             "Which experiment failed?",
             "What is the status of candidate CAND-005?",
             "Show me recent discovery dashboard summary",
+            "EXP-001 experiment result enna?",
+            "EXP-001 results ready-ah?",
+            "Are experiment results ready for EXP-001?",
         ]
         for p in prompts:
             result = self.router.route(p)

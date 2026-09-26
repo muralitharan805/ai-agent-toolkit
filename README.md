@@ -21,9 +21,10 @@ Instead of hand-crafting agent instructions and context repeatedly inside every 
 4. [Antigravity Rules & Activation Trigger Strategies](#-antigravity-rules--activation-trigger-strategies)
 5. [Repository Directory Layout](#-repository-directory-layout)
 6. [Built-in AI Generators & Developer Tooling](#-built-in-ai-generators--developer-tooling)
-7. [Tool-Aware Context CLI (`context.sh`)](#-tool-aware-context-cli-contextsh)
-8. [Quickstart Guide for New Users](#-quickstart-guide-for-new-users)
-9. [How to Contribute to the Open-Source Toolkit](#-how-to-contribute-to-the-open-source-toolkit)
+7. [Flagship Agent: Problem Discovery Orchestrator](#-flagship-agent-problem-discovery-orchestrator)
+8. [Tool-Aware Context CLI (`context.sh`)](#-tool-aware-context-cli-contextsh)
+9. [Quickstart Guide for New Users](#-quickstart-guide-for-new-users)
+10. [How to Contribute to the Open-Source Toolkit](#-how-to-contribute-to-the-open-source-toolkit)
 
 ---
 
@@ -213,6 +214,36 @@ uv run tools/generators/eval-skill/skills/scripts/run_evals.py \
 ```
 
 The authoring tools are not part of normal consumer sync.
+
+---
+
+## 🔍 Flagship Agent: Problem Discovery Orchestrator
+
+The toolkit includes an autonomous Python-based orchestrator agent (`agents.problem_discovery`) powered by the official Google Antigravity SDK. It guides product discovery from raw domain prompts to evidence collection, 35-point evaluation, preregistered experiment contracts, and an automated **SeyaliCraft Build Verdict (Go / No-Go)**.
+
+For complete architectural details and advanced runbooks, see the dedicated [Problem Discovery Agent Documentation](agents/problem_discovery/README.md).
+
+### Quick CLI Execution Cheat Sheet
+
+```bash
+# 1. Run full-pipeline research from a prompt file until a real gate
+python -m agents.problem_discovery.cli --file geo_research.txt --db-path discovery.sqlite --until-blocked
+
+# 2. View SeyaliCraft Build Verdict (Build vs Don't Build) for all candidates
+python -m agents.problem_discovery.cli --db-path discovery.sqlite --verdict
+
+# 3. View Build Verdict for a specific candidate
+python -m agents.problem_discovery.cli --db-path discovery.sqlite --verdict CAND-001
+
+# 4. Zero-token read-only status query (instant SQLite FTS search)
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "CAND-001 status enna?"
+
+# 5. Resume a paused run or candidate
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "Continue RUN-2026-001" --until-blocked
+
+# 6. Launch an interactive terminal session
+python -m agents.problem_discovery.cli --db-path discovery.sqlite --interactive
+```
 
 ---
 

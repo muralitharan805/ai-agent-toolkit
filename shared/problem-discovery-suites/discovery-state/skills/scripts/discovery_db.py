@@ -320,13 +320,33 @@ class DiscoveryDB:
         conn = self._get_connection()
         try:
             inserted = 0
+            # Calculate current sequence ceiling for auto-generating unique signal IDs without overwrites
+            existing_signals = conn.execute(
+                "SELECT signal_id FROM evidence_signals WHERE research_id=?", (research_id,)
+            ).fetchall()
+            max_seq = 0
+            prefix = f"SIG-{research_id}-"
+            for row in existing_signals:
+                sid = row["signal_id"]
+                if sid.startswith(prefix):
+                    suffix = sid[len(prefix):]
+                    if suffix.isdigit():
+                        max_seq = max(max_seq, int(suffix))
+
+            affected_candidates = set()
             for index, sig in enumerate(signals, start=1):
                 source = sig.get("source", {}) if isinstance(sig.get("source"), dict) else {}
                 actor = sig.get("actor", {}) if isinstance(sig.get("actor"), dict) else {}
                 observation = sig.get("observation", {}) if isinstance(sig.get("observation"), dict) else {}
                 evidence = sig.get("evidence", {}) if isinstance(sig.get("evidence"), dict) else {}
 
-                signal_id = sig.get("signal_id") or f"SIG-{research_id}-{index:03d}"
+                signal_id = sig.get("signal_id") or f"SIG-{research_id}-{max_seq + index:03d}"
+                # Track affected candidate if an existing signal is being deliberately updated
+                existing_row = conn.execute(
+                    "SELECT candidate_id FROM evidence_signals WHERE signal_id=?", (signal_id,)
+                ).fetchone()
+                if existing_row and existing_row["candidate_id"]:
+                    affected_candidates.add(existing_row["candidate_id"])
                 stream_id = sig.get("stream_id")
                 platform = sig.get("platform") or source.get("platform") or "WEB"
                 source_url = sig.get("source_url") or source.get("url")
@@ -395,6 +415,41 @@ class DiscoveryDB:
                     (signal_id, reported_issue, reported_workaround or ""),
                 )
                 inserted += 1
+
+            # If deliberate updates modified signals linked to candidates, recompute candidate scores
+            for cid in affected_candidates:
+                cand_row = conn.execute(
+                    "SELECT origin_research_id, evaluation_json FROM candidates WHERE candidate_id=?",
+                    (cid,),
+                ).fetchone()
+                if cand_row:
+                    linked_rows = conn.execute(
+                        "SELECT signal_id FROM evidence_signals WHERE candidate_id=?", (cid,)
+                    ).fetchall()
+                    linked_ids = [r["signal_id"] for r in linked_rows]
+                    eval_dict = self._loads(cand_row["evaluation_json"])
+                    gate = self.derive_candidate_evidence_gate(
+                        cand_row["origin_research_id"], linked_ids, eval_dict
+                    )
+                    gated_eval = self._apply_gate_to_evaluation(eval_dict, gate)
+                    gated_lifecycle = self._lifecycle_from_score(
+                        gate["research_score"], self._stop_checks_triggered(eval_dict)
+                    )
+                    conn.execute(
+                        """
+                        UPDATE candidates
+                        SET research_score=?, evidence_level=?, lifecycle_status=?,
+                            evaluation_json=?, updated_at=CURRENT_TIMESTAMP
+                        WHERE candidate_id=?
+                        """,
+                        (
+                            gate["research_score"],
+                            gate["evidence_level"],
+                            gated_lifecycle,
+                            self._json(gated_eval),
+                            cid,
+                        ),
+                    )
 
             conn.execute(
                 """
@@ -637,7 +692,7 @@ class DiscoveryDB:
 
             sample_achieved = observed.get("sample_achieved")
             observed_value = observed.get("observed_value")
-            min_usable = int(sample.get("minimum_usable", 0) or 0)
+            min_usable = int(sample.get("minimum_usable", sample.get("target", 0)) or 0)
             locked_threshold = threshold.get("value")
             direction = threshold.get("operator")
             final_hash = artifact_hash or review.get("sha256")
@@ -648,6 +703,11 @@ class DiscoveryDB:
                 raise ValueError("Assessment verdict conflicts with preregistered minimum usable sample")
 
             if verdict in {"PASSED", "FAILED"}:
+                if sample_achieved is None or int(sample_achieved) < min_usable:
+                    raise ValueError(
+                        f"Audited {verdict} requires sample_achieved >= minimum_usable ({min_usable}); "
+                        f"got {sample_achieved}"
+                    )
                 if artifact_requirements.get("required") and not final_hash:
                     raise ValueError("Audited PASS/FAIL requires the preregistered evidence artifact hash")
                 if review_requirements.get("human_review_required") and not (final_auditor and final_audit_date):
@@ -831,7 +891,14 @@ class DiscoveryDB:
                     for r in candidates
                 )
 
-                if all_terminal and not has_unfinished_experiment:
+                unassigned_count = conn.execute(
+                    "SELECT COUNT(*) as cnt FROM evidence_signals WHERE research_id=? AND candidate_id IS NULL",
+                    (research_id,),
+                ).fetchone()["cnt"]
+
+                if unassigned_count > 0:
+                    state = {"current_stage": "PROBLEM_EVALUATION", "status": "ACTIVE"}
+                elif all_terminal and not has_unfinished_experiment:
                     state = {"current_stage": "COMPLETED", "status": "COMPLETED"}
                 elif has_solution_work and not has_unfinished_experiment:
                     state = {"current_stage": "SOLUTION_STRATEGY", "status": "ACTIVE"}

@@ -1,0 +1,40 @@
+Research whether there are recurring, evidence-backed unmet problems worldwide
+in workflows that depend on geographic coordinates, latitude/longitude, precise
+locations, geospatial points, or location identifiers.
+
+Do not begin by assuming that a map application, coordinate converter, GIS tool,
+mobile app, API, developer tool, or SaaS product is needed.
+
+The goal is to discover whether people, businesses, developers, field operators,
+travelers, researchers, logistics teams, emergency workers, surveyors, property
+professionals, agriculture users, outdoor users, or other operators repeatedly
+experience friction when working with exact geographic locations.
+
+Search globally and do not restrict the research to one country unless evidence
+shows a problem is geography-specific.
+
+Investigate public evidence from sources such as:
+- Reddit discussions and complaints
+- GIS / mapping / developer forums
+- Stack Overflow and GIS Stack Exchange
+- GitHub issues and feature requests
+- product support forums
+- mobile and web app reviews where accessible
+
+Look broadly for recurring problems involving concepts such as:
+latitude and longitude, coordinate capture, coordinate sharing, coordinate lookup,
+reverse geocoding, geocoding, address-to-coordinate conversion, coordinate-to-address conversion,
+GPS accuracy, location verification, coordinate validation, invalid or malformed coordinates,
+different coordinate formats, decimal degrees, degrees/minutes/seconds, UTM, MGRS, plus codes,
+geohashes, coordinate reference systems, CRS conversion, datum conversion, map projections,
+copying coordinates between applications, bulk coordinate processing, CSV/Excel coordinate workflows,
+location deduplication, nearby-point matching, distance calculation, route/location comparison,
+geofencing, offline coordinate use, poor-connectivity environments, cross-border location formats,
+places without conventional street addresses, remote/rural locations, field data collection,
+photo/location metadata, location privacy, location audit/history, and location-based developer workflows.
+
+Map strong problem candidates using the 14 workflow nodes:
+Actor, Trigger, Input, Steps, Tools, Decisions, Handoffs, Delays, Rework, Errors, Output, Cost, Risk, Audit.
+
+Cluster similar complaints into stable root-problem candidates instead of treating every feature request as a separate problem.
+Distinguish problem evidence from solution demand.

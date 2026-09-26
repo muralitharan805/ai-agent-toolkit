@@ -70,6 +70,8 @@ class ProblemDiscoveryAgent:
         self.router = IntentRouter()
         self.state_machine = DiscoveryStateMachine(db_path=self.db_path)
         self._sdk_agent: Optional[Any] = None
+        self.session_input_tokens: int = 0
+        self.session_output_tokens: int = 0
 
     # ---------------------------------------------------------------------
     # Stable identifier allocation
@@ -122,8 +124,16 @@ class ProblemDiscoveryAgent:
     # Antigravity runtime
     # ---------------------------------------------------------------------
 
-    def build_sdk_config(self) -> Any:
-        """Build the official Antigravity LocalAgentConfig with least privilege."""
+    def build_sdk_config(
+        self,
+        stage: Optional[WorkflowStage] = None,
+        mode: Optional[str] = None,
+    ) -> Any:
+        """Build the official Antigravity LocalAgentConfig with least privilege.
+
+        When stage is specified, only read tools and the single authorized mutation tool
+        for that stage are registered.
+        """
         if not ANTIGRAVITY_AVAILABLE:
             raise RuntimeError(
                 "google-antigravity is not installed. Install it before executing reasoning stages."
@@ -140,11 +150,18 @@ class ProblemDiscoveryAgent:
             policy.deny("run_command"),
             policy.deny("create_file"),
             policy.deny("edit_file"),
+            policy.allow("*"),
         ]
 
+        stage_tools = (
+            self.tools_provider.get_stage_tools(stage=stage, mode=mode)
+            if stage is not None
+            else self.tools_provider.get_all_tools()
+        )
+
         return LocalAgentConfig(
-            system_instructions=get_system_prompt(),
-            tools=self.tools_provider.get_all_tools(),
+            system_instructions=get_system_prompt(self.config.system_instruction_path),
+            tools=stage_tools,
             skills_paths=self.config.skills_paths or get_canonical_skills_paths(),
             capabilities=capabilities,
             policies=policies,
@@ -152,8 +169,12 @@ class ProblemDiscoveryAgent:
             api_key=self.config.api_key,
         )
 
-    def create_sdk_agent(self) -> Any:
-        return Agent(self.build_sdk_config())
+    def create_sdk_agent(
+        self,
+        stage: Optional[WorkflowStage] = None,
+        mode: Optional[str] = None,
+    ) -> Any:
+        return Agent(self.build_sdk_config(stage=stage, mode=mode))
 
     async def __aenter__(self) -> "ProblemDiscoveryAgent":
         # Keep read-only SQLite usage available without model credentials.
@@ -171,7 +192,12 @@ class ProblemDiscoveryAgent:
             finally:
                 self._sdk_agent = None
 
-    async def _chat_sdk(self, prompt: str) -> str:
+    async def _chat_sdk(
+        self,
+        prompt: str,
+        stage: Optional[WorkflowStage] = None,
+        mode: Optional[str] = None,
+    ) -> str:
         """Execute one bounded reasoning turn through the real Antigravity Agent with rate-limit backoff."""
         if not ANTIGRAVITY_AVAILABLE:
             raise RuntimeError(
@@ -180,15 +206,46 @@ class ProblemDiscoveryAgent:
             )
 
         max_retries = 3
+        timeout_seconds = 120.0
         for attempt in range(max_retries):
             try:
                 if self._sdk_agent is not None:
-                    response = await self._sdk_agent.chat(prompt)
-                    return await response.text()
+                    response = await asyncio.wait_for(
+                        self._sdk_agent.chat(prompt), timeout=timeout_seconds
+                    )
+                else:
+                    async with self.create_sdk_agent(stage=stage, mode=mode) as agent:
+                        response = await asyncio.wait_for(
+                            agent.chat(prompt), timeout=timeout_seconds
+                        )
 
-                async with self.create_sdk_agent() as agent:
-                    response = await agent.chat(prompt)
-                    return await response.text()
+                meta = getattr(response, "usage_metadata", None)
+                if meta is not None:
+                    inp = getattr(meta, "prompt_token_count", 0) or 0
+                    out = getattr(meta, "candidates_token_count", 0) or 0
+                    tot = getattr(meta, "total_token_count", 0) or (inp + out)
+                    self.session_input_tokens += inp
+                    self.session_output_tokens += out
+                    cost_usd = (inp / 1_000_000 * 0.10) + (out / 1_000_000 * 0.40)
+                    cost_inr = cost_usd * 85.0
+                    now_ts = datetime.now().strftime("%H:%M:%S")
+                    print(
+                        f"[{now_ts}]   [Tokens] Input: {inp:,} | Output: {out:,} | Total: {tot:,} tokens (~₹{cost_inr:.3f})",
+                        flush=True,
+                    )
+
+                return await response.text()
+            except (asyncio.TimeoutError, TimeoutError):
+                now_ts = datetime.now().strftime("%H:%M:%S")
+                if attempt < max_retries - 1:
+                    print(
+                        f"\n[{now_ts}]   [Network / API Timeout: Gemini did not respond within {int(timeout_seconds)}s. Retrying attempt {attempt + 2}/{max_retries}...]",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    await asyncio.sleep(5)
+                    continue
+                raise TimeoutError(f"Gemini API request timed out after {max_retries} attempts.")
             except Exception as exc:
                 err_str = str(exc)
                 is_rate_limit = any(k in err_str for k in ("429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE"))
@@ -242,8 +299,15 @@ Original user request:
 {original_request}
 
 Create a valid ResearchPlan from the user's actual request. Do not invent empirical facts.
-Geography remains unknown/null unless supplied. Then persist the plan by calling
-create_research_run with EXACTLY research_id={research_id}. Stop after the plan is persisted.
+Geography remains unknown/null unless supplied.
+
+CRITICAL INSTRUCTION:
+You MUST invoke the custom tool `create_research_run` with arguments:
+- research_id="{research_id}"
+- request="{original_request}"
+- plan_dict={{...your generated ResearchPlan...}}
+
+Do not merely return text or markdown. You must call the `create_research_run` tool to persist the plan to SQLite. Stop after calling the tool.
 """
 
         if stage == WorkflowStage.EVIDENCE_RESEARCH:
@@ -396,8 +460,21 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
             next_action=state.next_action,
         )
 
+        now_ts = datetime.now().strftime("%H:%M:%S")
+        if stage == WorkflowStage.EVIDENCE_RESEARCH:
+            print(f"[{now_ts}]   --> [Stage: {stage.value}] Gemini is searching the web and qualifying evidence signals (takes ~30-60s)...", flush=True)
+        else:
+            print(f"[{now_ts}]   --> [Stage: {stage.value}] Gemini reasoning in progress...", flush=True)
+
         try:
-            model_text = await self._chat_sdk(prompt)
+            mode = "ASSESS" if user_submission is not None else "DESIGN"
+            try:
+                model_text = await self._chat_sdk(prompt, stage=stage, mode=mode)
+            except TypeError as type_err:
+                if "unexpected keyword argument" in str(type_err):
+                    model_text = await self._chat_sdk(prompt)
+                else:
+                    raise
         except Exception as exc:
             return self._execution_error(
                 intent=state.intent,
@@ -495,16 +572,20 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
             )
 
             if self._state_signature(state) == before and state.workflow_status == WorkflowStatus.CONTINUED:
+                model_reply = state.data.get("stage_agent_response", "") if state.data else ""
+                err_msg = (
+                    "Antigravity returned without advancing persisted discovery state. "
+                    "Stopping to avoid a loop or fabricated transition."
+                )
+                if model_reply:
+                    err_msg += f"\n\nModel reasoning output:\n{model_reply}"
                 return self._execution_error(
                     intent=state.intent,
                     stage=state.current_stage or WorkflowStage.PROBLEM_EVALUATION,
                     research_id=state.research_id,
                     candidate_id=state.candidate_id,
                     experiment_id=state.experiment_id,
-                    message=(
-                        "Antigravity returned without advancing persisted discovery state. "
-                        "Stopping to avoid a loop or fabricated transition."
-                    ),
+                    message=err_msg,
                 )
 
         return self._execution_error(
@@ -522,21 +603,6 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
         *,
         callback: Optional[Callable[[str, Dict[str, Any]], None]] = None,
     ) -> OrchestrationResult:
-        matches = self.tools_provider.search_discovery(user_prompt, entity_type="CANDIDATE")
-        if matches:
-            existing_cid = matches[0]["entity_id"]
-            candidate = self.tools_provider.get_candidate(existing_cid)
-            if candidate.get("found"):
-                initial = self.state_machine.evaluate_next_action(existing_cid)
-                initial.intent = IntentType.NEW_RESEARCH
-                initial.message = (
-                    f"Reusing existing stable candidate {existing_cid} instead of duplicating the "
-                    f"same root problem.\n\n{initial.message}"
-                )
-                return await self._run_existing_state_until_blocked(
-                    initial, original_request=user_prompt, callback=callback
-                )
-
         run_id = self._next_research_id()
         initial = OrchestrationResult(
             intent=IntentType.NEW_RESEARCH,
@@ -573,7 +639,7 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
                 message=f"Experiment {experiment_id} does not exist in the discovery database.",
             )
 
-        if row["outcome_verdict"] != "PREREGISTERED":
+        if row["outcome_verdict"] not in ("PREREGISTERED", "INCOMPLETE"):
             result = self.state_machine.evaluate_next_action(row["candidate_id"])
             result.intent = IntentType.EXPERIMENT_RESULT
             return result

@@ -458,6 +458,52 @@ class ProblemDiscoveryAgentStateMachineTest(unittest.TestCase):
         self.assertEqual(result.current_stage, WorkflowStage.EXPERIMENT_VALIDATION)
         self.assertEqual(result.candidate_id, "CAND-002")
 
+    def test_unassigned_signals_with_existing_paused_candidate_routes_to_problem_evaluation(self) -> None:
+        """Unassigned signals must not be starved when an existing candidate is paused on an experiment."""
+        self.tools.create_research_run(
+            research_id="RUN-2026-001",
+            prompt="Investigate inventory sync",
+            plan_dict=make_test_plan(),
+        )
+        self.db.save_evidence_signals(
+            research_id="RUN-2026-001",
+            signals=[make_test_signal("SIG-001")],
+        )
+        self.tools.upsert_candidate(
+            candidate_id="CAND-001",
+            origin_research_id="RUN-2026-001",
+            problem_statement="Inventory sync failures cause stockouts.",
+            evaluation_dict=make_test_evaluation(),
+            signal_ids=["SIG-001"],
+        )
+        # Preregister experiment so CAND-001 is paused
+        self.tools.preregister_experiment(
+            experiment_id="EXP-001",
+            candidate_id="CAND-001",
+            contract_dict={
+                "metric_name": "manual_sync_events",
+                "target_threshold": 3.0,
+                "direction": ">=",
+                "sample_target": 5,
+                "aggregation_rule": "MEAN_PER_PARTICIPANT",
+            },
+        )
+        # Verify CAND-001 is paused
+        cand_res = self.sm.evaluate_next_action("CAND-001")
+        self.assertEqual(cand_res.workflow_status, WorkflowStatus.PAUSED)
+
+        # Now add a new unassigned signal to the research run
+        self.db.save_evidence_signals(
+            research_id="RUN-2026-001",
+            signals=[make_test_signal("SIG-002", issue="New unassigned friction pattern")],
+        )
+
+        # Evaluating RUN-2026-001 must route to PROBLEM_EVALUATION to cluster the new signal
+        run_res = self.sm.evaluate_next_action("RUN-2026-001")
+        self.assertEqual(run_res.current_stage, WorkflowStage.PROBLEM_EVALUATION)
+        self.assertEqual(run_res.next_action, "RUN_PROBLEM_EVALUATION")
+        self.assertEqual(run_res.workflow_status, WorkflowStatus.CONTINUED)
+
 
 if __name__ == "__main__":
     unittest.main()

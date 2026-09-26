@@ -133,48 +133,199 @@ export GEMINI_API_KEY="..."
 Read-only status queries can operate from SQLite without running a model. Reasoning
 stages require a working Antigravity runtime/authentication configuration.
 
-## Usage
+## 💻 CLI Commands & Usage Reference
 
-Start research:
+The Problem Discovery Agent CLI (`python -m agents.problem_discovery.cli`) supports single-stage execution, continuous multi-stage execution (`--until-blocked`), file-based prompts, SQLite state inspection, SeyaliCraft Build Verdict generation, and interactive REPL sessions.
 
+### 🚀 Quick Cheat Sheet
+
+```bash
+# 1. Run detailed research from a file until paused at an experiment gate
+python -m agents.problem_discovery.cli --file geo_research.txt --db-path discovery.sqlite --until-blocked
+
+# 2. View SeyaliCraft Build Verdict (Go / No-Go decision) for all candidates
+python -m agents.problem_discovery.cli --db-path discovery.sqlite --verdict
+
+# 3. View Build Verdict for a specific candidate
+python -m agents.problem_discovery.cli --db-path discovery.sqlite --verdict CAND-001
+
+# 4. Zero-token read-only query (inspects SQLite without calling LLM)
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "CAND-001 status enna?"
+
+# 5. Resume a paused research run or candidate
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "Continue RUN-2026-001" --until-blocked
+
+# 6. Launch an interactive REPL shell
+python -m agents.problem_discovery.cli --db-path discovery.sqlite --interactive
+```
+
+---
+
+### 📋 CLI Options & Flags
+
+| Flag | Shorthand | Description |
+| :--- | :--- | :--- |
+| `prompt` | *(positional)* | Research request string, resume instruction, experiment submission, or `@path/to/prompt.txt`. |
+| `--file PATH` | `-f PATH` | Path to a UTF-8 text file containing the research prompt (avoids shell escaping). |
+| `--until-blocked` | `-e`, `--end-to-end` | Runs justified stages continuously until paused at a real-world gate or completed. |
+| `--verdict [ID]` | — | Prints the **SeyaliCraft Build Verdict Card** (Go / Hold / No-Go) for `ALL` or a specific candidate. |
+| `--db-path PATH` | — | Overrides the discovery SQLite database (default is canonical `discovery-state/data/discovery.sqlite`). |
+| `--json` | — | Emits machine-readable JSON output (includes token usage and build verdicts). |
+| `--interactive` | `-i` | Launches an interactive REPL terminal session. |
+
+---
+
+### 📖 Workflow Examples
+
+#### 1. Starting New Research
+
+##### A. From a detailed text file (Recommended for complex domains):
+```bash
+python -m agents.problem_discovery.cli --file geo_research.txt --db-path discovery.sqlite --until-blocked
+```
+*Alternatively, use the `@` shorthand:*
+```bash
+python -m agents.problem_discovery.cli @geo_research.txt --db-path discovery.sqlite --until-blocked
+```
+
+##### B. Inline prompt string:
 ```bash
 python -m agents.problem_discovery.cli \
-  "Research whether multi-channel ecommerce sellers have recurring inventory sync problems"
+  --db-path discovery.sqlite \
+  --until-blocked \
+  "Research whether private dental clinics face recurring inventory backorders from distributors."
 ```
 
-Run with stage progress until a real gate blocks execution:
-
-```bash
-python -m agents.problem_discovery.cli --until-blocked \
-  "Research whether multi-channel ecommerce sellers have recurring inventory sync problems"
-```
-
-`--end-to-end` remains a compatibility alias for `--until-blocked`. It does **not**
-mean "fabricate enough data to complete every stage."
-
-Resume:
-
-```bash
-python -m agents.problem_discovery.cli "Continue RUN-2026-001"
-python -m agents.problem_discovery.cli "Continue CAND-001"
-```
-
-Read-only query:
-
-```bash
-python -m agents.problem_discovery.cli "CAND-001 current status enna?"
-```
-
-Submit a real experiment result only after the requested evidence exists:
-
+##### C. Single-turn execution (runs only the immediate next stage, e.g. planning only):
 ```bash
 python -m agents.problem_discovery.cli \
+  --db-path discovery.sqlite \
+  "Research whether freight brokers experience invoice discrepancy friction."
+```
+
+---
+
+#### 2. Evaluating Build Decisions (SeyaliCraft Build Verdict)
+
+The verdict engine evaluates persisted evidence against SeyaliCraft portfolio criteria (`CLIENT_SIDE_UTILITY`, `BROWSER_EXTENSION`, `STANDALONE_SAAS`, `EDUCATIONAL_GUIDE`, or `NON_SOFTWARE`):
+
+```bash
+# View Build Verdicts for all candidates in the database
+python -m agents.problem_discovery.cli --db-path discovery.sqlite --verdict
+
+# Inspect a specific candidate (e.g. CAND-001)
+python -m agents.problem_discovery.cli --db-path discovery.sqlite --verdict CAND-001
+
+# Inspect candidates in the canonical discovery-state database
+python -m agents.problem_discovery.cli --verdict
+```
+
+**Example Verdict Output Card:**
+```text
+================================================================
+ SEYALICRAFT BUILD VERDICT: CAND-001
+================================================================
+Title:             Dental Consumable Replenishment Stockouts
+Domain:            dental_practice_supply_chain
+Target Audience:   dental office manager / clinical procurement staff
+Evidence Strength: Score: 24/35 | Level: L2 (6 signals)
+Validation Status: IN_PROGRESS (Lifecycle: VALIDATING)
+----------------------------------------------------------------
+DECISION:          HOLD (VALIDATE FIRST BEFORE BUILDING)
+Confidence:        MODERATE
+Recommended Shape: STANDALONE_SAAS
+Reversibility:     Type 1 (One-Way Door - High Resource Commitment)
+----------------------------------------------------------------
+Justification:
+  Problem is real (Score: 24/35), but SaaS requires ongoing database and auth infra.
+  Validate with a manual concierge/spreadsheet trial before scaffolding full stack.
+
+SeyaliCraft Portfolio Fit:
+  - Target Placement: app.seyalicraft.com or standalone domain
+  - Tech Architecture: NestJS API + Next.js + PostgreSQL + Stripe billing
+  - Monthly Infra Cost: $15 - $40 / month (VPS compute + Managed database)
+  - Monetization Strategy: Recurring monthly/annual subscription ($19 - $49 / month)
+
+Next Concrete Steps:
+  1. Do NOT write backend SaaS code or provision servers yet.
+  2. Run a 7-day manual concierge experiment (e.g. Google Sheets / WhatsApp template).
+  3. Verify if at least 2 operators commit to paying before architecting multi-tenant database.
+================================================================
+```
+
+---
+
+#### 3. Read-Only Status & FTS Search (Zero LLM Tokens / Free)
+
+Read-only queries use SQLite full-text search (`discovery_fts`) directly. They incur **0 API cost**:
+
+```bash
+# Check current candidate status (English or Thanglish)
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "CAND-001 status enna?"
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "What is the status of RUN-2026-001?"
+
+# Search existing findings
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "ecommerce inventory sync"
+
+# Output as JSON
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "CAND-001" --json
+```
+
+---
+
+#### 4. Resuming Paused Workflows
+
+When new signals or research data are available, resume the workflow:
+
+```bash
+# Resume an entire research run
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "Continue RUN-2026-001" --until-blocked
+
+# Resume a specific candidate (e.g. advance to experiment design)
+python -m agents.problem_discovery.cli --db-path discovery.sqlite "Continue CAND-001" --until-blocked
+```
+
+---
+
+#### 5. Submitting Real-World Experiment Results
+
+When empirical observations from a preregistered experiment trial are collected, submit them for immutable contract evaluation:
+
+```bash
+python -m agents.problem_discovery.cli --db-path discovery.sqlite \
   "EXP-001 results are ready. sample_achieved=5, observed mean=4.2, \
-   artifact sha256=<real hash>, audited_by=<reviewer>, audit_date=2026-09-26."
+   artifact sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855, \
+   audited_by=Murali, audit_date=2026-09-26."
 ```
 
-If required contract fields/artifact/reviewer evidence are missing, the agent must
-leave the experiment `PREREGISTERED`.
+*(If mandatory verification artifacts or sample thresholds are unmet, the experiment remains `PREREGISTERED` / `INCOMPLETE`).*
+
+---
+
+#### 6. Interactive REPL Mode
+
+Launch a stateful terminal session to execute multiple queries or research commands:
+
+```bash
+python -m agents.problem_discovery.cli --db-path discovery.sqlite --interactive
+```
+```text
+discovery> CAND-001 status enna?
+discovery> Continue RUN-2026-001
+discovery> exit
+```
+
+---
+
+### ⚙️ Environment Variables
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `GEMINI_API_KEY` | *(None)* | Google AI Studio / Gemini API authentication key. |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Reasoning model (`gemini-3.8-flash` recommended for speed & cost). |
+| `DISCOVERY_DB_PATH` | `.../discovery-state/data/discovery.sqlite` | Global fallback path for discovery database. |
+
+---
 
 ## Python API
 

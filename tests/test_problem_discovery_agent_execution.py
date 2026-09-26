@@ -9,6 +9,7 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock
 
 from agents.problem_discovery.agent import ProblemDiscoveryAgent
@@ -26,7 +27,7 @@ class ProblemDiscoveryRealExecutionTest(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp_dir.cleanup()
 
-    async def _fake_stage_agent(self, prompt: str) -> str:
+    async def _fake_stage_agent(self, prompt: str, *args: Any, **kwargs: Any) -> str:
         """Simulate Antigravity tool usage without inventing experiment execution."""
         if "Use the research-planning skill." in prompt:
             run_id = re.search(r"Reserved research_id: (RUN-[0-9-]+)", prompt).group(1)
@@ -300,6 +301,114 @@ class ProblemDiscoveryRealExecutionTest(unittest.TestCase):
         )
         self.assertEqual(summary["workflow_status"], "PAUSED")
         self.assertEqual(summary["pause_reason"], "WAITING_FOR_REAL_WORLD_EXPERIMENT")
+
+    def test_new_research_does_not_hijack_unrelated_candidate(self) -> None:
+        """New research requests must create their own run and not hijack existing candidates via FTS."""
+        # Seed an existing ecommerce candidate with common words 'manual' and 'spreadsheet'
+        self.agent.tools_provider.create_research_run(
+            research_id="RUN-2026-001",
+            request="Ecommerce inventory research",
+            domain="ecommerce",
+            plan_dict={"schema_version": "1.0"},
+        )
+        self.agent.tools_provider.upsert_candidate(
+            candidate_id="CAND-001",
+            research_id="RUN-2026-001",
+            title="Manual inventory sync causes stockouts",
+            domain="ecommerce",
+            evaluation_dict={"problem_statement": "Manual spreadsheet sync"},
+        )
+
+        self.agent._chat_sdk = self._fake_stage_agent
+        result = asyncio.run(
+            self.agent.run(
+                "Research whether accountants frequently make manual spreadsheet errors when reconciling invoices"
+            )
+        )
+        # Must create RUN-2026-002, not resume CAND-001
+        self.assertEqual(result.research_id, "RUN-2026-002")
+        self.assertNotIn("Reusing existing stable candidate", result.message)
+
+    def test_incomplete_experiment_can_be_assessed_when_full_data_submitted(self) -> None:
+        """An experiment previously marked INCOMPLETE must be assessable when full results are submitted."""
+        self.agent.tools_provider.create_research_run(
+            research_id="RUN-2026-001",
+            request="Inventory sync research",
+            domain="ecommerce",
+            plan_dict={"schema_version": "1.0"},
+        )
+        self.agent.tools_provider.upsert_candidate(
+            candidate_id="CAND-001",
+            research_id="RUN-2026-001",
+            title="Inventory sync issues",
+            domain="ecommerce",
+            evaluation_dict={"problem_statement": "Inventory sync issues"},
+        )
+        self.agent.tools_provider.preregister_experiment(
+            experiment_id="EXP-001",
+            candidate_id="CAND-001",
+            contract_dict={
+                "metric_name": "manual_sync_events",
+                "target_threshold": 3.0,
+                "direction": ">=",
+                "sample_target": 5,
+                "aggregation_rule": "MEAN_PER_PARTICIPANT",
+            },
+        )
+        # Mark as INCOMPLETE first
+        self.agent.tools_provider.record_experiment_assessment(
+            experiment_id="EXP-001",
+            result_dict={
+                "status": "INCOMPLETE",
+                "sample_achieved": 2,
+                "observed_value": 4.0,
+                "audited_by": "Murali",
+                "audit_date": "2026-09-26",
+            },
+        )
+
+        conn = sqlite3.connect(self.db_path)
+        try:
+            verdict = conn.execute(
+                "SELECT outcome_verdict FROM experiments WHERE experiment_id='EXP-001'"
+            ).fetchone()[0]
+            self.assertEqual(verdict, "INCOMPLETE")
+        finally:
+            conn.close()
+
+        # Mock stage agent for the assessment turn
+        async def fake_assessment(prompt: str, *args: Any, **kwargs: Any) -> str:
+            self.agent.tools_provider.record_experiment_assessment(
+                experiment_id="EXP-001",
+                result_dict={
+                    "status": "EXPERIMENT_PASSED",
+                    "sample_achieved": 5,
+                    "observed_value": 4.5,
+                    "audited_by": "Murali",
+                    "audit_date": "2026-09-26",
+                    "artifact_hash": "a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0",
+                },
+            )
+            return "Assessment recorded."
+
+        self.agent._chat_sdk = fake_assessment
+        result = asyncio.run(
+            self.agent.run(
+                "EXP-001 trial result recorded. sample_achieved=5, observed mean=4.5, "
+                "artifact hash a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0, "
+                "audited_by Murali, audit_date 2026-09-26."
+            )
+        )
+        self.assertEqual(result.intent.value, "EXPERIMENT_RESULT")
+        # Experiment should now be PASSED
+        conn = sqlite3.connect(self.db_path)
+        try:
+            new_verdict = conn.execute(
+                "SELECT outcome_verdict FROM experiments WHERE experiment_id='EXP-001'"
+            ).fetchone()[0]
+            self.assertEqual(new_verdict, "PASSED")
+        finally:
+            conn.close()
 
 
 if __name__ == "__main__":

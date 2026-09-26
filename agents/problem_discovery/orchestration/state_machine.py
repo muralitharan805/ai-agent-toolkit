@@ -116,7 +116,8 @@ class DiscoveryStateMachine:
                 (research_id, research_id),
             ).fetchall()
 
-            if unassigned_count > 0 and len(candidates) == 0:
+            if unassigned_count > 0:
+                cand_phrase = f" ({len(candidates)} existing candidates in run)" if candidates else ""
                 return OrchestrationResult(
                     intent=IntentType.RESUME_RUN,
                     research_id=research_id,
@@ -125,7 +126,7 @@ class DiscoveryStateMachine:
                     workflow_status=WorkflowStatus.CONTINUED,
                     next_action="RUN_PROBLEM_EVALUATION",
                     message=(
-                        f"Research run '{research_id}' has {unassigned_count} signals awaiting evaluation. "
+                        f"Research run '{research_id}' has {unassigned_count} signals awaiting evaluation{cand_phrase}. "
                         "Next action: evaluate signals, map 14-node workflow, and cluster candidates."
                     ),
                     data={"unassigned_signals": unassigned_count},

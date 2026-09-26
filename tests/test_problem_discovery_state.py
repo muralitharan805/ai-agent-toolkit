@@ -537,6 +537,142 @@ class DiscoveryStateLifecycleTest(unittest.TestCase):
             finally:
                 conn.close()
 
+    def test_sample_count_omission_cannot_pass_experiment(self) -> None:
+        """Audited PASSED/FAILED cannot bypass sample_achieved threshold validation."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db = discovery_db.DiscoveryDB(str(Path(tmpdir) / "sample_test.sqlite"))
+            run_id = "RUN-2026-001"
+            db.create_research_run(run_id, "Test request", "ecommerce", plan_dict={})
+            db.upsert_candidate(
+                "CAND-001",
+                run_id,
+                "Test problem",
+                "ecommerce",
+                evaluation_dict=scored_evaluation(),
+            )
+            db.preregister_experiment(
+                "EXP-001",
+                "CAND-001",
+                {
+                    "hypothesis": "Test hypothesis",
+                    "metric_name": "intervention_rate",
+                    "aggregation_rule": "MEAN_PER_PARTICIPANT",
+                    "success_threshold": {"value": 3.0, "operator": ">="},
+                    "sample": {"target": 5, "minimum_usable": 5},
+                    "artifact_requirements": {"required": True},
+                    "review_requirements": {"human_review_required": True},
+                },
+            )
+
+            # Attempting to PASS with sample_achieved omitted/None must raise ValueError
+            with self.assertRaises(ValueError) as ctx:
+                db.record_experiment_assessment(
+                    "EXP-001",
+                    {
+                        "status": "EXPERIMENT_PASSED",
+                        "observed_result": {"sample_achieved": None, "observed_value": 4.5},
+                        "artifact_review": {
+                            "sha256": "a" * 64,
+                            "audited_by": "Murali",
+                            "audit_date": "2026-09-26",
+                        },
+                    },
+                )
+            self.assertIn("requires sample_achieved", str(ctx.exception))
+
+            # Attempting to PASS with sample_achieved < minimum_usable (e.g. 2 < 5) must raise ValueError
+            with self.assertRaises(ValueError) as ctx2:
+                db.record_experiment_assessment(
+                    "EXP-001",
+                    {
+                        "status": "EXPERIMENT_PASSED",
+                        "observed_result": {"sample_achieved": 2, "observed_value": 4.5},
+                        "artifact_review": {
+                            "sha256": "a" * 64,
+                            "audited_by": "Murali",
+                            "audit_date": "2026-09-26",
+                        },
+                    },
+                )
+            self.assertIn("minimum usable", str(ctx2.exception).lower())
+
+    def test_successive_signal_saves_do_not_overwrite_earlier_batches(self) -> None:
+        """Batch 2 without explicit IDs must append new unique signal IDs instead of overwriting batch 1."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db = discovery_db.DiscoveryDB(str(Path(tmpdir) / "signals_test.sqlite"))
+            run_id = "RUN-2026-001"
+            db.create_research_run(run_id, "Test request", "ecommerce", plan_dict={})
+
+            def make_raw_sig(issue: str) -> dict:
+                return {
+                    "source": {"platform": "WEB", "url": "https://example.test", "inspection_status": "FULL_SOURCE_REVIEWED"},
+                    "actor": {"role": "ops seller", "role_is_self_reported": True},
+                    "observation": {"reported_issue": issue},
+                    "evidence": {"classification": "L4"},
+                }
+
+            # Batch 1: 2 signals
+            db.save_evidence_signals(run_id, [make_raw_sig("Issue 1"), make_raw_sig("Issue 2")])
+            # Batch 2: 2 more signals without explicit signal_ids
+            db.save_evidence_signals(run_id, [make_raw_sig("Issue 3"), make_raw_sig("Issue 4")])
+
+            conn = sqlite3.connect(db.db_path)
+            try:
+                rows = conn.execute(
+                    "SELECT signal_id, reported_issue FROM evidence_signals WHERE research_id=? ORDER BY signal_id",
+                    (run_id,),
+                ).fetchall()
+                self.assertEqual(len(rows), 4)
+                ids = [r[0] for r in rows]
+                self.assertEqual(
+                    ids,
+                    [
+                        f"SIG-{run_id}-001",
+                        f"SIG-{run_id}-002",
+                        f"SIG-{run_id}-003",
+                        f"SIG-{run_id}-004",
+                    ],
+                )
+                issues = [r[1] for r in rows]
+                self.assertEqual(issues, ["Issue 1", "Issue 2", "Issue 3", "Issue 4"])
+            finally:
+                conn.close()
+
+    def test_unassigned_signals_prevent_run_completion_even_if_candidate_parked(self) -> None:
+        """Unassigned evidence signals must prevent research_runs from prematurely becoming COMPLETED."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db = discovery_db.DiscoveryDB(str(Path(tmpdir) / "completion_test.sqlite"))
+            run_id = "RUN-2026-001"
+            db.create_research_run(run_id, "Test request", "ecommerce", plan_dict={})
+
+            # Candidate 1 is PARKED (terminal)
+            db.upsert_candidate(
+                "CAND-001",
+                run_id,
+                "Candidate 1",
+                "ecommerce",
+                lifecycle_status="PARKED",
+                evaluation_dict=scored_evaluation(),
+            )
+
+            # Add an unassigned signal
+            db.save_evidence_signals(
+                run_id,
+                [
+                    {
+                        "source": {"platform": "WEB", "url": "https://example.test", "inspection_status": "FULL_SOURCE_REVIEWED"},
+                        "actor": {"role": "ops seller", "role_is_self_reported": True},
+                        "observation": {"reported_issue": "Pending unassigned friction"},
+                        "evidence": {"classification": "L4"},
+                    }
+                ],
+            )
+
+            state = db.refresh_research_run_state(run_id)
+            self.assertEqual(state["current_stage"], "PROBLEM_EVALUATION")
+            self.assertEqual(state["status"], "ACTIVE")
+            self.assertNotEqual(state["status"], "COMPLETED")
+
 
 if __name__ == "__main__":
     unittest.main()
