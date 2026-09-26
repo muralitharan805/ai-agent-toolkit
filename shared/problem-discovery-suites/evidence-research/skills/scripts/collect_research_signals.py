@@ -253,8 +253,12 @@ def execute_plan_searches(
                                 "inspection_status": raw_res.get("inspection_status", "SNIPPET_ONLY")
                             },
                             "actor": {
-                                "role": stream.get("operator", {}).get("title") if isinstance(stream.get("operator"), dict) else None,
-                                "role_is_self_reported": False
+                                "role": None,
+                                "role_is_self_reported": False,
+                                "role_provenance": "UNKNOWN"
+                            },
+                            "research_context": {
+                                "target_operator": stream.get("operator", {}).get("title") if isinstance(stream.get("operator"), dict) else None
                             },
                             "observation": {
                                 "reported_issue": raw_res.get("excerpt", ""),
@@ -264,6 +268,7 @@ def execute_plan_searches(
                             },
                             "evidence": {
                                 "classification": "UNASSESSED",
+                                "evidence_kind": "RAW_SEARCH_HIT",
                                 "independently_corroborated": False,
                                 "human_audited_primary_evidence": False,
                                 "verification_status": "UNVERIFIED"
