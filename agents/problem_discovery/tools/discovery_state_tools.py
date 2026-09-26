@@ -10,13 +10,43 @@ from agents.problem_discovery.orchestration.models import ExperimentContractVali
 
 
 class DiscoveryStateTools:
-    """Tool provider wrapping canonical DiscoveryDB and context pack builders."""
+    """Tool provider wrapping canonical DiscoveryDB and context pack builders.
+
+    Antigravity serializes custom Python tools before handing them to the runtime.
+    Bound methods therefore need a pickle-safe self. Dynamic module objects and
+    dynamically loaded repository classes are intentionally kept out of serialized
+    instance state and are restored lazily from db_path after deserialization.
+    """
 
     def __init__(self, db_path: Optional[str] = None) -> None:
         self.db_path = str(db_path or get_default_db_path())
-        db_cls = get_discovery_db_class()
-        self.db = db_cls(db_path=self.db_path)
-        self.context_builder = get_build_agent_context_module()
+        self._db: Optional[Any] = None
+        self._context_builder: Optional[Any] = None
+
+    def __getstate__(self) -> Dict[str, Any]:
+        """Serialize only stable configuration required to rebuild runtime helpers."""
+        return {"db_path": self.db_path}
+
+    def __setstate__(self, state: Dict[str, Any]) -> None:
+        """Restore a pickle-safe provider without carrying module objects across processes."""
+        self.db_path = str(state["db_path"])
+        self._db = None
+        self._context_builder = None
+
+    @property
+    def db(self) -> Any:
+        """Load the canonical DiscoveryDB lazily so bound tools remain serializable."""
+        if self._db is None:
+            db_cls = get_discovery_db_class()
+            self._db = db_cls(db_path=self.db_path)
+        return self._db
+
+    @property
+    def context_builder(self) -> Any:
+        """Load the context-builder module lazily and never serialize the module object."""
+        if self._context_builder is None:
+            self._context_builder = get_build_agent_context_module()
+        return self._context_builder
 
     def _get_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path)
