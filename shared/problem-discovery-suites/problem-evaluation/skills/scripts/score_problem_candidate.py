@@ -16,6 +16,8 @@ import os
 import json
 import sqlite3
 import argparse
+import importlib.util
+from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 DIMENSIONS = ("frequency", "severity", "workaround", "wtp", "decision_maker", "feasibility", "discrepancy")
@@ -30,43 +32,74 @@ STOP_CHECKS = (
 
 EVIDENCE_CAPS = {
     "L1": 35,
-    "L2": 28,
-    "L3": 20,
-    "L4": 15,
-    "L5": 10,
-    "UNASSESSED": 15
+    "L2": 35,
+    "L3": 35,
+    "L4": 7,
+    "L5": 0,
+    "UNASSESSED": 0
 }
+
+def _load_discovery_db_class():
+    """Load the canonical discovery-state client."""
+    db_module_path = Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py"
+    spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load discovery-state client from {db_module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.DiscoveryDB
 
 def calculate_candidate_score(
     scores: Dict[str, int],
-    evidence_level: str = "L3",
+    evidence_level: str = "UNASSESSED",
     stop_checks_triggered: Optional[List[str]] = None
 ) -> Dict[str, Any]:
-    """Calculates deterministic 35-point score with evidence caps and stop checks."""
-    total = sum(max(0, min(5, scores.get(d, 0))) for d in DIMENSIONS)
-    level = evidence_level.upper() if evidence_level else "UNASSESSED"
-    cap = EVIDENCE_CAPS.get(level, 15)
+    """Calculate research priority only. Never promote a candidate to a build state."""
+    level = (evidence_level or "UNASSESSED").upper()
+    normalized = {d: max(0, min(5, int(scores.get(d, 0)))) for d in DIMENSIONS}
 
+    # Canonical evidence gate from the original discovery framework:
+    # L4 secondary interpretation contributes at most 1 point per dimension;
+    # L5 and unassessed evidence contribute zero until stronger evidence exists.
+    if level == "L4":
+        gated_scores = {d: min(v, 1) for d, v in normalized.items()}
+    elif level in {"L5", "UNASSESSED"}:
+        gated_scores = {d: 0 for d in DIMENSIONS}
+    else:
+        gated_scores = normalized
+
+    raw_total = sum(normalized.values())
+    total = sum(gated_scores.values())
     triggered_stops = stop_checks_triggered or []
-    capped_score = min(total, cap)
-    if triggered_stops:
-        capped_score = min(capped_score, 14)
 
-    status = "RESEARCH_PRIORITY"
-    if triggered_stops or capped_score < 15:
-        status = "PARKED"
-    elif level == "L1" and capped_score >= 28:
-        status = "READY_TO_BUILD"
+    if triggered_stops:
+        lifecycle = "PARKED"
+        tier = "STOP_CHECK_TRIGGERED"
+    elif total >= 28:
+        lifecycle = "RESEARCH_PRIORITY"
+        tier = "HIGH_RESEARCH_PRIORITY"
+    elif total >= 23:
+        lifecycle = "RESEARCH_PRIORITY"
+        tier = "QUALIFIED_RESEARCH_CANDIDATE"
+    elif total >= 15:
+        lifecycle = "PARKED"
+        tier = "LOW_RESEARCH_PRIORITY"
+    else:
+        lifecycle = "PARKED"
+        tier = "HALT_NO_PROBLEM_FALLBACK"
 
     return {
-        "raw_total": total,
-        "capped_score": capped_score,
+        "raw_total": raw_total,
+        "capped_score": total,
         "maximum": 35,
         "evidence_level": level,
-        "evidence_cap": cap,
-        "scores": {d: scores.get(d, 0) for d in DIMENSIONS},
+        "evidence_cap": EVIDENCE_CAPS.get(level, 0),
+        "scores": gated_scores,
+        "raw_scores": normalized,
         "stop_checks_triggered": triggered_stops,
-        "lifecycle_status": status
+        "lifecycle_status": lifecycle,
+        "priority_tier": tier,
+        "score_is_validation": False
     }
 
 def persist_candidate_to_sqlite(
@@ -83,61 +116,23 @@ def persist_candidate_to_sqlite(
     evaluation_dict: Dict[str, Any],
     supporting_signal_ids: List[str]
 ) -> None:
-    """Inserts candidate record, links underlying signals, and updates research_runs stage."""
-    conn = sqlite3.connect(db_path)
-    try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS candidates (
-                candidate_id        TEXT PRIMARY KEY,
-                research_id         TEXT NOT NULL,
-                title               TEXT NOT NULL,
-                domain              TEXT NOT NULL,
-                target_operator     TEXT,
-                track               TEXT DEFAULT 'COMMERCIAL',
-                research_score      INTEGER DEFAULT 0,
-                evidence_level      TEXT DEFAULT 'UNASSESSED',
-                validation_status   TEXT DEFAULT 'UNVERIFIED',
-                lifecycle_status    TEXT DEFAULT 'ACTIVE',
-                evaluation_json     TEXT,
-                solution_json       TEXT,
-                created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-
-        eval_str = json.dumps(evaluation_dict, indent=2)
-        cursor.execute("""
-            INSERT OR REPLACE INTO candidates (
-                candidate_id, research_id, title, domain, target_operator, track,
-                research_score, evidence_level, validation_status, lifecycle_status, evaluation_json, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'UNVERIFIED', ?, ?, CURRENT_TIMESTAMP)
-        """, (
-            candidate_id, research_id, title, domain, operator, track,
-            research_score, evidence_level, lifecycle_status, eval_str
-        ))
-
-        # Link supporting signals
-        if supporting_signal_ids:
-            placeholders = ",".join("?" for _ in supporting_signal_ids)
-            cursor.execute(f"""
-                UPDATE evidence_signals
-                SET candidate_id = ?
-                WHERE signal_id IN ({placeholders})
-            """, [candidate_id] + supporting_signal_ids)
-            sys.stderr.write(f"[INFO] Linked {cursor.rowcount} signals to candidate {candidate_id}\n")
-
-        # Update parent run stage
-        cursor.execute("""
-            UPDATE research_runs
-            SET current_stage = 'EVALUATED', updated_at = CURRENT_TIMESTAMP
-            WHERE research_id = ?
-        """, (research_id,))
-
-        conn.commit()
-        sys.stderr.write(f"[INFO] Persisted candidate {candidate_id} in {db_path}\n")
-    finally:
-        conn.close()
+    """Delegate all mutations to the canonical discovery-state client."""
+    DiscoveryDB = _load_discovery_db_class()
+    db = DiscoveryDB(db_path)
+    db.upsert_candidate(
+        candidate_id=candidate_id,
+        research_id=research_id,
+        title=title,
+        domain=domain,
+        target_operator=operator,
+        track=track,
+        research_score=research_score,
+        evidence_level=evidence_level,
+        lifecycle_status=lifecycle_status,
+        evaluation_dict=evaluation_dict,
+        supporting_signal_ids=supporting_signal_ids,
+    )
+    sys.stderr.write(f"[INFO] Persisted candidate {candidate_id} through discovery-state\n")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -150,7 +145,7 @@ def main():
     parser.add_argument("--domain", default="general", help="Operational domain")
     parser.add_argument("--operator", help="Target operator role")
     parser.add_argument("--track", default="COMMERCIAL", choices=["COMMERCIAL", "FREE_UTILITY"], help="Evaluation track")
-    parser.add_argument("--evidence-level", default="L3", choices=list(EVIDENCE_CAPS.keys()), help="Highest verified evidence level")
+    parser.add_argument("--evidence-level", default="UNASSESSED", choices=list(EVIDENCE_CAPS.keys()), help="Highest verified evidence level")
 
     # 7 dimensions
     parser.add_argument("--frequency", type=int, default=0)
