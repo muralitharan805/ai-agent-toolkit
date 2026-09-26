@@ -30,8 +30,10 @@ CREATE TABLE IF NOT EXISTS candidates (
     target_operator     TEXT,
     track               TEXT NOT NULL DEFAULT 'COMMERCIAL',
     research_score      INTEGER CHECK(research_score IS NULL OR research_score BETWEEN 0 AND 35),
-    evidence_level      TEXT NOT NULL DEFAULT 'UNASSESSED',
-    validation_status   TEXT NOT NULL DEFAULT 'UNVERIFIED',
+    evidence_level      TEXT NOT NULL DEFAULT 'UNASSESSED'
+                        CHECK(evidence_level IN ('UNASSESSED','L1','L2','L3','L4','L5')),
+    validation_status   TEXT NOT NULL DEFAULT 'UNVERIFIED'
+                        CHECK(validation_status IN ('UNVERIFIED','IN_PROGRESS','PARTIALLY_VALIDATED','VALIDATED')),
     lifecycle_status    TEXT NOT NULL DEFAULT 'ACTIVE',
     solution_class      TEXT,
     evaluation_json     TEXT CHECK(evaluation_json IS NULL OR json_valid(evaluation_json)),
@@ -51,7 +53,8 @@ CREATE TABLE IF NOT EXISTS evidence_signals (
     actor_role          TEXT,
     reported_issue      TEXT NOT NULL,
     reported_workaround TEXT,
-    evidence_level      TEXT NOT NULL DEFAULT 'UNASSESSED',
+    evidence_level      TEXT NOT NULL DEFAULT 'UNASSESSED'
+                        CHECK(evidence_level IN ('UNASSESSED','L1','L2','L3','L4','L5')),
     payload_json        TEXT CHECK(payload_json IS NULL OR json_valid(payload_json)),
     retrieved_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (research_id) REFERENCES research_runs(research_id),
@@ -68,7 +71,8 @@ CREATE TABLE IF NOT EXISTS experiments (
     sample_target       INTEGER NOT NULL CHECK(sample_target > 0),
     sample_achieved     INTEGER,
     observed_value      REAL,
-    outcome_verdict     TEXT NOT NULL DEFAULT 'PREREGISTERED',
+    outcome_verdict     TEXT NOT NULL DEFAULT 'PREREGISTERED'
+                        CHECK(outcome_verdict IN ('PREREGISTERED','PASSED','FAILED','INCOMPLETE','INVALID','CANCELLED')),
     contract_json       TEXT NOT NULL CHECK(json_valid(contract_json)),
     assessment_json     TEXT CHECK(assessment_json IS NULL OR json_valid(assessment_json)),
     artifact_hash       TEXT,
@@ -111,6 +115,8 @@ SELECT
     (SELECT COUNT(*) FROM experiments e WHERE e.candidate_id = c.candidate_id) AS experiment_count,
     (SELECT COUNT(*) FROM experiments e WHERE e.candidate_id = c.candidate_id AND e.outcome_verdict = 'PASSED') AS passed_experiments,
     (SELECT COUNT(*) FROM experiments e WHERE e.candidate_id = c.candidate_id AND e.outcome_verdict = 'FAILED') AS failed_experiments,
+    (SELECT COUNT(*) FROM experiments e WHERE e.candidate_id = c.candidate_id AND e.outcome_verdict = 'INVALID') AS invalid_experiments,
+    (SELECT COUNT(*) FROM experiments e WHERE e.candidate_id = c.candidate_id AND e.outcome_verdict = 'INCOMPLETE') AS incomplete_experiments,
     COALESCE(
         (
             SELECT e2.outcome_verdict
@@ -119,7 +125,7 @@ SELECT
             ORDER BY e2.created_at DESC, e2.experiment_id DESC
             LIMIT 1
         ),
-        'PREREGISTERED'
+        'NOT_RUN'
     ) AS latest_experiment_verdict,
     c.updated_at
 FROM candidates c
