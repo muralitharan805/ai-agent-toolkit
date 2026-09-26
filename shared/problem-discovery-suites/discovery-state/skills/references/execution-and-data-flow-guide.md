@@ -11,7 +11,7 @@
 | Stage | Suite Name | Type | Directory | Core Responsibility |
 |:---:|:---|:---:|:---|:---|
 | **01** | `research-planning` | Reasoning | `shared/problem-discovery-suites/research-planning/` | Slot filling, domain decomposition, precision search dorks & MECE streams. |
-| **02** | `evidence-research` | Reasoning | `shared/problem-discovery-suites/evidence-research/` | Search execution, primary source inspection, verbatim quotes & L1–L5 tagging. |
+| **02** | `evidence-research` | Reasoning | `shared/problem-discovery-suites/evidence-research/` | Search execution, source inspection, raw `UNASSESSED` capture, and evidence qualification. |
 | **03** | `problem-evaluation` | Reasoning | `shared/problem-discovery-suites/problem-evaluation/` | Forensic 14-node workflow mapping, root-cause isolation & 35-point scoring. |
 | **04** | `experiment-validation` | Reasoning | `shared/problem-discovery-suites/experiment-validation/` | Preregistered experiment contracts (DESIGN) & empirical trial audits (ASSESS). |
 | **05** | `solution-strategy` | Reasoning | `shared/problem-discovery-suites/solution-strategy/` | Non-software sufficiency, 15-flag constraints, SaaS gating & 14-day STS design. |
@@ -37,7 +37,7 @@ User Question / Domain Prompt
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ STAGE 2: /evidence-research <RUN-ID>                                        │
 │  - Reads Context  : SELECT plan_json FROM research_runs                     │
-│  - Agent Task     : Live API/Web search (GitHub, Reddit, HN), L1–L5 quotes  │
+│  - Agent Task     : Live search + source inspection; raw hits stay UNASSESSED │
 │  - Writes State   : ───► DiscoveryDB.save_evidence_signals(signals_list)    │
 │                          Table: evidence_signals (candidate_id = NULL)      │
 └──────────────────────────────────────┬──────────────────────────────────────┘
@@ -95,7 +95,7 @@ User Question / Domain Prompt
 │  - Agent Task     : 15-point constraints, Non-software gate, SaaS rejection,│
 │                     Select Solution Class, Design 14-day STS                 │
 │  - Writes State   : ───► DiscoveryDB.finalize_solution(solution_dict)       │
-│                          Table: candidates (solution_class, READY_TO_BUILD) │
+│                          Table: candidates (solution_class, PILOT_READY)   │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
                                        ▼
@@ -208,7 +208,7 @@ db = DiscoveryDB()  # Automatically resolves DISCOVERY_DB_PATH or ./discovery.sq
       - `platform`: `'GITHUB'`, `'REDDIT'`, `'HACKERNEWS'`.
       - `source_url`: Verbatim URL.
       - `reported_issue`: Direct complaint statement.
-      - `evidence_level`: `'L1'`, `'L2'`, `'L3'`, etc.
+      - `evidence_level`: Raw/snippet hits are `'UNASSESSED'`; inspected evidence may later qualify as `L1`–`L5`.
       - `payload_json`: Raw API metadata.
   - **Table 2:** `research_runs`
     - **Action:** `UPDATE`
@@ -247,7 +247,7 @@ db = DiscoveryDB()  # Automatically resolves DISCOVERY_DB_PATH or ./discovery.sq
       - `target_operator`: Human experiencing the pain (e.g. `'small ecommerce merchant'`).
       - `track`: `'COMMERCIAL'` or `'FREE_UTILITY'`.
       - `research_score`: `0` to `35` (e.g. `30`).
-      - `evidence_level`: Dominant level (e.g. `'L1'`).
+      - `evidence_level`: Deterministically derived usable level from the linked supporting signals; caller/model labels cannot upgrade it.
       - `validation_status`: `'UNVERIFIED'` (or `'IN_PROGRESS'`).
       - `lifecycle_status`: `'RESEARCH_PRIORITY'` or `'EXPERIMENT_DESIGNED'`.
       - `evaluation_json`: 14-node map, root causes, 35-pt subscores.
@@ -276,7 +276,7 @@ db = DiscoveryDB()  # Automatically resolves DISCOVERY_DB_PATH or ./discovery.sq
   - Operates in one of two strict modes:
     - **`DESIGN` Mode** *(Default when real trials haven't occurred)*:
       - Defines a 14-day empirical experiment with strict numeric thresholds (e.g. "$\ge 4$ of 10 merchants complete 14 days and confirm sync lag $< 2$ mins").
-      - Establishes unambiguous failure rules (e.g. "If $\le 2$ complete, mark `EXPERIMENT_FAILED`").
+      - Establishes unambiguous failure rules; database verdicts are `PASSED`, `FAILED`, `INCOMPLETE`, or `INVALID`.
     - **`ASSESS` Mode** *(When user provides real participant logs)*:
       - Audits observed data against the locked thresholds.
       - Computes local artifact SHA-256 digest and records human auditor name.
@@ -294,7 +294,7 @@ db = DiscoveryDB()  # Automatically resolves DISCOVERY_DB_PATH or ./discovery.sq
       - `artifact_hash`: SHA-256 checksum of evidence file.
   - **Table 2:** `candidates`
     - **Action:** `UPDATE`
-    - `validation_status`: Updates to `'VALIDATED'` (if passed) or `'EXPERIMENT_FAILED'` (if failed).
+    - `validation_status`: A passed claim normally becomes `PARTIALLY_VALIDATED`; a failed individual experiment keeps the candidate under `IN_PROGRESS` research/validation review.
     - `lifecycle_status`: Updates to `'EXPERIMENT_DESIGNED'` or `'PARKED'`.
 
 ---
@@ -322,7 +322,7 @@ db = DiscoveryDB()  # Automatically resolves DISCOVERY_DB_PATH or ./discovery.sq
     - **Action:** `UPDATE` (via `evaluate_solution_strategy.py`)
     - **Key Fields Written:**
       - `solution_class`: Selected architecture class (e.g. `'INTEGRATION_SERVICE'`).
-      - `lifecycle_status`: Transitions to `'READY_TO_BUILD'`.
+      - `lifecycle_status`: Validated candidates may transition to `'PILOT_READY'`; otherwise a draft assessment remains `'SOLUTION_PROPOSED'`.
       - `solution_json`: 15-flag constraints audit, SaaS justification verdict, and 14-day STS design.
   - **Table:** `research_runs`
     - **Action:** `UPDATE`
@@ -454,15 +454,27 @@ db = DiscoveryDB()  # Automatically resolves DISCOVERY_DB_PATH or ./discovery.sq
 
 ---
 
+### Guardrail Invariants
+
+- Search result or snippet is not verified evidence; raw collection defaults to `UNASSESSED`.
+- Planned operator is research context, not observed actor identity.
+- Candidate evidence level and 35-point score are recomputed from persisted supporting signals.
+- Official policy evidence can prove policy/consequence but does not by itself establish behavioral L1.
+- An experiment must have one atomic primary metric and a preregistered aggregation rule.
+- One passed experiment does not imply market demand, willingness-to-pay, adoption, or retention validation.
+- A single finalized candidate cannot complete a research run while another attached candidate is still active.
+
+---
+
 #### Canonical `DiscoveryDB` Client Methods (Python Interface):
 
 Every reasoning script interacts with SQLite exclusively through these 7 methods:
 - `create_research_run(research_id, request, domain, scope_type, geography, plan_dict)` $\to$ Inserts run, sets `stage='EVIDENCE_RESEARCH'`.
 - `save_evidence_signals(research_id, signals_list)` $\to$ Bulk inserts normalized signals with `candidate_id=NULL`, updates run to `stage='PROBLEM_EVALUATION'`.
 - `upsert_candidate(candidate_id, research_id, title, ..., evaluation_dict, supporting_signal_ids)` $\to$ Upserts candidate, atomically links supporting signal rows, advances run to `stage='EXPERIMENT_VALIDATION'`.
-- `preregister_experiment(experiment_id, candidate_id, contract_dict)` $\to$ Inserts experiment with `verdict='PREREGISTERED'`, updates candidate to `lifecycle='EXPERIMENT_DESIGNED'`.
-- `record_experiment_assessment(experiment_id, candidate_id, assessment_dict, artifact_hash, ...)` $\to$ Records audit, updates `outcome_verdict` to `'PASSED'` or `'FAILED'`, updates candidate `validation_status`.
-- `finalize_solution(candidate_id, solution_class, solution_dict)` $\to$ Updates candidate `solution_class`, records 14-day STS in `solution_json`, transitions `lifecycle='READY_TO_BUILD'`, and completes parent run.
+- `preregister_experiment(experiment_id, candidate_id, contract_dict)` $\to$ Inserts an immutable contract with `verdict='PREREGISTERED'` and updates the candidate to `validation_status='IN_PROGRESS'`, `lifecycle='VALIDATING'`.
+- `record_experiment_assessment(experiment_id, assessment_dict, artifact_hash, ...)` $\to$ Verifies the locked threshold, sample, artifact, and human review; stores `PASSED` / `FAILED` / `INCOMPLETE` / `INVALID` and updates claim-scoped candidate validation.
+- `finalize_solution(candidate_id, solution_class, solution_dict)` $\to$ Rejects unfinished experiments, stores the smallest justified solution, and uses `PILOT_READY` only when validation supports it. The run completes only when every attached candidate is terminal.
 - `get_discovery_dashboard(status_filter=None)` $\to$ Returns flattened single-pane rows directly from `v_discovery_dashboard`.
 
 ---
@@ -494,7 +506,7 @@ FROM v_discovery_dashboard;
 ### Example Real-World Output:
 | candidate_id | title | score | evidence | validation | solution_class | lifecycle | total_evidence | latest_experiment |
 | :--- | :--- | :---: | :---: | :--- | :--- | :--- | :---: | :--- |
-| `CAND-001` | Multi-Marketplace Inventory Desynchronization | 30/35 | L1 | `IN_PROGRESS` | `INTEGRATION_SERVICE` | `READY_TO_BUILD` | 40 | `PREREGISTERED` |
+| `CAND-001` | Multi-Marketplace Inventory Desynchronization | 30/35 | L3 | `PARTIALLY_VALIDATED` | `INTEGRATION_SERVICE` | `PILOT_READY` | 6 | `PASSED` |
 
 ---
 
@@ -506,4 +518,4 @@ FROM v_discovery_dashboard;
 2. **Do I need `pip install`?**
    - **No.** All 9 Python scripts rely exclusively on the built-in Python standard library (`sqlite3`, `json`, `urllib`).
 3. **What if an experiment fails?**
-   - The record is **NEVER deleted**. It remains in `experiments` and `candidates` marked as `EXPERIMENT_FAILED` and `PARKED`. Negative knowledge is permanently preserved to prevent researching failed ideas again!
+   - The record is **NEVER deleted**. The experiment remains `FAILED` as negative knowledge; the candidate can remain `IN_PROGRESS` / `RESEARCH_PRIORITY` while the orchestrator decides whether to retry, gather evidence, park, or archive it.
