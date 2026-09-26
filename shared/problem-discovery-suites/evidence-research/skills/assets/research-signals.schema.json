@@ -175,7 +175,7 @@
                     "human_audited_primary_evidence": { "type": "boolean" },
                     "verification_status": {
                       "type": "string",
-                      "enum": ["UNVERIFIED", "REFUTED", "CORROBORATED"]
+                      "enum": ["UNVERIFIED", "REFUTED", "CORROBORATED", "CONFIRMED"]
                     }
                   }
                 },
