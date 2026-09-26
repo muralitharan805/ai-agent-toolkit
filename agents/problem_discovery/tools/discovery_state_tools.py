@@ -10,16 +10,37 @@ from agents.problem_discovery.orchestration.models import ExperimentContractVali
 
 
 class DiscoveryStateTools:
-    """Tool provider wrapping canonical DiscoveryDB and context pack builders."""
+    """Tool provider wrapping canonical DiscoveryDB and context pack builders.
+
+    Antigravity serializes bound custom Python tools before runtime execution.
+    Keep only stable configuration in pickled instance state; dynamically loaded
+    repository helpers are reconstructed lazily after deserialization.
+    """
 
     def __init__(self, db_path: Optional[str] = None) -> None:
         self.db_path = str(db_path or get_default_db_path())
-        db_cls = get_discovery_db_class()
-        self.db = db_cls(db_path=self.db_path)
+        self._db: Optional[Any] = None
+
+    def __getstate__(self) -> Dict[str, Any]:
+        """Serialize only the database path required to rebuild runtime helpers."""
+        return {"db_path": self.db_path}
+
+    def __setstate__(self, state: Dict[str, Any]) -> None:
+        """Restore a pickle-safe provider without dynamic module/class instances."""
+        self.db_path = str(state["db_path"])
+        self._db = None
+
+    @property
+    def db(self) -> Any:
+        """Load the canonical DiscoveryDB lazily so bound methods are pickle-safe."""
+        if self._db is None:
+            db_cls = get_discovery_db_class()
+            self._db = db_cls(db_path=self.db_path)
+        return self._db
 
     @property
     def context_builder(self) -> Any:
-        """Dynamically load context builder module to remain deepcopyable for Antigravity SDK."""
+        """Dynamically load context builder module and never keep it in serialized state."""
         return get_build_agent_context_module()
 
     def _get_connection(self) -> sqlite3.Connection:
@@ -29,6 +50,59 @@ class DiscoveryStateTools:
         conn.execute("PRAGMA busy_timeout = 5000;")
         conn.row_factory = sqlite3.Row
         return conn
+
+    def detect_legacy_synthetic_state(
+        self, candidate_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Detect records produced by the removed synthetic end-to-end demo.
+
+        This detector is read-only and intentionally not registered as an
+        Antigravity tool. It only matches the exact historical synthetic
+        experiment fingerprint so genuine user experiments are not broadly
+        classified as synthetic.
+        """
+        empty_sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        conn = self._get_connection()
+        try:
+            sql = """
+                SELECT
+                    e.experiment_id,
+                    e.candidate_id,
+                    e.metric_name,
+                    e.sample_target,
+                    e.sample_achieved,
+                    e.observed_value,
+                    e.outcome_verdict,
+                    e.artifact_hash,
+                    e.audited_by,
+                    c.solution_class,
+                    c.lifecycle_status
+                FROM experiments e
+                JOIN candidates c ON c.candidate_id = e.candidate_id
+                WHERE e.metric_name = 'weekly_operational_interventions'
+                  AND e.sample_target = 6
+                  AND e.sample_achieved = 6
+                  AND ABS(e.observed_value - 4.6) < 0.000001
+                  AND e.outcome_verdict = 'PASSED'
+                  AND e.artifact_hash = ?
+                  AND e.audited_by = 'Murali (Principal Architect & SeyaliCraft Lead)'
+            """
+            params: List[Any] = [empty_sha256]
+            if candidate_id:
+                sql += " AND e.candidate_id = ?"
+                params.append(candidate_id.strip().upper())
+            rows = [dict(r) for r in conn.execute(sql, params).fetchall()]
+            return {
+                "detected": bool(rows),
+                "records": rows,
+                "reason": (
+                    "EXACT_LEGACY_SYNTHETIC_EXPERIMENT_FINGERPRINT"
+                    if rows
+                    else None
+                ),
+            }
+        finally:
+            conn.close()
 
     # =========================================================================
     # Read-Only Tools
