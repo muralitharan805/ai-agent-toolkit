@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import collections
 import json
+import os
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -423,7 +424,7 @@ def main() -> None:
         required=True,
         choices=["problem-evaluation", "experiment-validation", "solution-strategy", "discovery-query"],
     )
-    parser.add_argument("--db", default="discovery.sqlite")
+    parser.add_argument("--db", default=os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite"), help="Path to SQLite database")
     parser.add_argument("--research-id")
     parser.add_argument("--candidate-id")
     parser.add_argument("--experiment-id")

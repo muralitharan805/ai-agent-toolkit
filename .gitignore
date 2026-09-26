@@ -4,6 +4,12 @@
 node_modules/
 .agents/
 
+# Ignore Python Cache & Local SQLite DBs
+__pycache__/
+*.pyc
+*.sqlite*
+*.db*
+
 # Ignore Private Project Business Domains (Open-Source Protection)
 domains/*
 !domains/README.md

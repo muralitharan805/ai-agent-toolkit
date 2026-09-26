@@ -53,6 +53,6 @@ When describing the architecture in `SolutionAssessment`, characterization must 
 
 Once the `SolutionAssessment` is finalized and marked `READY_TO_BUILD` in the SQLite `candidates` table:
 1. The builder selects the implementation technology that best matches their team's existing core competencies and operational stack.
-2. For SeyaliCraft projects, refer to the developer profile:
+2. For portfolio and utility projects, refer to the developer profile:
    - Primary: Angular, Next.js, Node.js, NestJS, Spring Boot, Laravel, PHP, Docker, AWS.
 3. The solution strategy provides the **requirements and boundaries**, leaving implementation details to the engineering phase.

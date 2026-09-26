@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -43,7 +44,7 @@ def search_discovery(db_path: str, query: str, entity_type: str | None = None) -
 def main() -> None:
     parser = argparse.ArgumentParser(description="Full-Text Search across Problem Discovery SQLite database.")
     parser.add_argument("query", help="Search query string (supports FTS5 syntax, e.g., 'reconciliation OR dispute')")
-    parser.add_argument("--db", default="discovery.sqlite", help="Path to SQLite database")
+    parser.add_argument("--db", default=os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite"), help="Path to SQLite database")
     parser.add_argument("--type", choices=["RUN", "CANDIDATE", "SIGNAL"], help="Filter by entity type")
 
     args = parser.parse_args()

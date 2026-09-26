@@ -20,13 +20,22 @@ from typing import Any, Dict, Optional
 
 
 def _load_discovery_db_class():
-    db_module_path = Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py"
-    spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Unable to load discovery-state client from {db_module_path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.DiscoveryDB
+    candidates = [
+        Path(__file__).resolve().parents[3] / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
+        Path(__file__).resolve().parents[2] / "discovery-state" / "scripts" / "discovery_db.py",
+        Path(__file__).resolve().parents[3] / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
+        Path(__file__).resolve().parents[4] / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
+        Path.cwd() / "shared" / "problem-discovery-suites" / "discovery-state" / "skills" / "scripts" / "discovery_db.py",
+        Path.cwd() / ".agents" / "skills" / "discovery-state" / "scripts" / "discovery_db.py",
+    ]
+    for db_module_path in candidates:
+        if db_module_path.exists():
+            spec = importlib.util.spec_from_file_location("discovery_state_db", db_module_path)
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                return module.DiscoveryDB
+    raise RuntimeError(f"Unable to load discovery-state client from candidates: {candidates}")
 
 
 def compute_file_sha256(file_path: Optional[str]) -> Optional[str]:
@@ -242,10 +251,10 @@ def main() -> None:
     parser.add_argument("--audit-date")
     parser.add_argument("--input", help="ExperimentContract JSON path for ASSESS")
     parser.add_argument("--output")
-    parser.add_argument("--sqlite-db")
+    parser.add_argument("--sqlite-db", "--db", default=os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite"), help="Path to SQLite database")
     args = parser.parse_args()
 
-    DiscoveryDB = _load_discovery_db_class() if args.sqlite_db else None
+    DiscoveryDB = _load_discovery_db_class() if (args.sqlite_db and os.path.exists(args.sqlite_db)) else None
     db = DiscoveryDB(args.sqlite_db) if DiscoveryDB else None
 
     if args.mode == "design":

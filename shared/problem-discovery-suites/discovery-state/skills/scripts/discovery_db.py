@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -19,8 +20,8 @@ from typing import Any, Dict, List, Optional
 
 
 class DiscoveryDB:
-    def __init__(self, db_path: str = "discovery.sqlite") -> None:
-        self.db_path = db_path
+    def __init__(self, db_path: Optional[str] = None) -> None:
+        self.db_path = db_path or os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite")
         self._bootstrap()
 
     @property
@@ -467,7 +468,7 @@ class DiscoveryDB:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Canonical Problem Discovery state client")
-    parser.add_argument("--db", default="discovery.sqlite")
+    parser.add_argument("--db", default=os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite"), help="Path to SQLite database")
     parser.add_argument("--dashboard", action="store_true")
     parser.add_argument("--filter-status")
     parser.add_argument("--search")

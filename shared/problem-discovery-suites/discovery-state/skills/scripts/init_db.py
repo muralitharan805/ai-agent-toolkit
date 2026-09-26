@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 
 from discovery_db import DiscoveryDB
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Bootstrap Problem Discovery SQLite database")
-    parser.add_argument("--db", default="discovery.sqlite")
+    parser.add_argument("--db", default=os.getenv("DISCOVERY_DB_PATH", "discovery.sqlite"), help="Path to SQLite database")
     args = parser.parse_args()
     DiscoveryDB(args.db)
     print(json.dumps({"status": "BOOTSTRAPPED", "db_path": args.db}))

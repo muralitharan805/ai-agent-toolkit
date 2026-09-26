@@ -29,7 +29,7 @@ This document provides the authoritative data dictionary, value ranges, enum spe
 | `title` | `TEXT` | NO | 5–150 characters | Descriptive problem candidate title. |
 | `domain` | `TEXT` | NO | Matching parent domain | Domain taxonomy classification. |
 | `target_operator` | `TEXT` | YES | Role slug (e.g. `accounts_manager`) | Specific human operator experiencing the friction. |
-| `track` | `TEXT` | NO | `'COMMERCIAL'`, `'FREE_UTILITY'` | SeyaliCraft monetization or utility track. |
+| `track` | `TEXT` | NO | `'COMMERCIAL'`, `'FREE_UTILITY'` | Commercial monetization or free utility track. |
 | `research_score` | `INTEGER` | NO | `0` to `35` | 35-point empirical research score. |
 | `evidence_level` | `TEXT` | NO | `'L1'`, `'L2'`, `'L3'`, `'L4'`, `'L5'`, `'UNASSESSED'` | Dominant evidence level backing the candidate. |
 | `validation_status` | `TEXT` | NO | `'UNVERIFIED'`, `'VALIDATED'`, `'EXPERIMENT_FAILED'` | Empirical proof state from real-world trials. |
