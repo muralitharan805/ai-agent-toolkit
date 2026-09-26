@@ -170,20 +170,37 @@ class ProblemDiscoveryAgent:
                 self._sdk_agent = None
 
     async def _chat_sdk(self, prompt: str) -> str:
-        """Execute one bounded reasoning turn through the real Antigravity Agent."""
+        """Execute one bounded reasoning turn through the real Antigravity Agent with rate-limit backoff."""
         if not ANTIGRAVITY_AVAILABLE:
             raise RuntimeError(
                 "Reasoning stage execution requires the google-antigravity package. "
                 "No synthetic fallback is permitted."
             )
 
-        if self._sdk_agent is not None:
-            response = await self._sdk_agent.chat(prompt)
-            return await response.text()
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                if self._sdk_agent is not None:
+                    response = await self._sdk_agent.chat(prompt)
+                    return await response.text()
 
-        async with self.create_sdk_agent() as agent:
-            response = await agent.chat(prompt)
-            return await response.text()
+                async with self.create_sdk_agent() as agent:
+                    response = await agent.chat(prompt)
+                    return await response.text()
+            except Exception as exc:
+                err_str = str(exc)
+                is_rate_limit = any(k in err_str for k in ("429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE"))
+                if is_rate_limit and attempt < max_retries - 1:
+                    match = re.search(r"retry(?:Delay:\s*|.*?in\s*)([0-9]+)", err_str, re.IGNORECASE)
+                    wait_sec = int(match.group(1)) + 2 if match else 25
+                    wait_sec = max(5, min(wait_sec, 60))
+                    print(
+                        f"\n[Gemini Free Tier Rate Limit / High Demand. Waiting {wait_sec}s for quota reset (attempt {attempt + 1}/{max_retries})...]",
+                        file=sys.stderr,
+                    )
+                    await asyncio.sleep(wait_sec)
+                    continue
+                raise
 
     # ---------------------------------------------------------------------
     # Stage prompts
