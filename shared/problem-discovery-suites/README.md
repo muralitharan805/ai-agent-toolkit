@@ -48,3 +48,15 @@ for dir in shared/problem-discovery-suites/*; do
   [[ -d "$dir" ]] && python3 tools/generators/generate-agent-suite/skills/scripts/verify_suite.py "$dir"
 done
 ```
+
+
+---
+
+## Persistence Safety Invariants
+
+- `discovery-state` is the only schema/mutation authority.
+- Candidate evidence level and research score are derived from persisted supporting signals; model-proposed labels cannot upgrade evidence.
+- A research run completes only after aggregate candidate state is terminal and no preregistered/incomplete experiment remains.
+- Planned target operators are research context, not observed actor identity.
+- Write JSON through the Python/file APIs. Avoid `echo` or unquoted heredocs for payloads containing `$`, backticks, or backslashes because shell expansion can silently corrupt literals.
+- For databases created before these guardrails, run `discovery_db.py --repair-integrity` once after upgrading.
