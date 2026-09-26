@@ -20,7 +20,7 @@ The skill **plans research**; it does not execute live searches or validate mark
 
 - **Inputs**: User prompt (broad, narrow, or messy brain-dump), optional research history, geography, known frictions, and constraints.
 - **Primary Output**: A structured `ResearchPlan` JSON conforming to [assets/research-plan.schema.json](assets/research-plan.schema.json).
-- **Persistence**: Initializes a parent record in SQLite table `research_runs` and emits a `research_id` claim-check token.
+- **Persistence**: Emits a `ResearchPlan`; the canonical `discovery-state` client initializes the parent `research_runs` record and emits the `research_id` claim-check token.
 - **Out of Scope**: Executing live web/API searches, calculating 35-point problem scores, assigning candidate problem IDs (`PRB-xxx`), writing `discovery_matrix.csv`, or designing software solutions.
 
 ---
@@ -93,11 +93,7 @@ graph TD
 The skill initiates the parent record in SQLite table `research_runs`:
 
 ```sql
-INSERT INTO research_runs (
-    research_id, original_request, domain, scope_type, geography, current_stage, status, plan_json
-) VALUES (
-    :research_id, :original_request, :domain, :scope_type, :geography, 'PLANNED', 'ACTIVE', :plan_json
-);
+Do not issue direct mutation SQL from this reasoning suite. Call `DiscoveryDB.create_research_run(...)` from `discovery-state`. After planning is persisted, the canonical state layer sets `current_stage='EVIDENCE_RESEARCH'`.
 ```
 
 Downstream agents fetch query targets directly via `WHERE research_id = :research_id`.
