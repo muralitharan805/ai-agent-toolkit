@@ -16,7 +16,11 @@ class DiscoveryStateTools:
         self.db_path = str(db_path or get_default_db_path())
         db_cls = get_discovery_db_class()
         self.db = db_cls(db_path=self.db_path)
-        self.context_builder = get_build_agent_context_module()
+
+    @property
+    def context_builder(self) -> Any:
+        """Dynamically load context builder module to remain deepcopyable for Antigravity SDK."""
+        return get_build_agent_context_module()
 
     def _get_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path)
