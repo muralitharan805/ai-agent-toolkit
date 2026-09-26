@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "task": "PROBLEM_EVALUATION",
+  "assembled_at": "2026-09-26T12:00:00Z",
+  "research_run": {
+    "research_id": "run_2026_001",
+    "domain": "ecommerce_logistics",
+    "scope_type": "NARROW",
+    "original_request": "Explore Indian D2C courier weight discrepancy disputes"
+  },
+  "research_plan": {
+    "streams": [
+      {
+        "stream_id": "RS-001",
+        "name": "Courier Weight Disputes",
+        "operators": ["dispatch_manager", "accounts_executive"]
+      }
+    ],
+    "unknowns": ["Target geography", "Monetary loss per shipment"]
+  },
+  "signals": [
+    {
+      "signal_id": "sig_001",
+      "stream_id": "RS-001",
+      "platform": "REDDIT",
+      "source_url": "https://reddit.com/r/ecom/comments/xyz123",
+      "actor_role": "D2C Brand Owner",
+      "reported_issue": "Courier charged 1.5kg for 400g t-shirt packet",
+      "reported_workaround": "Manual Excel VLOOKUP matching SKU weights vs courier bills",
+      "evidence_level": "L3"
+    },
+    {
+      "signal_id": "sig_002",
+      "stream_id": "RS-001",
+      "platform": "HACKERNEWS",
+      "source_url": "https://news.ycombinator.com/item?id=456789",
+      "actor_role": "Accounts Executive",
+      "reported_issue": "Dispute window only 4 days, losing ₹30k/mo in unverified deductions",
+      "reported_workaround": "Late night manual dispute filing",
+      "evidence_level": "L3"
+    }
+  ],
+  "deterministic_summary": {
+    "total_signals": 2,
+    "platform_breakdown": {
+      "REDDIT": 1,
+      "HACKERNEWS": 1
+    },
+    "evidence_level_distribution": {
+      "L1": 0,
+      "L2": 0,
+      "L3": 2,
+      "L4": 0,
+      "L5": 0
+    },
+    "existing_candidate_matches": []
+  },
+  "constraints": {
+    "do_not_search_web": true,
+    "max_allowed_evidence_score_per_dim": 3,
+    "enforce_14_nodes": true
+  }
+}

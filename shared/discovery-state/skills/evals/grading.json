@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "discovery-state",
+  "evaluated_at": "2026-09-26T07:45:02.475640+00:00",
+  "evaluator": "eval-suite-validator v1.1.0",
+  "verdict": "not_evaluated",
+  "deterministic_coverage_percent": 0,
+  "benchmark": null,
+  "summary": {
+    "total_test_cases": 5,
+    "verified_test_cases": 0,
+    "failed_test_cases": 0,
+    "not_evaluated_test_cases": 5,
+    "total_assertions": 20,
+    "verified_assertions": 0,
+    "failed_assertions": 0,
+    "not_evaluated_assertions": 20
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "name": "Schema Bootstrapping & PRAGMA Verification",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Enforces PRAGMA foreign_keys = ON and journal_mode = WAL",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Creates all 4 relational tables with JSON check constraints",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Provisions discovery_fts FTS5 virtual table",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Deploys v_discovery_dashboard master decision view",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Deterministic Context Pack Assembly for Problem Evaluation",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Computes total_signals deterministically in Python",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Aggregates platform breakdown and evidence level distribution",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Excludes raw SQL DDL and schema boilerplate",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Hydrates complete standalone Context Pack",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Signal Linkage & Atomic Candidate Upsert",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Performs atomic multi-row database transaction",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Updates candidate_id on specified evidence signals",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Advances parent research_run stage to EVALUATED",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Updates discovery_fts search index",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Negative Knowledge Preservation On Experiment Failure",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Records outcome_verdict as EXPERIMENT_FAILED",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Updates candidate validation_status to EXPERIMENT_FAILED",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Sets candidate lifecycle_status to PARKED",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Strictly forbids hard deletion of failed experiment",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Master Discovery Dashboard Querying",
+      "status": "not_evaluated",
+      "assertions_total": 4,
+      "assertions_verified": 0,
+      "assertions_failed": 0,
+      "assertions_not_evaluated": 4,
+      "details": [
+        {
+          "assertion": "Queries v_discovery_dashboard view directly",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Filters by validation_status and lifecycle_status",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Returns flattened candidate records with total evidence count",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        },
+        {
+          "assertion": "Eliminates multi-table JOINs for callers",
+          "status": "not_evaluated",
+          "evidence": "This assertion requires an agent run or a dedicated deterministic grader; the local suite validator cannot verify it.",
+          "remediation": "Run this case through a real agent-eval harness with an assertion-specific grader."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentContextPackSchema",
+  "description": "Validation schema for Dynamic Context Packs assembled by the Discovery State capability.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task",
+    "assembled_at",
+    "deterministic_summary",
+    "constraints"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0"]
+    },
+    "task": {
+      "type": "string",
+      "enum": ["PROBLEM_EVALUATION", "EXPERIMENT_VALIDATION", "SOLUTION_STRATEGY"]
+    },
+    "assembled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "research_run": {
+      "type": "object",
+      "properties": {
+        "research_id": { "type": "string" },
+        "domain": { "type": "string" },
+        "scope_type": { "type": "string" },
+        "original_request": { "type": "string" }
+      }
+    },
+    "research_plan": {
+      "type": "object",
+      "properties": {
+        "streams": { "type": "array" },
+        "unknowns": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "properties": {
+        "candidate_id": { "type": "string" },
+        "research_id": { "type": "string" },
+        "title": { "type": "string" },
+        "domain": { "type": "string" },
+        "target_operator": { "type": "string" },
+        "research_score": { "type": "integer" },
+        "evidence_level": { "type": "string" },
+        "validation_status": { "type": "string" },
+        "lifecycle_status": { "type": "string" }
+      }
+    },
+    "signals": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "deterministic_summary": {
+      "type": "object",
+      "required": ["total_signals"],
+      "properties": {
+        "total_signals": { "type": "integer", "minimum": 0 },
+        "platform_breakdown": { "type": "object" },
+        "evidence_level_distribution": { "type": "object" },
+        "existing_candidate_matches": { "type": "array" }
+      }
+    },
+    "constraints": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

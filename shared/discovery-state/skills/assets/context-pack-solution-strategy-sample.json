@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "task": "SOLUTION_STRATEGY",
+  "assembled_at": "2026-09-26T12:00:00Z",
+  "candidate": {
+    "candidate_id": "cand_courier_disputes",
+    "research_id": "run_2026_001",
+    "title": "Courier Weight Dispute Reconciliation",
+    "domain": "ecommerce_logistics",
+    "target_operator": "dispatch_accounts_manager",
+    "track": "COMMERCIAL",
+    "research_score": 29,
+    "evidence_level": "L3",
+    "validation_status": "VALIDATED",
+    "lifecycle_status": "READY_FOR_SOLUTION"
+  },
+  "evaluation_summary": {
+    "symptom": "High courier bills and unexplained RTO deductions",
+    "root_cause": "Volumetric scanner discrepancies combined with zero outbound packaging dimensional logs",
+    "current_glue_work": "Manual Excel SKU weight cross-matching",
+    "observed_costs": "15 hours/week manual labor + ₹25,000/mo unrecovered leakage",
+    "non_software_sufficient": false,
+    "commercial_alternative_fits_well": false
+  },
+  "experiments_summary": {
+    "total_trials": 1,
+    "passed": 1,
+    "failed": 0,
+    "latest_trial": {
+      "experiment_id": "exp_weight_001",
+      "metric_name": "dispute_csv_submissions",
+      "target_threshold": 3.0,
+      "observed_value": 4.0,
+      "outcome_verdict": "VALIDATED",
+      "audited_by": "Murali"
+    }
+  },
+  "deterministic_summary": {
+    "total_signals": 6,
+    "prior_experiments_count": 1
+  },
+  "known_technical_constraints": {
+    "multi_user_sync_required": false,
+    "server_storage_required": false,
+    "background_jobs_required": false,
+    "offline_use_required": true
+  },
+  "constraints": {
+    "enforce_non_software_first": true,
+    "enforce_15_operational_flags": true,
+    "gate_saas_speculation": true,
+    "require_sts_under_14_days": true
+  }
+}
