@@ -19,6 +19,15 @@ Act as a Principal Data Infrastructure Architect and State Persistence Specialis
 
 ---
 
+## Authoritative Reference Grounding
+Consult the bundled reference specifications for deep contracts:
+- [Execution & Data Flow Guide](references/execution-and-data-flow-guide.md): Visual stage topology, CLI triggers, and SQLite mutation matrix.
+- [Database Schema Specification](references/database-schema.md): 4-table schema, FTS5 virtual table, and view definitions.
+- [Dynamic Context Pack Specification](references/context-pack-spec.md): JSON schema contracts emitted by `build_agent_context.py`.
+- [Field Semantics & State Lifecycle](references/field-semantics.md): Invariant rules for research stages and candidate lifecycles.
+
+---
+
 ## 6-Phase Infrastructure Execution Pipeline
 
 ```text
