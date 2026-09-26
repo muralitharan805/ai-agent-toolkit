@@ -1,0 +1,70 @@
+{
+  "skill_name": "evidence-research",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Multi-Stream Plan Execution with Source URL Provenance",
+      "prompt": "Execute evidence research for a ResearchPlan containing two streams: RS-001 (inventory sync) and RS-002 (courier handoff). Collect real practitioner signals across available adapters.",
+      "expected_output": "Allocates deterministic query task IDs (RS-001-Q001, RS-002-Q001), executes queries across available adapters, records permanent source URLs and retrieval timestamps, and preserves raw query links without fabricating synthetic findings.",
+      "assertions": [
+        "Allocates deterministic task IDs preserving stream identifiers",
+        "Records permanent source URLs and retrieval timestamps",
+        "Preserves original query strings and provider-adapted variants",
+        "Formats output conforming to research-signals.schema.json"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Provider Failure & Timeout Isolation without False Zero Hits",
+      "prompt": "Simulate search execution where GitHub Issues API returns HTTP 500 server error and Web Search adapter is unconfigured.",
+      "expected_output": "Records GitHub provider run as FAILED with error message, marks Web Search as SKIPPED_UNAVAILABLE, sets overall status to COMPLETED_WITH_GAPS, and strictly avoids interpreting provider failures as zero search results.",
+      "assertions": [
+        "Marks unconfigured adapter as SKIPPED_UNAVAILABLE",
+        "Records API server error as FAILED rather than zero hits",
+        "Sets overall run status to COMPLETED_WITH_GAPS",
+        "Logs explicit gaps in research_limitations array"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Source Inspection State Classification",
+      "prompt": "Process two search hits where Hit A allows full page review, while Hit B is blocked by a login wall.",
+      "expected_output": "Tags Hit A with inspection_status FULL_SOURCE_REVIEWED, tags Hit B as INACCESSIBLE, preserves Hit B snippet without fabricating full-thread findings, and marks primary verification as pending.",
+      "assertions": [
+        "Applies FULL_SOURCE_REVIEWED to accessible content",
+        "Applies INACCESSIBLE to login-gated content",
+        "Refrains from hallucinating details for inaccessible URLs",
+        "Labels community post observations as L3 evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Canonical Source Deduplication across Query Tasks",
+      "prompt": "Execute search where both RS-001-Q001 and RS-001-Q002 retrieve the exact same Reddit thread URL.",
+      "expected_output": "Creates a single canonical signal record in signals array, links both RS-001-Q001 and RS-001-Q002 in query_ids, and ensures the single post is not counted as two independent sources.",
+      "assertions": [
+        "Collapses duplicate URL hits into a single canonical signal",
+        "Associates all matching query_ids in the signal record",
+        "Prevents artificial inflation of corroborating source counts",
+        "Maintains complete raw_result_ids audit trail"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "SQLite Evidence Persistence Contract Verification",
+      "prompt": "Persist collected evidence signals into the SQLite database for research run RUN-2026-001.",
+      "expected_output": "Batch inserts signals into evidence_signals table ensuring candidate_id is NULL, populates signal_id and raw JSON payloads, and executes stage update on research_runs to RESEARCHED.",
+      "assertions": [
+        "Inserts signals into evidence_signals table with candidate_id NULL",
+        "Populates stream_id, platform, source_url, and evidence_level",
+        "Updates research_runs current_stage to RESEARCHED",
+        "Emits claim-check confirmation to stderr"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ResearchSignals",
+  "description": "Standard output contract for the Evidence Research Skill containing collected research signals, query execution records, source inspection states, and alternatives evidence.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "research_run_id",
+    "status",
+    "original_request",
+    "scope",
+    "research_results"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0"]
+    },
+    "research_run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-Z-]+$",
+      "description": "Sequential research run identifier, e.g. RUN-2026-001"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["COMPLETED", "COMPLETED_WITH_GAPS", "PARTIAL", "FAILED"]
+    },
+    "original_request": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "object"
+    },
+    "research_results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "stream_id",
+          "name",
+          "research_questions",
+          "query_execution",
+          "signals",
+          "alternative_evidence"
+        ],
+        "properties": {
+          "stream_id": {
+            "type": "string",
+            "pattern": "^RS-[0-9]{3}$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "research_questions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "query_execution": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["query_id", "original_query", "provider_runs"],
+              "properties": {
+                "query_id": { "type": "string" },
+                "original_query": { "type": "string" },
+                "provider_runs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["provider", "executed_query", "status", "result_count"],
+                    "properties": {
+                      "provider": { "type": "string" },
+                      "executed_query": { "type": "string" },
+                      "status": {
+                        "type": "string",
+                        "enum": ["COMPLETED", "SKIPPED_UNAVAILABLE", "FAILED", "TIMEOUT", "RATE_LIMITED"]
+                      },
+                      "result_count": { "type": "integer", "minimum": 0 },
+                      "error": { "type": ["string", "null"] }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "signals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "signal_id",
+                "query_ids",
+                "source",
+                "actor",
+                "observation",
+                "evidence"
+              ],
+              "properties": {
+                "signal_id": {
+                  "type": "string",
+                  "pattern": "^SIG-[0-9]{3,}$"
+                },
+                "raw_result_ids": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "query_ids": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "source": {
+                  "type": "object",
+                  "required": ["platform", "url", "inspection_status"],
+                  "properties": {
+                    "platform": { "type": "string" },
+                    "url": { "type": "string" },
+                    "published_at": { "type": ["string", "null"] },
+                    "retrieved_at": { "type": ["string", "null"] },
+                    "inspection_status": {
+                      "type": "string",
+                      "enum": ["FULL_SOURCE_REVIEWED", "SNIPPET_ONLY", "INACCESSIBLE", "NOT_INSPECTED"]
+                    }
+                  }
+                },
+                "actor": {
+                  "type": "object",
+                  "properties": {
+                    "role": { "type": ["string", "null"] },
+                    "role_is_self_reported": { "type": ["boolean", "null"] }
+                  }
+                },
+                "observation": {
+                  "type": "object",
+                  "required": ["reported_issue"],
+                  "properties": {
+                    "reported_issue": { "type": "string" },
+                    "reported_workaround": { "type": ["string", "null"] },
+                    "reported_frequency": { "type": ["string", "null"] },
+                    "reported_impact": { "type": ["string", "null"] }
+                  }
+                },
+                "evidence": {
+                  "type": "object",
+                  "required": ["classification", "verification_status"],
+                  "properties": {
+                    "classification": {
+                      "type": "string",
+                      "enum": ["L1", "L2", "L3", "L4", "L5", "UNASSESSED"]
+                    },
+                    "independently_corroborated": { "type": "boolean" },
+                    "human_audited_primary_evidence": { "type": "boolean" },
+                    "verification_status": {
+                      "type": "string",
+                      "enum": ["UNVERIFIED", "REFUTED", "CORROBORATED"]
+                    }
+                  }
+                },
+                "unknowns": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
+          "alternative_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["alternative_name", "category", "documented_limitations"],
+              "properties": {
+                "alternative_name": { "type": "string" },
+                "category": { "type": "string", "enum": ["NATIVE_FEATURE", "INCUMBENT_SAAS", "SPREADSHEET_SOP", "MANUAL_SERVICE"] },
+                "pricing_reference": { "type": ["string", "null"] },
+                "documented_limitations": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "unknowns": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "next_verification": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "research_limitations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "next_action": {
+      "type": "string",
+      "enum": ["EVALUATE_RESEARCH_SIGNALS", "REPLAN_RESEARCH", "ABORT_RESEARCH"]
+    }
+  }
+}
