@@ -31,6 +31,7 @@ except ImportError:
 from agents.problem_discovery.config import (
     ProblemDiscoveryConfig,
     get_canonical_skills_paths,
+    get_stage_skills_paths,
 )
 from agents.problem_discovery.orchestration.models import (
     IntentClassification,
@@ -72,6 +73,8 @@ class ProblemDiscoveryAgent:
         self._sdk_agent: Optional[Any] = None
         self.session_input_tokens: int = 0
         self.session_output_tokens: int = 0
+        self.session_thinking_tokens: int = 0
+        self.session_total_tokens: int = 0
 
     # ---------------------------------------------------------------------
     # Stable identifier allocation
@@ -152,11 +155,15 @@ class ProblemDiscoveryAgent:
                 BuiltinTools.SEARCH_WEB,
             ]
         else:
-            enabled_caps = [
-                BuiltinTools.VIEW_FILE,
-            ]
+            # Deterministic reasoning stages operate purely on bounded SQLite context packs.
+            # Disabling VIEW_FILE prevents massive token bloat from recursive reference reading.
+            enabled_caps = []
 
-        capabilities = types.CapabilitiesConfig(enabled_tools=enabled_caps)
+        trunc_config = types.ToolOutputTruncationConfig(max_tokens=3000) if types else None
+        capabilities = types.CapabilitiesConfig(
+            enabled_tools=enabled_caps,
+            tool_output_truncation_config=trunc_config,
+        )
         policies = [
             policy.deny("run_command"),
             policy.deny("create_file"),
@@ -173,7 +180,7 @@ class ProblemDiscoveryAgent:
         return LocalAgentConfig(
             system_instructions=get_system_prompt(self.config.system_instruction_path),
             tools=stage_tools,
-            skills_paths=self.config.skills_paths or get_canonical_skills_paths(),
+            skills_paths=self.config.skills_paths or get_stage_skills_paths(stage),
             capabilities=capabilities,
             policies=policies,
             model=self.config.model,
@@ -227,8 +234,24 @@ class ProblemDiscoveryAgent:
                     async for chunk in resp.chunks:
                         if types and isinstance(chunk, types.ToolCall):
                             now_ts = datetime.now().strftime("%H:%M:%S")
+                            args_repr = ""
+                            if hasattr(chunk, "args") and isinstance(chunk.args, dict) and chunk.args:
+                                if "query" in chunk.args:
+                                    args_repr = f'(query="{chunk.args["query"]}")'
+                                elif "url" in chunk.args:
+                                    args_repr = f'(url="{chunk.args["url"]}")'
+                                elif "research_id" in chunk.args and len(chunk.args) <= 2:
+                                    args_repr = f'(research_id="{chunk.args["research_id"]}")'
+                                elif "candidate_id" in chunk.args and len(chunk.args) <= 2:
+                                    args_repr = f'(candidate_id="{chunk.args["candidate_id"]}")'
+                                elif len(chunk.args) == 1:
+                                    k, v = next(iter(chunk.args.items()))
+                                    val_str = str(v)
+                                    if len(val_str) > 50:
+                                        val_str = val_str[:47] + "..."
+                                    args_repr = f'({k}={val_str!r})'
                             print(
-                                f"[{now_ts}]   [Stage Tool Dispatched] Invoking `{chunk.name}`...",
+                                f"[{now_ts}]   [Stage Tool Dispatched] Invoking `{chunk.name}{args_repr}`...",
                                 flush=True,
                             )
                         elif types and isinstance(chunk, types.Text):
@@ -249,14 +272,21 @@ class ProblemDiscoveryAgent:
                 if meta is not None:
                     inp = getattr(meta, "prompt_token_count", 0) or 0
                     out = getattr(meta, "candidates_token_count", 0) or 0
-                    tot = getattr(meta, "total_token_count", 0) or (inp + out)
+                    thn = getattr(meta, "thoughts_token_count", 0) or 0
+                    tot = getattr(meta, "total_token_count", 0) or (inp + out + thn)
                     self.session_input_tokens += inp
                     self.session_output_tokens += out
-                    cost_usd = (inp / 1_000_000 * 0.10) + (out / 1_000_000 * 0.40)
+                    self.session_thinking_tokens += thn
+                    self.session_total_tokens += tot
+                    cost_usd = (inp / 1_000_000 * 0.10) + ((out + thn) / 1_000_000 * 0.40)
                     cost_inr = cost_usd * 85.0
                     now_ts = datetime.now().strftime("%H:%M:%S")
+                    detail = f"Input: {inp:,} | Output: {out:,}"
+                    if thn > 0:
+                        detail += f" | Thinking: {thn:,}"
+                    detail += f" | Total: {tot:,} tokens (~₹{cost_inr:.3f})"
                     print(
-                        f"[{now_ts}]   [Tokens] Input: {inp:,} | Output: {out:,} | Total: {tot:,} tokens (~₹{cost_inr:.3f})",
+                        f"[{now_ts}]   [Tokens] {detail}",
                         flush=True,
                     )
 
@@ -327,13 +357,12 @@ Original user request:
 Create a valid ResearchPlan from the user's actual request. Do not invent empirical facts.
 Geography remains unknown/null unless supplied.
 
-CRITICAL INSTRUCTION:
-You MUST invoke the custom tool `create_research_run` with arguments:
-- research_id="{research_id}"
-- request="{original_request}"
-- plan_dict={{...your generated ResearchPlan...}}
-
-Do not merely return text or markdown. You must call the `create_research_run` tool to persist the plan to SQLite. Stop after calling the tool.
+CRITICAL INSTRUCTIONS:
+1. You MUST invoke the custom tool `create_research_run` with arguments:
+   - research_id="{research_id}"
+   - request="{original_request}"
+   - plan_dict={{...your generated ResearchPlan...}}
+2. TERMINATION RULE: Once `create_research_run` completes, STOP immediately. Do NOT call read tools (`get_discovery_run`, `get_discovery_dashboard`, etc.) to re-verify state. Provide a brief 1-sentence confirmation and conclude your turn.
 """
 
         if stage == WorkflowStage.EVIDENCE_RESEARCH:
@@ -342,13 +371,13 @@ Use the evidence-research skill for research_id={research_id}.
 
 Load the persisted ResearchPlan first using `get_discovery_run(research_id="{research_id}")`.
 
-EXECUTION SEQUENCE:
+EXECUTION SEQUENCE & HARD QUANTITATIVE BUDGET:
 1. Review the search queries in the research plan streams.
-2. Execute 2 to 4 targeted web searches using `search_web`.
-3. Inspect 2 to 3 most relevant URLs using `read_url_content` to extract authentic practitioner testimony and workarounds.
+2. Execute at most 2 or 3 high-precision web searches using `search_web`.
+3. Inspect at most 2 authoritative URLs using `read_url_content` to extract authentic practitioner testimony and workarounds.
 4. Normalize 2 to 4 authentic ResearchSignals (each signal containing signal_id, source_url, observed_actor, evidence, etc.).
 5. Immediately persist them by calling `save_evidence_signals(research_id="{research_id}", signals=[...])`.
-6. Once `save_evidence_signals` completes, provide a brief summary and STOP.
+6. TERMINATION RULE: Once `save_evidence_signals` completes, provide a brief 2-sentence summary and STOP immediately. Do NOT perform additional searches, URL reads, or database re-verification calls.
 
 CRITICAL INSTRUCTIONS:
 - Do NOT browse local files; focus directly on live web research.
@@ -358,6 +387,7 @@ CRITICAL INSTRUCTIONS:
 
         if stage == WorkflowStage.PROBLEM_EVALUATION:
             reserved_candidate = candidate_id or self._next_candidate_id()
+            rid_param = f'research_id="{research_id}"' if research_id else ""
             return header + f"""
 Use the problem-evaluation skill.
 
@@ -366,14 +396,12 @@ candidate_id={candidate_id or 'not assigned yet'}
 next_action={next_action or 'RUN_PROBLEM_EVALUATION'}
 reserved_new_candidate_id={reserved_candidate}
 
-Build the bounded problem-evaluation context from persisted state. Interpret only persisted
-signals. Reuse an existing stable candidate when it matches the same actor/task/friction/root
-workflow. If a new candidate is justified, use reserved_new_candidate_id. Unsupported workflow
-nodes remain UNKNOWN. Root causes remain hypotheses unless supported. Score is research priority,
-not validation.
-
-Persist through upsert_candidate only after identifying the exact supporting signal IDs.
-Stop after candidate/evaluation persistence or after reporting that more evidence is required.
+EXECUTION SEQUENCE:
+1. Invoke `build_problem_evaluation_context({rid_param})` to load all signals and context.
+2. Group the signals into distinct problem candidate(s). Reuse an existing stable candidate when it matches the same actor/task/friction/root workflow. If a new candidate is justified, use reserved_new_candidate_id.
+3. Unsupported workflow nodes remain UNKNOWN. Root causes remain hypotheses unless supported. Score is research priority, not validation.
+4. Call `upsert_candidate(...)` to persist each candidate with its exact supporting signal IDs.
+5. CRITICAL TERMINATION RULE: Once `upsert_candidate` succeeds, STOP immediately. Do NOT call any read tools (`get_candidate`, `get_discovery_run`, etc.) to re-verify state. Provide a concise 2-sentence summary and conclude your turn.
 """
 
         if stage == WorkflowStage.EXPERIMENT_VALIDATION and user_submission is None:

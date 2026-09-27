@@ -97,10 +97,13 @@ def _print_result(result, output_json: bool, agent: Optional[ProblemDiscoveryAge
         payload = result.to_summary_dict()
         payload["message"] = result.message
         if agent and (agent.session_input_tokens > 0 or agent.session_output_tokens > 0):
+            thn = getattr(agent, "session_thinking_tokens", 0)
+            tot = getattr(agent, "session_total_tokens", 0) or (agent.session_input_tokens + agent.session_output_tokens + thn)
             payload["token_usage"] = {
                 "input_tokens": agent.session_input_tokens,
                 "output_tokens": agent.session_output_tokens,
-                "total_tokens": agent.session_input_tokens + agent.session_output_tokens,
+                "thinking_tokens": thn,
+                "total_tokens": tot,
             }
         if verdict:
             payload["build_verdict"] = {
@@ -129,10 +132,15 @@ def _print_result(result, output_json: bool, agent: Optional[ProblemDiscoveryAge
     if result.pause_reason:
         print(f"PAUSED:    {result.pause_reason}")
     if agent and (agent.session_input_tokens > 0 or agent.session_output_tokens > 0):
-        tot = agent.session_input_tokens + agent.session_output_tokens
-        cost_usd = (agent.session_input_tokens / 1_000_000 * 0.10) + (agent.session_output_tokens / 1_000_000 * 0.40)
+        thn = getattr(agent, "session_thinking_tokens", 0)
+        tot = getattr(agent, "session_total_tokens", 0) or (agent.session_input_tokens + agent.session_output_tokens + thn)
+        cost_usd = (agent.session_input_tokens / 1_000_000 * 0.10) + ((agent.session_output_tokens + thn) / 1_000_000 * 0.40)
         cost_inr = cost_usd * 85.0
-        print(f"TOKENS:    Input: {agent.session_input_tokens:,} | Output: {agent.session_output_tokens:,} | Total: {tot:,} (~₹{cost_inr:.2f})")
+        detail = f"Input: {agent.session_input_tokens:,} | Output: {agent.session_output_tokens:,}"
+        if thn > 0:
+            detail += f" | Thinking: {thn:,}"
+        detail += f" | Total: {tot:,} (~₹{cost_inr:.2f})"
+        print(f"TOKENS:    {detail}")
     print("=" * 60)
     print(f"\n{result.message}\n")
 

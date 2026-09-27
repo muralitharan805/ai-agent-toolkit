@@ -52,8 +52,8 @@ QUERY_PATTERNS = [
     r"\bcurrent\s+status\b",
     r"\bevidence\b",
     r"\bhistory\b",
-    r"-ah\b",
-    r"\bah\b",
+    r"-(?:ah|aa)\s*\??$",
+    r"\bready-(?:ah|aa)\b",
     r"\?\s*$",
 ]
 
@@ -73,6 +73,17 @@ NEW_RESEARCH_PATTERNS = [
     r"\bcheck\s+pannu\b",
     r"\binvestigate\s+pannu\b",
     r"\bexplore\s+pannu\b",
+    r"\banalyse\s+pananum\b",
+    r"\banalyze\s+pananum\b",
+    r"\banalyse\s+pannu\b",
+    r"\banalyze\s+pannu\b",
+    r"\banalyze\b",
+    r"\banalyse\b",
+    r"\bmarket\s+demand\b",
+    r"\bon\s+demand\b",
+    r"\bpakanum\b",
+    r"\bpaakanum\b",
+    r"\butility\s+tool\b",
 ]
 
 

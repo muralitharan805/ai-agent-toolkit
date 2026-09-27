@@ -5,6 +5,7 @@ from agents.problem_discovery.config import (
     ProblemDiscoveryConfig,
     get_canonical_skills_paths,
     get_default_db_path,
+    get_stage_skills_paths,
 )
 from agents.problem_discovery.orchestration.models import (
     IntentClassification,
@@ -32,4 +33,5 @@ __all__ = [
     "WorkflowStatus",
     "get_canonical_skills_paths",
     "get_default_db_path",
+    "get_stage_skills_paths",
 ]

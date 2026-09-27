@@ -18,6 +18,8 @@ class ProblemDiscoveryAgentRouterTest(unittest.TestCase):
             "Research whether accountants have recurring month-end reconciliation problems.",
             "Investigate manual inventory sync failures across Shopify and Amazon.",
             "Find out if dental clinics face patient onboarding delays.",
+            "enaku ai agents related ah on demain iruka nu pakanum internet agent realated ah ask panragalanu analyse pananum. oru small level utility tool ah irundhalum paravala or any big project",
+            "frontend performance bottleneck explore pannu",
         ]
         for p in prompts:
             result = self.router.route(p)

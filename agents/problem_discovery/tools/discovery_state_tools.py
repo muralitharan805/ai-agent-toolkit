@@ -821,27 +821,53 @@ class DiscoveryStateTools:
         stage: Optional[Any] = None,
         mode: Optional[str] = None,
     ) -> List[Callable[..., Any]]:
-        """Return read tools plus ONLY the specific write tool authorized for the active stage.
+        """Return scoped read tools plus ONLY the specific write tool authorized for the active stage.
 
-        This enforces deterministic code-level mutation boundaries so that an agent executing
-        research planning cannot call finalize_solution or record_experiment_assessment.
+        This enforces deterministic code-level mutation boundaries and minimizes tool schema
+        overhead in LLM API requests.
         """
-        read_tools = self.get_read_tools()
         stage_val = stage.value if hasattr(stage, "value") else str(stage) if stage else None
 
         if stage_val == "RESEARCH_PLANNING":
-            return read_tools + [self.create_research_run]
+            return [
+                self.get_discovery_run,
+                self.search_discovery,
+                self.get_discovery_dashboard,
+                self.create_research_run,
+            ]
         elif stage_val == "EVIDENCE_RESEARCH":
-            return read_tools + [self.save_evidence_signals]
+            return [
+                self.get_discovery_run,
+                self.search_discovery,
+                self.save_evidence_signals,
+            ]
         elif stage_val == "PROBLEM_EVALUATION":
-            return read_tools + [self.upsert_candidate]
+            return [
+                self.build_problem_evaluation_context,
+                self.get_candidate,
+                self.search_discovery,
+                self.upsert_candidate,
+            ]
         elif stage_val == "EXPERIMENT_VALIDATION":
-            if mode == "ASSESS":
-                return read_tools + [self.record_experiment_assessment]
-            return read_tools + [self.preregister_experiment]
+            mut_tool = (
+                self.record_experiment_assessment
+                if mode == "ASSESS"
+                else self.preregister_experiment
+            )
+            return [
+                self.build_experiment_context,
+                self.get_candidate,
+                self.get_discovery_run,
+                mut_tool,
+            ]
         elif stage_val == "SOLUTION_STRATEGY":
-            return read_tools + [self.finalize_solution]
+            return [
+                self.build_solution_context,
+                self.get_candidate,
+                self.get_discovery_run,
+                self.finalize_solution,
+            ]
         elif stage_val in ("READ_ONLY", "COMPLETED", "PAUSED"):
-            return read_tools
+            return self.get_read_tools()
 
         return self.get_all_tools()
