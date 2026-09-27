@@ -419,7 +419,14 @@ class DiscoveryStateTools:
         Returns:
             Count of signals successfully persisted.
         """
-        raw = signals if signals is not None else kwargs.get("signal_list", [])
+        raw = signals if signals is not None else (
+            kwargs.get("signals")
+            or kwargs.get("signal_list")
+            or kwargs.get("signals_dict")
+            or kwargs.get("evidence_signals")
+            or kwargs.get("items")
+            or []
+        )
         if isinstance(raw, str):
             try:
                 raw = json.loads(raw)
@@ -498,7 +505,11 @@ class DiscoveryStateTools:
         return res
 
     def preregister_experiment(
-        self, experiment_id: str, candidate_id: str, contract_dict: Dict[str, Any]
+        self,
+        experiment_id: str,
+        candidate_id: str,
+        contract_dict: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
     ) -> str:
         """Preregister an immutable empirical experiment contract for a candidate.
 
@@ -513,39 +524,50 @@ class DiscoveryStateTools:
         Returns:
             Experiment ID token.
         """
+        c_dict = (
+            contract_dict
+            if contract_dict is not None
+            else (
+                kwargs.get("contract")
+                or kwargs.get("experiment_contract")
+                or kwargs.get("contract_data")
+                or kwargs.get("data")
+                or {}
+            )
+        )
         # Validate atomic metric
         metric_name = (
-            contract_dict.get("metric_name")
-            or contract_dict.get("metric")
-            or (contract_dict.get("contract", {}).get("metric_name"))
+            c_dict.get("metric_name")
+            or c_dict.get("metric")
+            or (c_dict.get("contract", {}).get("metric_name"))
             or ""
         )
         threshold = (
-            contract_dict.get("target_threshold")
-            or contract_dict.get("threshold")
-            or (contract_dict.get("contract", {}).get("target_threshold"))
+            c_dict.get("target_threshold")
+            or c_dict.get("threshold")
+            or (c_dict.get("contract", {}).get("target_threshold"))
             or 0.0
         )
         sample_target = (
-            contract_dict.get("sample_target")
-            or (contract_dict.get("contract", {}).get("sample_target"))
+            c_dict.get("sample_target")
+            or (c_dict.get("contract", {}).get("sample_target"))
             or 5
         )
         aggregation_rule = (
-            contract_dict.get("aggregation_rule")
-            or (contract_dict.get("contract", {}).get("aggregation_rule"))
+            c_dict.get("aggregation_rule")
+            or (c_dict.get("contract", {}).get("aggregation_rule"))
             or "MEAN_PER_PARTICIPANT"
         )
 
         ExperimentContractValidation(
             metric_name=metric_name,
             target_threshold=float(threshold),
-            direction=contract_dict.get("direction", ">="),
+            direction=c_dict.get("direction", ">="),
             sample_target=int(sample_target),
             aggregation_rule=aggregation_rule,
         )
 
-        contract_copy = dict(contract_dict)
+        contract_copy = dict(c_dict)
         if not contract_copy.get("hypothesis"):
             contract_copy["hypothesis"] = f"Empirical validation hypothesis for candidate {candidate_id}."
         if "success_threshold" not in contract_copy:
@@ -705,7 +727,11 @@ class DiscoveryStateTools:
             conn.close()
 
     def finalize_solution(
-        self, candidate_id: str, solution_class: str, solution_dict: Dict[str, Any]
+        self,
+        candidate_id: str,
+        solution_class: Optional[str] = None,
+        solution_dict: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
     ) -> str:
         """Finalize the smallest justified solution shape for a validated candidate.
 
@@ -720,6 +746,23 @@ class DiscoveryStateTools:
         Returns:
             Resulting candidate lifecycle status ('SOLUTION_PROPOSED' or 'PILOT_READY').
         """
+        s_class = (
+            solution_class
+            or kwargs.get("solution_class")
+            or kwargs.get("class")
+            or kwargs.get("shape")
+            or "PROCESS_SOP"
+        )
+        s_dict = (
+            solution_dict
+            if solution_dict is not None
+            else (
+                kwargs.get("solution")
+                or kwargs.get("solution_spec")
+                or kwargs.get("spec")
+                or {}
+            )
+        )
         # Guard: Check for unfinished experiments
         conn = self._get_connection()
         try:
@@ -741,7 +784,7 @@ class DiscoveryStateTools:
             conn.close()
 
         return self.db.finalize_solution(
-            candidate_id=candidate_id, solution_class=solution_class, solution_dict=solution_dict
+            candidate_id=candidate_id, solution_class=s_class, solution_dict=s_dict
         )
 
     def get_read_tools(self) -> List[Callable[..., Any]]:

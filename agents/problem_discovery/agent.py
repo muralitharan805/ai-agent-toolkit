@@ -139,13 +139,24 @@ class ProblemDiscoveryAgent:
                 "google-antigravity is not installed. Install it before executing reasoning stages."
             )
 
-        capabilities = types.CapabilitiesConfig(
-            enabled_tools=[
+        stage_val = stage.value if hasattr(stage, "value") else str(stage) if stage else None
+        if stage_val == "EVIDENCE_RESEARCH":
+            enabled_caps = [
+                BuiltinTools.SEARCH_WEB,
+                BuiltinTools.READ_URL_CONTENT,
+            ]
+        elif stage is None:
+            enabled_caps = [
                 BuiltinTools.VIEW_FILE,
                 BuiltinTools.READ_URL_CONTENT,
                 BuiltinTools.SEARCH_WEB,
             ]
-        )
+        else:
+            enabled_caps = [
+                BuiltinTools.VIEW_FILE,
+            ]
+
+        capabilities = types.CapabilitiesConfig(enabled_tools=enabled_caps)
         policies = [
             policy.deny("run_command"),
             policy.deny("create_file"),
@@ -206,7 +217,8 @@ class ProblemDiscoveryAgent:
             )
 
         max_retries = 3
-        timeout_seconds = 120.0
+        stage_val = stage.value if hasattr(stage, "value") else str(stage) if stage else None
+        timeout_seconds = 300.0 if stage_val == "EVIDENCE_RESEARCH" else 180.0
         for attempt in range(max_retries):
             try:
                 async def _invoke(target_agent: Any) -> tuple[str, Any]:
@@ -328,13 +340,20 @@ Do not merely return text or markdown. You must call the `create_research_run` t
             return header + f"""
 Use the evidence-research skill for research_id={research_id}.
 
-Load the persisted ResearchPlan first. Execute real web/source research with the available
-read-only web tools. A search hit or snippet is not verified evidence. Inspect sources before
-qualification; raw/snippet-only hits remain UNASSESSED. Never invent a URL, quote, interview,
-actor identity, frequency, consequence, or workaround.
+Load the persisted ResearchPlan first using `get_discovery_run(research_id="{research_id}")`.
 
-Persist only genuinely collected normalized signals through save_evidence_signals.
-If live research cannot be completed, do not manufacture signals; report the blocker and stop.
+EXECUTION SEQUENCE:
+1. Review the search queries in the research plan streams.
+2. Execute 2 to 4 targeted web searches using `search_web`.
+3. Inspect 2 to 3 most relevant URLs using `read_url_content` to extract authentic practitioner testimony and workarounds.
+4. Normalize 2 to 4 authentic ResearchSignals (each signal containing signal_id, source_url, observed_actor, evidence, etc.).
+5. Immediately persist them by calling `save_evidence_signals(research_id="{research_id}", signals=[...])`.
+6. Once `save_evidence_signals` completes, provide a brief summary and STOP.
+
+CRITICAL INSTRUCTIONS:
+- Do NOT browse local files; focus directly on live web research.
+- Never invent URLs, quotes, metrics, or actor identities.
+- Persist signals through `save_evidence_signals` to advance the workflow stage to PROBLEM_EVALUATION.
 """
 
         if stage == WorkflowStage.PROBLEM_EVALUATION:
