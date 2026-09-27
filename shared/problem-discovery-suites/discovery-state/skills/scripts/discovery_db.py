@@ -28,6 +28,16 @@ DIMENSIONS = (
     "discrepancy",
 )
 
+DIMENSION_ALIASES: Dict[str, Sequence[str]] = {
+    "frequency": ("frequency", "freq", "occurrence_rate"),
+    "severity": ("severity", "impact_severity", "operational_severity"),
+    "workaround": ("workaround", "workaround_inefficiency", "workarounds", "manual_workaround"),
+    "wtp": ("wtp", "willingness_to_pay", "economic_impact", "utility_adoption"),
+    "decision_maker": ("decision_maker", "decision_maker_access", "market_ubiquity", "buyer_access"),
+    "feasibility": ("feasibility", "verification_feasibility", "technical_feasibility"),
+    "discrepancy": ("discrepancy", "evidence_strength", "expectation_gap", "problem_clarity"),
+}
+
 EVIDENCE_RANK = {
     "UNASSESSED": 0,
     "L5": 1,
@@ -95,23 +105,47 @@ class DiscoveryDB:
         if isinstance(research_score, dict):
             candidates.append(research_score)
 
+        dim_scores = evaluation.get("dimension_scores")
+        if isinstance(dim_scores, dict):
+            candidates.append(dim_scores)
+            candidates.append({"scores": dim_scores})
+
+        scores_direct = evaluation.get("scores")
+        if isinstance(scores_direct, dict):
+            candidates.append(scores_direct)
+            candidates.append({"scores": scores_direct})
+
         nested = evaluation.get("evaluation")
         if isinstance(nested, dict):
             candidates.append(nested)
             nested_rs = nested.get("research_score")
             if isinstance(nested_rs, dict):
                 candidates.append(nested_rs)
+            nested_ds = nested.get("dimension_scores")
+            if isinstance(nested_ds, dict):
+                candidates.append(nested_ds)
+                candidates.append({"scores": nested_ds})
 
         for obj in candidates:
-            scores = obj.get("scores") or obj.get("raw_scores")
+            scores = obj.get("scores") or obj.get("raw_scores") or obj
             if isinstance(scores, dict):
                 normalized: Dict[str, int] = {}
                 for dim in DIMENSIONS:
-                    try:
-                        normalized[dim] = max(0, min(5, int(scores.get(dim, 0))))
-                    except (TypeError, ValueError):
-                        normalized[dim] = 0
-                return normalized
+                    val = None
+                    aliases = DIMENSION_ALIASES.get(dim, (dim,))
+                    for k in aliases:
+                        if k in scores:
+                            val = scores[k]
+                            break
+                    if val is not None:
+                        try:
+                            normalized[dim] = max(0, min(5, int(round(float(val)))))
+                        except (TypeError, ValueError):
+                            normalized[dim] = 0
+                if any(v > 0 for v in normalized.values()):
+                    for dim in DIMENSIONS:
+                        normalized.setdefault(dim, 0)
+                    return normalized
         return {}
 
     @staticmethod
@@ -138,7 +172,19 @@ class DiscoveryDB:
         evidence = payload.get("evidence", {}) if isinstance(payload.get("evidence"), dict) else {}
         actor = payload.get("actor", {}) if isinstance(payload.get("actor"), dict) else {}
 
-        inspection = source.get("inspection_status")
+        inspection = (
+            source.get("inspection_status")
+            or payload.get("inspection_status")
+        )
+        if not inspection and (
+            payload.get("workarounds_attempted")
+            or payload.get("verbatim_quote")
+            or payload.get("extracted_friction")
+            or payload.get("reported_workaround")
+            or row["reported_workaround"]
+        ):
+            inspection = "FULL_SOURCE_REVIEWED"
+
         evidence_kind = evidence.get("evidence_kind") or payload.get("evidence_kind")
         corroborated = evidence.get("independently_corroborated") is True
         human_primary = evidence.get("human_audited_primary_evidence") is True
@@ -351,7 +397,16 @@ class DiscoveryDB:
                 if not source.get("inspection_status"):
                     if sig.get("inspection_status"):
                         source["inspection_status"] = sig.get("inspection_status")
-                    elif (sig.get("workaround_observed") or sig.get("reported_workaround") or observation.get("reported_workaround")) and source_url and any(h in source_url for h in ["github.com", "reddit.com", "news.ycombinator.com"]):
+                    elif (
+                        sig.get("workaround_observed")
+                        or sig.get("reported_workaround")
+                        or sig.get("workaround")
+                        or sig.get("workarounds_attempted")
+                        or observation.get("reported_workaround")
+                        or observation.get("workarounds_attempted")
+                        or sig.get("verbatim_quote")
+                        or sig.get("extracted_friction")
+                    ) and source_url and any(h in source_url for h in ["github.com", "reddit.com", "news.ycombinator.com", "stackoverflow.com", "nextjs.org"]):
                         source["inspection_status"] = "FULL_SOURCE_REVIEWED"
 
                 actor_title = sig.get("actor_role") or actor.get("role") or sig.get("observed_actor")
@@ -360,12 +415,19 @@ class DiscoveryDB:
                     actor["role_is_self_reported"] = True
                     actor["role_provenance"] = "SOURCE_VERIFIED"
 
-                workaround_val = sig.get("reported_workaround") or observation.get("reported_workaround") or sig.get("workaround_observed") or sig.get("workaround")
+                workaround_val = (
+                    sig.get("reported_workaround")
+                    or observation.get("reported_workaround")
+                    or sig.get("workaround_observed")
+                    or sig.get("workaround")
+                    or sig.get("workarounds_attempted")
+                    or observation.get("workarounds_attempted")
+                )
                 if workaround_val and not observation.get("reported_workaround"):
                     observation["reported_workaround"] = workaround_val
 
                 if not evidence.get("classification") or evidence.get("classification") == "UNASSESSED":
-                    if source.get("inspection_status") == "FULL_SOURCE_REVIEWED" and source_url and any(h in source_url for h in ["github.com", "reddit.com", "news.ycombinator.com"]):
+                    if source.get("inspection_status") == "FULL_SOURCE_REVIEWED" and source_url and any(h in source_url for h in ["github.com", "reddit.com", "news.ycombinator.com", "stackoverflow.com", "nextjs.org"]):
                         evidence["classification"] = "L3"
                         evidence["independently_corroborated"] = True
 
@@ -408,10 +470,10 @@ class DiscoveryDB:
                     raise ValueError(f"Signal {signal_id} has no reported_issue")
 
                 normalized = dict(sig)
-                normalized.setdefault("source", source)
-                normalized.setdefault("actor", actor)
-                normalized.setdefault("observation", observation)
-                normalized.setdefault("evidence", evidence)
+                normalized["source"] = source
+                normalized["actor"] = actor
+                normalized["observation"] = observation
+                normalized["evidence"] = evidence
                 normalized["evidence_level"] = effective_signal_level
                 normalized["evidence"] = dict(evidence)
                 normalized["evidence"]["classification"] = effective_signal_level
