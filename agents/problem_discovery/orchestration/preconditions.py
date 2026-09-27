@@ -324,6 +324,14 @@ def _check_experiment_preconditions(
     clean_id = (identifier or "").strip().upper()
     candidate_id = clean_id if clean_id.startswith("CAND-") else None
 
+    if clean_id.startswith("EXP-"):
+        exp = conn.execute(
+            "SELECT candidate_id FROM experiments WHERE experiment_id = ?",
+            (clean_id,),
+        ).fetchone()
+        if exp:
+            candidate_id = exp["candidate_id"]
+
     if clean_id.startswith("RUN-"):
         cand = conn.execute(
             "SELECT candidate_id FROM candidates WHERE origin_research_id = ? ORDER BY candidate_id ASC LIMIT 1",

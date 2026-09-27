@@ -14,13 +14,16 @@ EXPERIMENT_ID_REGEX = re.compile(r"\b(EXP-\d{3,})\b", re.IGNORECASE)
 # Keywords indicating experiment outcomes or observations
 EXPERIMENT_RESULT_PATTERNS = [
     r"results?\s+(?:are\s+)?ready",
-    r"observed\s+(?:mean|value|metric|data)",
+    r"observed[\s_]+(?:mean|value|metric|data)",
+    r"sample[\s_]+(?:achieved|target|size)",
     r"trial\s+result",
     r"(?:\d+\s+participants?|participants?\s*[:=]\s*\d+)",
-    r"artifact\s+hash",
+    r"artifact[\s_]+hash",
     r"here\s+is\s+the\s+artifact",
-    r"recorded\s+(?:observation|measurement)",
-    r"outcome\s+verdict",
+    r"recorded[\s_]+(?:observation|measurement)",
+    r"outcome[\s_]+verdict",
+    r"\"observed_value\"",
+    r"\"sample_achieved\"",
 ]
 
 # Keywords indicating explicit stage execution mapped to WorkflowStage
