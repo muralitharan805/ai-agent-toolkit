@@ -42,6 +42,10 @@ from agents.problem_discovery.orchestration.models import (
 )
 from agents.problem_discovery.orchestration.router import IntentRouter
 from agents.problem_discovery.orchestration.state_machine import DiscoveryStateMachine
+from agents.problem_discovery.orchestration.preconditions import (
+    validate_stage_preconditions,
+    verify_stage_postconditions,
+)
 from agents.problem_discovery.prompts import get_system_prompt
 from agents.problem_discovery.tools.discovery_state_tools import DiscoveryStateTools
 
@@ -345,6 +349,16 @@ class ProblemDiscoveryAgent:
         header = self._stage_header(stage)
 
         if stage == WorkflowStage.RESEARCH_PLANNING:
+            if not original_request and research_id:
+                conn = self.tools_provider._get_connection()
+                try:
+                    row = conn.execute(
+                        "SELECT original_request FROM research_runs WHERE research_id=?", (research_id,)
+                    ).fetchone()
+                    if row and row["original_request"]:
+                        original_request = row["original_request"]
+                finally:
+                    conn.close()
             if not research_id or not original_request:
                 raise ValueError("Research planning requires research_id and original_request")
             return header + f"""
@@ -511,6 +525,33 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
         }:
             return state
 
+        # Strict Stage Precondition Gate
+        target_id = state.candidate_id or state.research_id
+        precond = validate_stage_preconditions(
+            stage,
+            identifier=target_id,
+            prompt=user_submission or original_request,
+            db_path=self.config.db_path,
+        )
+        if not precond.allowed:
+            return OrchestrationResult(
+                intent=state.intent,
+                research_id=state.research_id,
+                candidate_id=state.candidate_id,
+                experiment_id=state.experiment_id,
+                current_stage=stage,
+                action_taken="Stage execution blocked by strict precondition monitor.",
+                workflow_status=WorkflowStatus.PAUSED if precond.current_stage == WorkflowStage.PAUSED else WorkflowStatus.ERROR,
+                pause_reason="PRECONDITION_FAILED",
+                next_action=precond.required_fix or "RESOLVE_STAGE_PRECONDITION",
+                message=(
+                    f"BLOCKED: Stage Precondition Failed for {stage.value}.\n\n"
+                    f"Reason: {precond.reason}\n"
+                    f"Required Action: {precond.required_fix}"
+                ),
+                data={"precondition_diagnostics": precond.diagnostics},
+            )
+
         prompt = self._build_stage_prompt(
             stage,
             research_id=state.research_id,
@@ -561,6 +602,21 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
         refreshed.intent = state.intent
         refreshed.data = dict(refreshed.data)
         refreshed.data["stage_agent_response"] = model_text
+
+        # Post-Stage Quality Verification
+        post_verify = verify_stage_postconditions(stage, identifier=identifier, db_path=self.config.db_path)
+        if not post_verify.verified:
+            return self._execution_error(
+                intent=state.intent,
+                stage=stage,
+                research_id=state.research_id,
+                candidate_id=state.candidate_id,
+                experiment_id=state.experiment_id,
+                message=f"Stage post-verification failed: {post_verify.message}",
+            )
+        if post_verify.warnings:
+            refreshed.data["stage_warnings"] = post_verify.warnings
+
         return refreshed
 
     async def _run_existing_state_until_blocked(
@@ -569,6 +625,7 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
         *,
         original_request: Optional[str] = None,
         callback: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+        single_stage: bool = False,
     ) -> OrchestrationResult:
         state = initial
 
@@ -632,6 +689,10 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
                 original_request=original_request,
             )
 
+            if single_stage:
+                state.workflow_status = WorkflowStatus.PAUSED
+                return state
+
             if self._state_signature(state) == before and state.workflow_status == WorkflowStatus.CONTINUED:
                 model_reply = state.data.get("stage_agent_response", "") if state.data else ""
                 err_msg = (
@@ -663,6 +724,7 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
         user_prompt: str,
         *,
         callback: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+        single_stage: bool = False,
     ) -> OrchestrationResult:
         run_id = self._next_research_id()
         initial = OrchestrationResult(
@@ -675,7 +737,7 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
             message=f"Starting evidence-first discovery as {run_id}.",
         )
         return await self._run_existing_state_until_blocked(
-            initial, original_request=user_prompt, callback=callback
+            initial, original_request=user_prompt, callback=callback, single_stage=single_stage
         )
 
     async def _assess_experiment_submission(
@@ -721,7 +783,13 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
     # Public API
     # ---------------------------------------------------------------------
 
-    async def run(self, user_prompt: str) -> OrchestrationResult:
+    async def run(
+        self,
+        user_prompt: str,
+        *,
+        callback: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+        single_stage: bool = False,
+    ) -> OrchestrationResult:
         """Route the request and execute justified stages until blocked/completed."""
         classification: IntentClassification = self.router.route(user_prompt)
 
@@ -729,7 +797,9 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
             return self.state_machine.handle_query(classification.query_text)
 
         if classification.intent == IntentType.NEW_RESEARCH:
-            return await self._start_new_research(user_prompt)
+            return await self._start_new_research(
+                user_prompt, callback=callback, single_stage=single_stage
+            )
 
         if classification.intent == IntentType.RESUME_RUN:
             if not classification.research_id:
@@ -738,9 +808,44 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
                     stage=WorkflowStage.RESEARCH_PLANNING,
                     message="Please specify a research run ID such as RUN-2026-001.",
                 )
+            target_stage_str = classification.extracted_parameters.get("target_stage")
+            if target_stage_str:
+                target_stage = WorkflowStage(target_stage_str)
+                precond = validate_stage_preconditions(
+                    target_stage,
+                    identifier=classification.research_id,
+                    prompt=user_prompt,
+                    db_path=self.config.db_path,
+                )
+                if not precond.allowed:
+                    return OrchestrationResult(
+                        intent=IntentType.RESUME_RUN,
+                        research_id=classification.research_id,
+                        current_stage=precond.current_stage or target_stage,
+                        action_taken="Stage execution blocked by strict precondition monitor.",
+                        workflow_status=WorkflowStatus.PAUSED if precond.current_stage == WorkflowStage.PAUSED else WorkflowStatus.ERROR,
+                        pause_reason="PRECONDITION_FAILED",
+                        next_action=precond.required_fix or "RESOLVE_STAGE_PRECONDITION",
+                        message=(
+                            f"BLOCKED: Stage Precondition Failed for {target_stage.value}.\n\n"
+                            f"Reason: {precond.reason}\n"
+                            f"Required Action: {precond.required_fix}"
+                        ),
+                        data={"precondition_diagnostics": precond.diagnostics},
+                    )
+                initial = self.state_machine.evaluate_next_action(classification.research_id)
+                initial.intent = IntentType.RESUME_RUN
+                initial.current_stage = target_stage
+                initial.workflow_status = WorkflowStatus.CONTINUED
+                return await self._run_existing_state_until_blocked(
+                    initial, callback=callback, single_stage=single_stage
+                )
+
             initial = self.state_machine.evaluate_next_action(classification.research_id)
             initial.intent = IntentType.RESUME_RUN
-            return await self._run_existing_state_until_blocked(initial)
+            return await self._run_existing_state_until_blocked(
+                initial, callback=callback, single_stage=single_stage
+            )
 
         if classification.intent == IntentType.RESUME_CANDIDATE:
             if not classification.candidate_id:
@@ -749,9 +854,44 @@ Persist through finalize_solution only when the readiness gate allows it. Stop a
                     stage=WorkflowStage.PROBLEM_EVALUATION,
                     message="Please specify a candidate ID such as CAND-001.",
                 )
+            target_stage_str = classification.extracted_parameters.get("target_stage")
+            if target_stage_str:
+                target_stage = WorkflowStage(target_stage_str)
+                precond = validate_stage_preconditions(
+                    target_stage,
+                    identifier=classification.candidate_id,
+                    prompt=user_prompt,
+                    db_path=self.config.db_path,
+                )
+                if not precond.allowed:
+                    return OrchestrationResult(
+                        intent=IntentType.RESUME_CANDIDATE,
+                        candidate_id=classification.candidate_id,
+                        current_stage=precond.current_stage or target_stage,
+                        action_taken="Stage execution blocked by strict precondition monitor.",
+                        workflow_status=WorkflowStatus.PAUSED if precond.current_stage == WorkflowStage.PAUSED else WorkflowStatus.ERROR,
+                        pause_reason="PRECONDITION_FAILED",
+                        next_action=precond.required_fix or "RESOLVE_STAGE_PRECONDITION",
+                        message=(
+                            f"BLOCKED: Stage Precondition Failed for {target_stage.value}.\n\n"
+                            f"Reason: {precond.reason}\n"
+                            f"Required Action: {precond.required_fix}"
+                        ),
+                        data={"precondition_diagnostics": precond.diagnostics},
+                    )
+                initial = self.state_machine.evaluate_next_action(classification.candidate_id)
+                initial.intent = IntentType.RESUME_CANDIDATE
+                initial.current_stage = target_stage
+                initial.workflow_status = WorkflowStatus.CONTINUED
+                return await self._run_existing_state_until_blocked(
+                    initial, callback=callback, single_stage=single_stage
+                )
+
             initial = self.state_machine.evaluate_next_action(classification.candidate_id)
             initial.intent = IntentType.RESUME_CANDIDATE
-            return await self._run_existing_state_until_blocked(initial)
+            return await self._run_existing_state_until_blocked(
+                initial, callback=callback, single_stage=single_stage
+            )
 
         if classification.intent == IntentType.EXPERIMENT_RESULT:
             if not classification.experiment_id:

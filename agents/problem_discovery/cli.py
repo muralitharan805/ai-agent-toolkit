@@ -11,6 +11,8 @@ from typing import Optional
 
 from agents.problem_discovery.agent import ProblemDiscoveryAgent
 from agents.problem_discovery.config import ProblemDiscoveryConfig, get_default_db_path
+from agents.problem_discovery.orchestration.models import WorkflowStage
+from agents.problem_discovery.orchestration.preconditions import validate_stage_preconditions
 from agents.problem_discovery.verdict import evaluate_all_candidates, evaluate_candidate
 
 
@@ -59,6 +61,26 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
             "Run justified stages until the workflow pauses, completes, or errors. "
             "--end-to-end is retained as a compatibility alias; real-world experiments are never fabricated."
         ),
+    )
+    parser.add_argument(
+        "--stage",
+        "-s",
+        choices=[
+            "research-planning",
+            "evidence-research",
+            "problem-evaluation",
+            "experiment-validation",
+            "solution-strategy",
+        ],
+        default=None,
+        help="Explicit stage to execute (e.g. --stage evidence-research RUN-2026-007). Automatically pauses after this stage.",
+    )
+    parser.add_argument(
+        "--single-stage",
+        "--step",
+        dest="single_stage",
+        action="store_true",
+        help="Execute only the immediate next stage and pause, allowing manual inspection of intermediate state.",
     )
     parser.add_argument(
         "--interactive",
@@ -153,6 +175,7 @@ async def run_single(
     db_path: Optional[str],
     output_json: bool,
     until_blocked: bool = False,
+    single_stage: bool = False,
 ) -> int:
     from datetime import datetime
 
@@ -174,7 +197,7 @@ async def run_single(
 
         result = await agent.run_until_blocked(prompt, callback=on_stage)
     else:
-        result = await agent.run(prompt)
+        result = await agent.run(prompt, single_stage=single_stage)
 
     _print_result(result, output_json, agent=agent)
     return 0 if result.workflow_status.value != "ERROR" else 1
@@ -246,12 +269,62 @@ def main(argv: Optional[list[str]] = None) -> int:
         "and whether existing tools solve it without heavy enterprise gateways."
     )
 
+    single_stage = args.single_stage
+    if args.stage:
+        single_stage = True
+        stage_map = {
+            "research-planning": WorkflowStage.RESEARCH_PLANNING,
+            "evidence-research": WorkflowStage.EVIDENCE_RESEARCH,
+            "problem-evaluation": WorkflowStage.PROBLEM_EVALUATION,
+            "experiment-validation": WorkflowStage.EXPERIMENT_VALIDATION,
+            "solution-strategy": WorkflowStage.SOLUTION_STRATEGY,
+        }
+        target_stage = stage_map[args.stage]
+        from agents.problem_discovery.orchestration.intents import extract_entities
+
+        rid, cid, eid = extract_entities(prompt)
+        target_id = cid or rid or eid
+        precond = validate_stage_preconditions(
+            target_stage,
+            identifier=target_id,
+            prompt=prompt,
+            db_path=str(args.db_path or get_default_db_path()),
+        )
+        if not args.json:
+            print("\n" + precond.format_terminal_card() + "\n", flush=True)
+
+        if not precond.allowed:
+            if args.json:
+                print(
+                    json.dumps(
+                        {
+                            "status": "BLOCKED",
+                            "target_stage": target_stage.value,
+                            "reason": precond.reason,
+                            "required_fix": precond.required_fix,
+                            "diagnostics": precond.diagnostics,
+                        },
+                        indent=2,
+                    )
+                )
+            return 1
+
+        if args.stage != "research-planning":
+            # If the user passed e.g. --stage evidence-research RUN-2026-007, ensure stage prefix is attached
+            lower_p = prompt.strip().lower()
+            if not any(
+                lower_p.startswith(s)
+                for s in ["evidence", "problem", "experiment", "solution", "resume", "continue"]
+            ):
+                prompt = f"{args.stage} {prompt.strip()}"
+
     return asyncio.run(
         run_single(
             prompt=prompt,
             db_path=args.db_path,
             output_json=args.json,
             until_blocked=args.until_blocked,
+            single_stage=single_stage,
         )
     )
 

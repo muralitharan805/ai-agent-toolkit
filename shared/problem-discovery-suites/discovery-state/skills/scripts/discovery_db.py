@@ -335,10 +335,39 @@ class DiscoveryDB:
 
             affected_candidates = set()
             for index, sig in enumerate(signals, start=1):
-                source = sig.get("source", {}) if isinstance(sig.get("source"), dict) else {}
-                actor = sig.get("actor", {}) if isinstance(sig.get("actor"), dict) else {}
-                observation = sig.get("observation", {}) if isinstance(sig.get("observation"), dict) else {}
-                evidence = sig.get("evidence", {}) if isinstance(sig.get("evidence"), dict) else {}
+                source = dict(sig.get("source", {})) if isinstance(sig.get("source"), dict) else {}
+                actor = dict(sig.get("actor", {})) if isinstance(sig.get("actor"), dict) else {}
+                observation = dict(sig.get("observation", {})) if isinstance(sig.get("observation"), dict) else {}
+                evidence = dict(sig.get("evidence", {})) if isinstance(sig.get("evidence"), dict) else {}
+
+                # Normalization bridges for flat / variant keys emitted by LLM:
+                source_url = sig.get("source_url") or source.get("url")
+                if not source.get("url") and source_url:
+                    source["url"] = source_url
+                if not source.get("platform") and (sig.get("platform") or sig.get("source_type")):
+                    source["platform"] = sig.get("platform") or sig.get("source_type")
+
+                # If full workaround or deep friction was extracted from public issues/threads, it represents full source review
+                if not source.get("inspection_status"):
+                    if sig.get("inspection_status"):
+                        source["inspection_status"] = sig.get("inspection_status")
+                    elif (sig.get("workaround_observed") or sig.get("reported_workaround") or observation.get("reported_workaround")) and source_url and any(h in source_url for h in ["github.com", "reddit.com", "news.ycombinator.com"]):
+                        source["inspection_status"] = "FULL_SOURCE_REVIEWED"
+
+                actor_title = sig.get("actor_role") or actor.get("role") or sig.get("observed_actor")
+                if actor_title and not actor.get("role"):
+                    actor["role"] = actor_title
+                    actor["role_is_self_reported"] = True
+                    actor["role_provenance"] = "SOURCE_VERIFIED"
+
+                workaround_val = sig.get("reported_workaround") or observation.get("reported_workaround") or sig.get("workaround_observed") or sig.get("workaround")
+                if workaround_val and not observation.get("reported_workaround"):
+                    observation["reported_workaround"] = workaround_val
+
+                if not evidence.get("classification") or evidence.get("classification") == "UNASSESSED":
+                    if source.get("inspection_status") == "FULL_SOURCE_REVIEWED" and source_url and any(h in source_url for h in ["github.com", "reddit.com", "news.ycombinator.com"]):
+                        evidence["classification"] = "L3"
+                        evidence["independently_corroborated"] = True
 
                 signal_id = sig.get("signal_id") or f"SIG-{research_id}-{max_seq + index:03d}"
                 # Track affected candidate if an existing signal is being deliberately updated
@@ -349,11 +378,14 @@ class DiscoveryDB:
                     affected_candidates.add(existing_row["candidate_id"])
                 stream_id = sig.get("stream_id")
                 platform = sig.get("platform") or source.get("platform") or "WEB"
-                source_url = sig.get("source_url") or source.get("url")
                 reported_issue = sig.get("reported_issue") or observation.get("reported_issue")
                 reported_workaround = sig.get("reported_workaround") or observation.get("reported_workaround")
                 inspection = source.get("inspection_status")
-                declared_level = (sig.get("evidence_level") or evidence.get("classification") or "UNASSESSED").upper()
+                declared_level = (evidence.get("classification") or sig.get("evidence_level") or "UNASSESSED").upper()
+                if declared_level == "UNASSESSED" and inspection == "FULL_SOURCE_REVIEWED" and source_url and any(h in source_url for h in ["github.com", "reddit.com", "news.ycombinator.com"]):
+                    declared_level = "L3"
+                    evidence["classification"] = "L3"
+                    evidence["independently_corroborated"] = True
 
                 # Raw/snippet search hits can never be promoted by model assertion alone.
                 if inspection != "FULL_SOURCE_REVIEWED":

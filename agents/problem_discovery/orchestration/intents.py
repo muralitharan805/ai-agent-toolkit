@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from typing import Optional, Tuple
-from agents.problem_discovery.orchestration.models import IntentClassification, IntentType
+from agents.problem_discovery.orchestration.models import IntentClassification, IntentType, WorkflowStage
 
 
 RUN_ID_REGEX = re.compile(r"\b(RUN-\d{4}-\d{3,})\b", re.IGNORECASE)
@@ -23,6 +23,17 @@ EXPERIMENT_RESULT_PATTERNS = [
     r"outcome\s+verdict",
 ]
 
+# Keywords indicating explicit stage execution mapped to WorkflowStage
+STAGE_ACTION_MAP: list[tuple[str, WorkflowStage]] = [
+    (r"\b(?:research-planning|planning)\b", WorkflowStage.RESEARCH_PLANNING),
+    (r"\b(?:evidence-research|evidence\s+research|collect-signals)\b", WorkflowStage.EVIDENCE_RESEARCH),
+    (r"\b(?:problem-evaluation|problem\s+evaluation|evaluate-candidate|evaluate-problem)\b", WorkflowStage.PROBLEM_EVALUATION),
+    (r"\b(?:experiment-validation|experiment\s+validation|validate-experiment)\b", WorkflowStage.EXPERIMENT_VALIDATION),
+    (r"\b(?:solution-strategy|solution\s+strategy|finalize-solution)\b", WorkflowStage.SOLUTION_STRATEGY),
+]
+
+STAGE_ACTION_PATTERNS = [pat for pat, _ in STAGE_ACTION_MAP]
+
 # Keywords indicating resume / advance workflow
 RESUME_ACTION_PATTERNS = [
     r"\bcontinue\b",
@@ -32,7 +43,7 @@ RESUME_ACTION_PATTERNS = [
     r"\bcontinue\s+pannu\b",
     r"\bnext\s+step\b",
     r"\bforward\b",
-]
+] + STAGE_ACTION_PATTERNS
 
 # Keywords indicating read-only query / inspection
 QUERY_PATTERNS = [
@@ -50,7 +61,9 @@ QUERY_PATTERNS = [
     r"\bdetails\b",
     r"\bexplain\b",
     r"\bcurrent\s+status\b",
-    r"\bevidence\b",
+    r"\bshow\s+evidence\b",
+    r"\bview\s+evidence\b",
+    r"\bevidence\s*\?",
     r"\bhistory\b",
     r"-(?:ah|aa)\s*\??$",
     r"\bready-(?:ah|aa)\b",
@@ -134,10 +147,18 @@ def classify_intent(user_input: str) -> IntentClassification:
             rationale="Prompt contains experiment identifier and outcome/observation data.",
         )
 
-    # 2. Check for explicit resume / advance command
+    # 2. Check for explicit stage or resume / advance command
+    matched_stage = None
+    for pat, stg in STAGE_ACTION_MAP:
+        if re.search(pat, lower_text):
+            matched_stage = stg
+            break
+
+    has_stage_action = matched_stage is not None
     has_resume_action = any(re.search(pat, lower_text) for pat in RESUME_ACTION_PATTERNS)
 
-    if has_resume_action and not has_query_intent:
+    if has_stage_action or (has_resume_action and not has_query_intent):
+        stage_params = {"target_stage": matched_stage.value} if matched_stage else {}
         if candidate_id:
             return IntentClassification(
                 intent=IntentType.RESUME_CANDIDATE,
@@ -145,6 +166,7 @@ def classify_intent(user_input: str) -> IntentClassification:
                 candidate_id=candidate_id,
                 experiment_id=experiment_id,
                 query_text=text,
+                extracted_parameters=stage_params,
                 rationale=f"Explicit request to resume workflow for candidate {candidate_id}.",
             )
         if research_id:
@@ -154,6 +176,7 @@ def classify_intent(user_input: str) -> IntentClassification:
                 candidate_id=candidate_id,
                 experiment_id=experiment_id,
                 query_text=text,
+                extracted_parameters=stage_params,
                 rationale=f"Explicit request to resume workflow for research run {research_id}.",
             )
 
