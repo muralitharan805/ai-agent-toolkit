@@ -1,6 +1,6 @@
 # Release Verification — Consumer and Authoring Journeys
 
-This checklist verifies what a developer experiences **after cloning** this toolkit. The command-line lifecycle is automatically tested in CI with the real Angular Forms catalog module; **actual AI IDE invocation still needs human verification** before a public release.
+This checklist verifies what a developer experiences **after cloning** this toolkit. The command-line lifecycle is automatically tested in CI using the Angular Forms catalog module. On 2026-11-07, a developer reported successful Antigravity skill/rule discovery, Angular form generation, and production build; the build log was not independently retained. Codex and Claude Code workspace sync were tested without the corresponding agents installed; **real agent invocation remains unverified for those two tools**.
 
 > **Safety:** Use a disposable target project for manual checks. Never use `--force` or `--force-clean` on a real workspace unless you intentionally want to discard local changes. Do not run the global (`-g`) flow as part of the workspace smoke test.
 
@@ -105,15 +105,19 @@ The companion-skill installation and relative reference links are automatically 
 
 ## 7. Final release sign-off
 
-- [ ] CI: Bash syntax, Python compilation, unit/integration tests, representative skill validation, Gitleaks — passing
-- [ ] Antigravity consumer smoke test — manually passed with a real app
-- [ ] Codex consumer smoke test — manually passed with a real app
-- [ ] Claude Code consumer smoke test — manually passed with a real app
-- [ ] Optional `generate-agent-suite` authoring smoke test — manually passed (if advertised)
-- [ ] Public snapshot includes only approved first-party or properly licensed materials
-- [ ] Fresh public repository history does **not** contain private repo history or unapproved third-party copies
-- [ ] Source snapshot separately reviewed for secret values, personal/private data, and external dependencies
-- [ ] Public source omits unsupported historical `evals/grading.json` reports claiming performance uplift. Keep `evals/evals.json` definitions; only publish real grading evidence after reproducible agent execution.
-- [ ] Documentation promises correspond to tested behavior
+Status recorded **2026-11-07** against fresh root commit `20ac3ff76543189d45343f97be2fdb37515d4637`.
 
-**A green CI is necessary but not sufficient for making the repository public.** Keep the existing private history intact, and only prepare the clean-history staging/public repository after these gates are reviewed.
+- [x] CI: Bash syntax, Python compilation, 75 unit/integration tests, representative skill validation, and Gitleaks — passed on the new private repository ([run 42382807463](https://github.com/muralitharan805/ai-agent-toolkit/actions/runs/42382807463)).
+- [x] Antigravity consumer: skill and rule sync, discovery, and file reading — independently evidenced by reported command/agent output; Angular form generation and production build — **developer-reported success without retained build logs**.
+- [x] Codex workspace skill sync — passed; Antigravity-specific rules correctly skipped. **Real Codex agent use not tested** (CLI unavailable).
+- [x] Claude Code workspace skill sync — passed; Antigravity-specific rules correctly skipped. **Real Claude agent use not tested** (CLI unavailable).
+- [ ] Full Codex consumer agent smoke test — requires Codex agent installation.
+- [ ] Full Claude Code consumer agent smoke test — requires Claude Code installation.
+- [ ] Optional `generate-agent-suite` authoring smoke test — requires actual agent invocation if advertised as agent-tested.
+- [ ] Manual provenance/sign-off for all first-party source and third-party redistribution rights; attribution and automated checks do not establish authorship of every file.
+- [x] Fresh repository history: one root commit with zero parents, separate from original private history; 650 files, no historical `evals/grading.json` reports or unverified backend guides.
+- [x] Secret checks: Gitleaks CI passed, developer's local no-Git directory scan found no leaks, and temporary tracked-file preflight scanned for private project names, credential-shaped strings and publisher identifiers. No scan guarantees the absence of secrets or private information.
+- [x] Public identity details in README, LICENSE and SECURITY.md — developer approved for publication.
+- [x] Documentation distinguishes deterministic evaluation checks from unverified agent/benchmark assertions.
+
+**Scope of verification:** The source snapshot and its one new commit have been checked; any additional untracked local files or future changes require separate review. A green CI does not validate actual behavior in every IDE. Keep `ai-agent-toolkit-internal` and its Git history private and separate.

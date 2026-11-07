@@ -38,4 +38,4 @@ Google Antigravity and related trademarks belong to their respective owners. Lin
 
 ## Important: Git history
 
-This source tree is prepared as a candidate for a **fresh public repository with a new initial commit**. Do not push or mirror the original private repository's Git history. Removing source files from a branch does not remove them from that branch's ancestors.
+The repository `muralitharan805/ai-agent-toolkit` was initialized as a **fresh-history source snapshot** (one new root commit) without importing the original private Git history. The former private repository remains separate as `ai-agent-toolkit-internal`. Never merge or push that private history into this repository; review all future additions for private data, secrets, and redistribution rights before publishing.
