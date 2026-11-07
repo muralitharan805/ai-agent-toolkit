@@ -26,7 +26,7 @@ Please include:
 - Potential impact on user workspaces or file systems.
 - Any proposed remediation or patch.
 
-We will acknowledge receipt within 48 hours and work with you to release a fix promptly.
+We aim to acknowledge reports as soon as practical and prioritize confirmed vulnerabilities according to severity. Response and remediation timelines depend on maintainer availability and the nature of the issue.
 
 ---
 
