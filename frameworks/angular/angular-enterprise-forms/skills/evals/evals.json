@@ -1,0 +1,43 @@
+{
+  "skill_name": "angular-enterprise-forms",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create an enterprise Angular 19+ registration form using NonNullableFormBuilder with full name, email, and password fields, custom validators, and centralized error display without inline template checks.",
+      "expected_output": "Produces a standalone component utilizing inject(FormBuilder).nonNullable, strictly typed FormGroup interface, FormErrorComponent for error presentation, markAllAsTouched on submit, and getRawValue() for submission payload.",
+      "assertions": [
+        "Uses inject(FormBuilder).nonNullable or NonNullableFormBuilder",
+        "Declares dedicated TypeScript interface for form model (zero 'any')",
+        "Uses centralized error presenter component rather than inline template checks",
+        "Executes markAllAsTouched() on submit before validity check",
+        "Uses getRawValue() for backend payload extraction"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Implement a reusable custom phone input component with country code and number fields that integrates seamlessly with Angular Reactive Forms.",
+      "expected_output": "Creates a standalone component implementing ControlValueAccessor, providing NG_VALUE_ACCESSOR with forwardRef, handling writeValue, registerOnChange, registerOnTouched, and setDisabledState with OnPush change detection.",
+      "assertions": [
+        "Implements ControlValueAccessor interface",
+        "Provides NG_VALUE_ACCESSOR using forwardRef",
+        "Configures ChangeDetectionStrategy.OnPush",
+        "Properly propagates value changes via registered onChange callback",
+        "Safely handles null and undefined in writeValue"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Audit an Angular codebase to detect untyped form usages, unmanaged valueChanges memory leaks, and inline template error boilerplate.",
+      "expected_output": "Executes scripts/audit_angular_forms.py against the target directory, producing structured diagnostics or JSON output identifying critical and high-severity violations.",
+      "assertions": [
+        "References scripts/audit_angular_forms.py CLI tool",
+        "Detects untyped form declarations and legacy UntypedFormGroup",
+        "Detects unmanaged form stream subscriptions lacking takeUntilDestroyed",
+        "Outputs structured summary of violations with line numbers"
+      ],
+      "files": []
+    }
+  ]
+}

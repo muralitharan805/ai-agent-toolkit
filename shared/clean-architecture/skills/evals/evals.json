@@ -1,0 +1,44 @@
+{
+  "skill_name": "clean-architecture",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Domain-First Feature Modularization & Layout Audit",
+      "prompt": "Inspect a backend repository containing top-level 'controllers/' and 'repositories/' folders and refactor it into a 4-layer domain-first structure.",
+      "expected_output": "Restructures files into 'src/modules/<feature>/' containing co-located controller, service, port, entity, and unit tests.",
+      "assertions": [
+        "Rejects top-level technical directories ('controllers/', 'services/', 'repositories/')",
+        "Packages code into vertical domain modules under 'src/modules/<feature>/'",
+        "Ensures unit tests are co-located alongside target services",
+        "Restricts 'src/common/' strictly to stateless cross-cutting primitives"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Pure Domain Entity Decoupling from Persistence ORM",
+      "prompt": "Evaluate a domain entity class containing TypeORM or Prisma annotations and decouple it into a pure domain model and infrastructure persistence mapper.",
+      "expected_output": "Creates a zero-dependency domain entity and a separate database repository using the Data Mapper pattern.",
+      "assertions": [
+        "Removes all ORM decorators and database imports from core domain entities",
+        "Keeps domain entities as pure language classes with zero external dependencies",
+        "Encapsulates business rules and state mutations directly within the domain entity",
+        "Implements a Data Mapper in infrastructure to convert between persistence and domain models"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Dependency Inversion with Ports and Adapters",
+      "prompt": "Create an order cancellation use case that depends on a database repository using Dependency Inversion.",
+      "expected_output": "Defines an OrderRepositoryPort interface in the domain/application layer and implements a PostgresOrderRepository adapter in infrastructure.",
+      "assertions": [
+        "Defines repository port interface inside the domain or application layer",
+        "Ensures application use case accepts the interface abstraction via constructor dependency injection",
+        "Implements concrete database queries exclusively inside the infrastructure adapter",
+        "Enforces inward dependency flow: Adapter -> Use Case -> Domain <- Infrastructure"
+      ],
+      "files": []
+    }
+  ]
+}

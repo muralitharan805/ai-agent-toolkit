@@ -1,0 +1,10 @@
+{
+  "template_collection": "Enterprise TSDoc Starter Templates",
+  "version": "1.0.0",
+  "templates": {
+    "service_method": "/**\n * ${1:Brief business description of what this operation accomplishes}.\n *\n * @param ${2:paramName} - ${3:Description including units or currency}\n * @returns ${4:Description of return payload and resolution behavior}\n *\n * @throws {${5:BadRequestException}} ${6:When input validation fails}\n * @throws {${7:NotFoundException}} ${8:When the requested entity does not exist}\n *\n * @example\n * const result = await service.${9:methodName}(${10:args});\n */",
+    "controller_endpoint": "/**\n * ${1:HTTP endpoint summary}.\n *\n * @param ${2:dto} - ${3:Validated request body payload}\n * @returns ${4:Standard HTTP response payload with status code}\n *\n * @throws {${5:UnauthorizedException}} When authentication token is missing or expired\n */",
+    "utility_function": "/**\n * ${1:Pure utility function description}.\n *\n * @param ${2:input} - ${3:Input data to transform}\n * @returns ${4:Transformed result without mutating input}\n *\n * @example\n * const output = ${5:functionName}(${6:exampleInput});\n */",
+    "route_guard": "/**\n * ${1:Functional route guard verifying security preconditions}.\n *\n * @param route - Target activated route snapshot\n * @param state - Router state snapshot\n * @returns True if route transition is authorized, or UrlTree redirect\n */"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "skill_name": "async-jobs-and-event-processing",
+  "evals": [
+    {
+      "id": 1,
+      "name": "HTTP Controller Decoupling & 202 Accepted Response",
+      "prompt": "Refactor a synchronous invoice export endpoint that generates large PDFs and sends emails within the HTTP controller to enqueue a job to BullMQ/SQS and return an immediate HTTP 202 Accepted response.",
+      "expected_output": "Enqueues job to background message queue and responds immediately with 202 Accepted, jobId, and poll URL.",
+      "assertions": [
+        "Removes heavy PDF generation and email sending operations from the HTTP controller",
+        "Enqueues job to message queue with versioned payload and unique tracking identifier",
+        "Returns HTTP 202 Accepted status immediately to prevent client request timeouts",
+        "Provides job tracking identifier or status poll URL in response payload"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Exponential Backoff Retries with Jitter & DLQ Routing",
+      "prompt": "Configure a background job consumer with exponential backoff and randomized jitter for transient failure retries, and route to a Dead Letter Queue (DLQ) when maximum retry attempts are exhausted.",
+      "expected_output": "Calculates exponential delay with jitter for retries and sends exhausted jobs to DLQ with error context.",
+      "assertions": [
+        "Calculates exponential delay across consecutive retry attempts",
+        "Applies randomized jitter (e.g. 10-20% or full jitter) to prevent thundering herds",
+        "Transfers permanently failed jobs to a Dead Letter Queue (DLQ) after max attempts",
+        "Attaches terminal failure diagnostic details and stack traces to DLQ payload"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Consumer Idempotency Safeguards & Deduplication Table",
+      "prompt": "Implement an idempotent payment processing worker that prevents duplicate charges if the message queue delivers the same job message multiple times.",
+      "expected_output": "Verifies idempotency key in deduplication store before execution and commits transaction atomically.",
+      "assertions": [
+        "Checks unique idempotencyKey before executing irreversible business operations",
+        "Skips duplicate job execution safely if key has already been marked as processed",
+        "Records processed key atomically within business transaction or deduplication table",
+        "Guarantees at-least-once queue delivery does not cause duplicate side effects"
+      ],
+      "files": []
+    }
+  ]
+}

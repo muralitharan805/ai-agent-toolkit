@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ResumeAuditReportSchema",
+  "description": "Schema validating structured audit reports for engineering resumes",
+  "type": "object",
+  "required": [
+    "executive_verdict",
+    "scores",
+    "critical_issues",
+    "bullet_improvements",
+    "keyword_alignment",
+    "missing_questions"
+  ],
+  "properties": {
+    "executive_verdict": {
+      "type": "object",
+      "required": ["overall_quality", "recruiter_impression", "shortlist_verdict"],
+      "properties": {
+        "overall_quality": { "type": "string" },
+        "recruiter_impression": { "type": "string" },
+        "shortlist_verdict": { "type": "string", "enum": ["Definite Shortlist", "Borderline / Conditional", "Likely Rejection"] },
+        "biggest_strengths": { "type": "array", "items": { "type": "string" } },
+        "biggest_weaknesses": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "required": ["ats_readability", "technical_relevance", "experience_impact", "seniority_calibration", "overall_score"],
+      "properties": {
+        "ats_readability": { "type": "number", "minimum": 0, "maximum": 10 },
+        "technical_relevance": { "type": "number", "minimum": 0, "maximum": 10 },
+        "professional_summary": { "type": "number", "minimum": 0, "maximum": 10 },
+        "skills_presentation": { "type": "number", "minimum": 0, "maximum": 10 },
+        "experience_impact": { "type": "number", "minimum": 0, "maximum": 10 },
+        "seniority_calibration": { "type": "number", "minimum": 0, "maximum": 10 },
+        "overall_score": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "critical_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["section", "problem", "severity", "correction"],
+        "properties": {
+          "section": { "type": "string" },
+          "problem": { "type": "string" },
+          "why_it_matters": { "type": "string" },
+          "severity": { "type": "string", "enum": ["Critical", "High", "Medium", "Low"] },
+          "correction": { "type": "string" }
+        }
+      }
+    },
+    "bullet_improvements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["original_text", "problem", "improved_text"],
+        "properties": {
+          "original_text": { "type": "string" },
+          "problem": { "type": "string" },
+          "improved_text": { "type": "string" },
+          "missing_metric_placeholder": { "type": "string" }
+        }
+      }
+    },
+    "keyword_alignment": {
+      "type": "object",
+      "required": ["verified_keywords", "missing_keywords"],
+      "properties": {
+        "verified_keywords": { "type": "array", "items": { "type": "string" } },
+        "missing_keywords": { "type": "array", "items": { "type": "string" } },
+        "unnecessary_buzzwords": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "missing_questions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 7
+    }
+  }
+}

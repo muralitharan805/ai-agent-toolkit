@@ -1,0 +1,44 @@
+{
+  "skill_name": "github-issue-pr-automation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Junior-Friendly GitHub Issue Creation & Branch Initialization",
+      "prompt": "Create a structured GitHub Issue and checkout a normalized feature branch for implementing EMI amortization calculations.",
+      "expected_output": "Creates issue with Overview, Context, and Acceptance Criteria, then checks out feat/<id>-emi-amortization-schedule off latest main.",
+      "assertions": [
+        "Generates issue title using Conventional Commit syntax",
+        "Includes clear acceptance criteria checklist in issue body",
+        "Checks out normalized feature branch matching feat/<id>-<slug>",
+        "Pulls latest commits from main before branching"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Pull Request Generation with Mandatory Auto-Closing Syntax",
+      "prompt": "Draft a pull request description for branch feat/14-emi-amortization linking issue #14.",
+      "expected_output": "Drafts PR body with technical overview, quality checklist, and explicit Closes #14 auto-closing directive.",
+      "assertions": [
+        "Includes Closes #14 or Fixes #14 in PR body",
+        "Summarizes code modifications and test coverage results",
+        "Targets default branch main as PR base",
+        "Avoids non-closing ambiguous phrases like Related to #14"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Post-Merge Branch Pruning & Main Sync",
+      "prompt": "Clean up local and remote git branches after Pull Request #14 is merged into main.",
+      "expected_output": "Checks out main, pulls merged changes, safely deletes local feat/14-emi-amortization, and deletes remote origin branch.",
+      "assertions": [
+        "Switches local branch back to main",
+        "Pulls latest remote commits from origin main",
+        "Deletes local merged feature branch via git branch -d",
+        "Deletes remote origin branch via git push origin --delete"
+      ],
+      "files": []
+    }
+  ]
+}

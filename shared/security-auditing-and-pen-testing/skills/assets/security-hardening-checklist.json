@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SecurityHardeningChecklist",
+  "description": "Comprehensive DevSecOps and Penetration Testing hardening checklist for web applications and backend APIs.",
+  "categories": [
+    {
+      "name": "Secrets & Environment Hygiene",
+      "controls": [
+        {
+          "id": "SEC-CTL-01",
+          "name": "No Hardcoded Secrets",
+          "severity": "CRITICAL",
+          "description": "Source files and configs must not contain plain-text passwords, JWT secrets, or private keys."
+        },
+        {
+          "id": "SEC-CTL-02",
+          "name": "Gitignore Env File",
+          "severity": "HIGH",
+          "description": ".env and .env.* must be explicitly listed in .gitignore."
+        },
+        {
+          "id": "SEC-CTL-03",
+          "name": "Env Example Parity",
+          "severity": "MEDIUM",
+          "description": ".env.example must mirror all keys with placeholder values and descriptive comments."
+        }
+      ]
+    },
+    {
+      "name": "Injection & Query Safety",
+      "controls": [
+        {
+          "id": "SEC-CTL-04",
+          "name": "Parameterized Database Queries",
+          "severity": "CRITICAL",
+          "description": "Database queries must use parameterized ORM queries or prepared statements; no raw concatenation."
+        },
+        {
+          "id": "SEC-CTL-05",
+          "name": "Template XSS Sanitization",
+          "severity": "HIGH",
+          "description": "HTML templates must sanitize user-rendered HTML strings via DOMPurify or framework binding."
+        }
+      ]
+    },
+    {
+      "name": "Authentication & Session Security",
+      "controls": [
+        {
+          "id": "SEC-CTL-06",
+          "name": "HTTP-Only Cookie Refresh Tokens",
+          "severity": "HIGH",
+          "description": "Sensitive authentication refresh tokens must be stored in HTTP-Only, Secure, SameSite cookies."
+        },
+        {
+          "id": "SEC-CTL-07",
+          "name": "Password Hashing Strength",
+          "severity": "CRITICAL",
+          "description": "Passwords must be hashed with minimum 12 salt rounds of bcrypt or Argon2id."
+        },
+        {
+          "id": "SEC-CTL-08",
+          "name": "Short-Lived JWT Access Tokens",
+          "severity": "MEDIUM",
+          "description": "JWT access tokens must expire within 15 minutes."
+        }
+      ]
+    },
+    {
+      "name": "HTTP Security Headers & Transport",
+      "controls": [
+        {
+          "id": "SEC-CTL-09",
+          "name": "Helmet Security Middleware",
+          "severity": "HIGH",
+          "description": "Server entrypoint must enable Helmet to set HSTS, CSP, X-Frame-Options, and X-Content-Type-Options."
+        },
+        {
+          "id": "SEC-CTL-10",
+          "name": "Restricted CORS Whitelist",
+          "severity": "HIGH",
+          "description": "CORS must not allow wildcard origin ('*') with credentials; restrict to explicit domain list."
+        },
+        {
+          "id": "SEC-CTL-11",
+          "name": "HSTS Enforcement",
+          "severity": "HIGH",
+          "description": "Strict-Transport-Security header must enforce HTTPS for at least 1 year (31536000 seconds)."
+        }
+      ]
+    },
+    {
+      "name": "Supply Chain & Rate Limiting",
+      "controls": [
+        {
+          "id": "SEC-CTL-12",
+          "name": "Clean Dependency Audit",
+          "severity": "HIGH",
+          "description": "Application must pass pnpm audit --audit-level high with zero critical or high vulnerabilities."
+        },
+        {
+          "id": "SEC-CTL-13",
+          "name": "Authentication Rate Limiting",
+          "severity": "HIGH",
+          "description": "Login and password reset endpoints must enforce rate limiting (e.g. 5 requests/minute)."
+        },
+        {
+          "id": "SEC-CTL-14",
+          "name": "Deterministic pnpm Lockfile",
+          "severity": "MEDIUM",
+          "description": "Repository must maintain pnpm-lock.yaml and exclude npm or yarn lockfiles."
+        },
+        {
+          "id": "SEC-CTL-15",
+          "name": "Error Stack Leaking Prevention",
+          "severity": "MEDIUM",
+          "description": "Production HTTP exception responses must sanitize stack traces and internal error payloads."
+        }
+      ]
+    }
+  ]
+}

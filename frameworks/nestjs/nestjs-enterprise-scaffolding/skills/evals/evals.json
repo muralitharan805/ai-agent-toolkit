@@ -1,0 +1,44 @@
+{
+  "skill_name": "nestjs-enterprise-scaffolding",
+  "evals": [
+    {
+      "id": 1,
+      "name": "20-Point Enterprise Architecture Scaffolding & Bootstrap",
+      "prompt": "Bootstrap a production-grade NestJS application configuring Helmet, global ValidationPipe with whitelist, Swagger at /api/docs, and app.enableShutdownHooks().",
+      "expected_output": "Generates main.ts with Helmet, ValidationPipe with whitelist and transform, Swagger setup via DocumentBuilder, and enableShutdownHooks().",
+      "assertions": [
+        "Configures global ValidationPipe with whitelist and transform options",
+        "Enables graceful shutdown handling via app.enableShutdownHooks",
+        "Sets up interactive Swagger documentation at /api/docs",
+        "Configures global route prefix api/v1 and security headers"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Zod Environment Validation, Exception Filter & Response Envelope",
+      "prompt": "Implement Zod schema environment validation, GlobalHttpExceptionFilter, and TransformResponseInterceptor for standardizing API responses.",
+      "expected_output": "Creates env.config.ts with Zod schema parsing, GlobalHttpExceptionFilter returning standardized error format, and TransformResponseInterceptor wrapping data in uniform envelope.",
+      "assertions": [
+        "Implements validateEnv using Zod schema safeParse for runtime variables",
+        "Implements GlobalHttpExceptionFilter standardizing HTTP error status and path",
+        "Implements TransformResponseInterceptor wrapping successful payloads in ApiResponseEnvelope",
+        "Separates pagination metadata into meta property inside response envelope"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Database Lifecycle, Mandatory Pagination & Containerization",
+      "prompt": "Implement PrismaService with connection lifecycle hooks, PaginationQueryDto with max limit 100, and a multi-stage Dockerfile.",
+      "expected_output": "Creates PrismaService with OnModuleInit and OnModuleDestroy, PaginationQueryDto with skip offset getter, and multi-stage Dockerfile with non-root user.",
+      "assertions": [
+        "Implements PrismaService lifecycle hooks onModuleInit and onModuleDestroy",
+        "Implements PaginationQueryDto enforcing default limit 10 and maxLimit 100",
+        "Provides multi-stage Dockerfile running as non-root node user",
+        "Enforces strict TypeScript types with zero explicit any annotations"
+      ],
+      "files": []
+    }
+  ]
+}

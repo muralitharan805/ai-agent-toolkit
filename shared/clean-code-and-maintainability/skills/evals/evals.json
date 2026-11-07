@@ -1,0 +1,44 @@
+{
+  "skill_name": "clean-code-and-maintainability",
+  "evals": [
+    {
+      "id": 1,
+      "name": "TSDoc Documentation & Function Parameter DTO Refactoring",
+      "prompt": "Refactor a legacy calculation function with 5 positional arguments and zero comments into an encapsulated typed DTO and complete TSDoc block documentation.",
+      "expected_output": "Creates typed options interface, reduces function signature to single parameter, and documents purpose, @param, @returns, and @throws.",
+      "assertions": [
+        "Encapsulates 4+ parameters into a typed DTO interface or options object",
+        "Reduces positional function parameters to at most 3",
+        "Adds comprehensive TSDoc comment with @param, @returns, and @throws tags",
+        "Includes a realistic @example usage snippet in documentation"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Elimination of Explicit any & Type Narrowing",
+      "prompt": "Refactor an untrusted webhook handler that uses explicit any types into strict TypeScript with unknown and user-defined type guards.",
+      "expected_output": "Eliminates all any types, validates payload using a type guard predicate, and safely accesses typed properties.",
+      "assertions": [
+        "Eliminates explicit 'any' type annotations from function signature",
+        "Accepts unvalidated external payload as 'unknown'",
+        "Implements a user-defined type guard returning 'value is PayloadType'",
+        "Safely handles invalid payloads by throwing descriptive domain errors"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Guard Clause Extraction & Flattening Deeply Nested Conditionals",
+      "prompt": "Refactor a deeply nested if/else payment processing method (3+ levels) into clean guard clauses with early returns.",
+      "expected_output": "Flattens conditional pyramid using early returns or early throws, keeping nesting depth strictly <= 2 levels.",
+      "assertions": [
+        "Replaces nested if/else statements with precondition guard clauses",
+        "Reduces maximum conditional nesting depth to at most 2 levels",
+        "Throws domain exceptions immediately upon invalid precondition states",
+        "Maintains happy path execution at the lowest indentation level"
+      ],
+      "files": []
+    }
+  ]
+}

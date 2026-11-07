@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ResearchPlan",
+  "description": "Standard output contract for the Research Planning Skill defining research scope, streams, questions, hypotheses, and execution constraints.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "research_id",
+    "status",
+    "original_request",
+    "objective",
+    "scope",
+    "research_streams",
+    "unknowns"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0"]
+    },
+    "research_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{4}-[0-9]{3,}$",
+      "description": "Sequential research run identifier, e.g. RUN-2026-001"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["READY", "NEEDS_CLARIFICATION", "BLOCKED"]
+    },
+    "original_request": {
+      "type": "string",
+      "description": "Verbatim user request preserving raw voice and attribution"
+    },
+    "objective": {
+      "type": "string",
+      "description": "Normalized empirical research objective"
+    },
+    "scope": {
+      "type": "object",
+      "required": ["domain", "scope_type"],
+      "properties": {
+        "domain": {
+          "type": "string"
+        },
+        "scope_type": {
+          "type": "string",
+          "enum": ["BROAD", "NARROW", "MESSY_BRAINDUMP", "MULTI_DOMAIN", "CONTINUATION"]
+        },
+        "geography": {
+          "type": ["string", "null"]
+        },
+        "in_scope": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "research_streams": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "stream_id",
+          "name",
+          "operator",
+          "workflow",
+          "operational_lens",
+          "research_questions",
+          "hypotheses",
+          "search_strategy"
+        ],
+        "properties": {
+          "stream_id": {
+            "type": "string",
+            "pattern": "^RS-[0-9]{3}$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "object",
+            "required": ["title", "epistemic_status"],
+            "properties": {
+              "title": { "type": "string" },
+              "epistemic_status": {
+                "type": "string",
+                "enum": ["EXPLICIT_REPORTED", "INFERRED", "HYPOTHESIS"]
+              }
+            }
+          },
+          "workflow": {
+            "type": "string"
+          },
+          "operational_lens": {
+            "type": "string",
+            "enum": [
+              "Frontline / Intake",
+              "Multi-party Handoffs",
+              "Back-office Reconciliation",
+              "Regulatory / Portal Workflows",
+              "Exceptions / Disputes"
+            ]
+          },
+          "research_questions": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "hypotheses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["claim", "status"],
+              "properties": {
+                "claim": { "type": "string" },
+                "status": {
+                  "type": "string",
+                  "enum": ["UNVERIFIED", "REFUTED", "CONFIRMED"]
+                }
+              }
+            }
+          },
+          "search_strategy": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["query", "source_category"],
+              "properties": {
+                "query": { "type": "string" },
+                "source_category": {
+                  "type": "string",
+                  "enum": [
+                    "community_discussion",
+                    "public_filetype",
+                    "job_posting",
+                    "software_gap",
+                    "regional_grievance"
+                  ]
+                },
+                "language": { "type": "string", "default": "en" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "unknowns": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "execution_constraints": {
+      "type": "object",
+      "properties": {
+        "live_search_required": { "type": "boolean", "default": true },
+        "manual_fieldwork_allowed": { "type": "boolean", "default": false },
+        "max_search_depth": { "type": "string", "enum": ["QUICK", "DEEP", "EXHAUSTIVE"], "default": "DEEP" }
+      }
+    }
+  }
+}

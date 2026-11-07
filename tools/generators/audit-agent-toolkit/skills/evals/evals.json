@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "audit-agent-toolkit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Ecosystem Health & Hard Limits Audit",
+      "prompt": "Run a full health and security audit on the ai-agent-toolkit repository and output an ecosystem scorecard.",
+      "expected_output": "Static toolkit audit report covering authoring-policy skill size, Antigravity 24,000-byte rule file limit, workflow migration candidates, and heuristic domain token checks.",
+      "assertions": [
+        "Invokes scripts/audit_toolkit.py against the repository",
+        "Applies the toolkit 500-line SKILL.md authoring policy and Antigravity 24,000-byte per-rule source limit",
+        "Flags legacy workflow files as migration candidates without claiming a fixed removal date",
+        "Reports known-domain keyword matches as heuristics, not comprehensive secret or privacy assurance"
+      ],
+      "files": [
+        "tools/generators/audit-agent-toolkit/skills/SKILL.md",
+        "tools/generators/audit-agent-toolkit/skills/scripts/audit_toolkit.py"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Global Parity & Token Budget Audit",
+      "prompt": "Run --check-global to inspect ~/.gemini/GEMINI.md source-file size; distinguish this limited check from unimplemented global skill parity.",
+      "expected_output": "Reports global rule source byte size and explicitly marks full global skill/parity and aggregate token-budget verification as not implemented.",
+      "assertions": [
+        "Checks ~/.gemini/GEMINI.md against the 24,000 UTF-8-byte per-file Antigravity rule limit",
+        "Does not claim orphan skill detection or timestamp parity without implementing it",
+        "Reports global_parity_verified: false and a correctly scoped health scorecard"
+      ],
+      "files": [
+        "tools/generators/audit-agent-toolkit/skills/references/audit-criteria-and-token-budgets.md"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StructuredLogRecord",
+  "description": "Standard schema for single-line structured JSON application logs adhering to OpenTelemetry and Elastic Common Schema.",
+  "type": "object",
+  "required": [
+    "timestamp",
+    "level",
+    "correlationId",
+    "service",
+    "environment",
+    "message",
+    "context"
+  ],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 execution timestamp."
+    },
+    "level": {
+      "type": "string",
+      "enum": ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"],
+      "description": "Standardized log severity level."
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique request correlation ID propagated via X-Correlation-ID header."
+    },
+    "service": {
+      "type": "string",
+      "description": "Name of the emitting microservice or application module."
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["development", "staging", "production", "test"],
+      "description": "Execution deployment environment."
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable descriptive log event message."
+    },
+    "context": {
+      "type": "string",
+      "description": "Originating class, controller, service, or interceptor name."
+    },
+    "http": {
+      "type": "object",
+      "properties": {
+        "method": { "type": "string" },
+        "route": { "type": "string" },
+        "statusCode": { "type": "integer" },
+        "durationMs": { "type": "number" },
+        "clientIp": { "type": "string" }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Sanitized contextual domain metadata dictionary."
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "message": { "type": "string" },
+        "stack": { "type": "string" }
+      }
+    }
+  }
+}

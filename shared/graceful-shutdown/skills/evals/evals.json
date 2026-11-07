@@ -1,0 +1,44 @@
+{
+  "skill_name": "graceful-shutdown",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Dual POSIX Signal Handling & Readiness Invalidation",
+      "prompt": "Implement graceful shutdown handlers for SIGTERM and SIGINT, ensuring the /health/ready endpoint returns HTTP 503 immediately while in-flight requests finish.",
+      "expected_output": "Registers SIGTERM and SIGINT listeners, updates readiness probe state to 503, and pauses for load balancer propagation before closing server socket.",
+      "assertions": [
+        "Registers explicit event listeners for both POSIX SIGTERM and SIGINT termination signals",
+        "Invalidates internal readiness state so /health/ready returns HTTP 503 immediately",
+        "Applies a delay before closing the HTTP listener to allow load balancer route propagation",
+        "Prevents accepting new incoming network connections during the termination sequence"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Kubernetes Grace Period Budgeting & In-Flight Request Draining",
+      "prompt": "Configure a shutdown coordinator with an internal grace timeout of 25 seconds to guarantee safe shutdown before Kubernetes terminationGracePeriodSeconds (30s) fires SIGKILL.",
+      "expected_output": "Defines internal 25s timeout timer, invokes server.close() to drain in-flight requests, and forces exit 1 if timeout is exceeded.",
+      "assertions": [
+        "Configures internal shutdown grace timeout strictly below orchestrator termination ceiling",
+        "Awaits completion of in-flight HTTP transactions via server.close connection draining",
+        "Sets up an automated forced-exit fallback timer in case in-flight requests hang",
+        "Emits exit code 1 if the grace period expires before connections are drained"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Ordered Infrastructure Teardown & Buffer Flushing",
+      "prompt": "Orchestrate resource deallocation during graceful shutdown, ensuring queue consumers pause, telemetry and logs flush, database pools close cleanly, and process exits with code 0.",
+      "expected_output": "Stops queue consumers, flushes OpenTelemetry and logger buffers, drains database pool and Redis, and calls process.exit(0) with uptime log.",
+      "assertions": [
+        "Halts asynchronous message queue consumers before closing underlying message brokers",
+        "Flushes pending OpenTelemetry spans and structured logging buffers before terminating",
+        "Closes database connection pools and cache clients only after requests are drained",
+        "Terminates cleanly with process exit code 0 and logs total process uptime"
+      ],
+      "files": []
+    }
+  ]
+}

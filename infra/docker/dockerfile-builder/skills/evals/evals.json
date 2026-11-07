@@ -1,0 +1,44 @@
+{
+  "skill_name": "dockerfile-builder",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Multi-Stage Build & Layer Caching Strategy",
+      "prompt": "Author a production Dockerfile for a NestJS application separating dependency installation, compilation, and production runner stages.",
+      "expected_output": "Creates a 3-stage Dockerfile (deps, builder, runner) with BuildKit cache mounts and layer optimization.",
+      "assertions": [
+        "Defines multiple stages using FROM ... AS syntax",
+        "Copies package.json and lockfile before application source code",
+        "Prunes development dependencies before copying to final runner",
+        "Discards build toolchains and compilers from final execution stage"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Non-Root USER Security & Healthcheck Directives",
+      "prompt": "Harden a production Dockerfile runner stage to prevent root container execution and implement a native HTTP healthcheck.",
+      "expected_output": "Configures an unprivileged user (USER node) with pre-assigned permissions and implements a native HEALTHCHECK directive.",
+      "assertions": [
+        "Declares explicit non-root USER instruction in final runner stage",
+        "Sets file ownership using COPY --chown in runtime stage",
+        "Configures native HEALTHCHECK directive with interval, timeout, and retries",
+        "Exposes dynamic application port without hardcoding static bindings"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Base Image Semantic Pinning & .dockerignore Hygiene",
+      "prompt": "Pin base container images to exact semantic versions and author a comprehensive .dockerignore file preventing credential leakage.",
+      "expected_output": "Pins base image tag avoiding :latest and scaffolds .dockerignore excluding node_modules, .env, and git metadata.",
+      "assertions": [
+        "Avoids unpinned :latest tag on all FROM base image declarations",
+        "Generates .dockerignore excluding local node_modules directory",
+        "Excludes .env files and local secrets from build context",
+        "Excludes git metadata (.git) and local test coverage artifacts"
+      ],
+      "files": []
+    }
+  ]
+}

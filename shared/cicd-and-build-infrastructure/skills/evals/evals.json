@@ -1,0 +1,44 @@
+{
+  "skill_name": "cicd-and-build-infrastructure",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Multi-Stage Dockerfile with Non-Root Hardening",
+      "prompt": "Author a multi-stage Dockerfile for a Node.js TypeScript application that installs dependencies using pnpm frozen lockfile, prunes dev dependencies, creates an unprivileged user, and executes as non-root.",
+      "expected_output": "Creates Dockerfile with builder stage compiling app, and production stage copying artifacts to appuser non-root account.",
+      "assertions": [
+        "Defines separate builder and production runtime stages in Dockerfile",
+        "Installs dependencies using deterministic pnpm frozen lockfile command",
+        "Creates custom non-root system group and user with explicit UID",
+        "Declares USER instruction to prevent root container execution in production"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "10-Step Mandatory CI Pull Request Quality Gate",
+      "prompt": "Configure a GitHub Actions CI workflow covering all 10 mandatory steps: lint, format, typecheck, unit tests, integration tests, dependency audit, secret scan, Docker build, Trivy scan, and registry push.",
+      "expected_output": "Defines .github/workflows/ci.yml running 10 quality gates, blocking PR on failures, and pushing only on main merge.",
+      "assertions": [
+        "Configures automated CI trigger on pull requests targeting the main branch",
+        "Executes lint, format, typecheck, unit, and integration test validation gates",
+        "Integrates SAST dependency auditing and GitLeaks secret scanning",
+        "Restricts container registry push step strictly to merged commits on main branch"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Trivy Container Vulnerability Scanning & Immutable Versioning",
+      "prompt": "Implement automated container vulnerability scanning with Trivy in CI, failing the build on critical CVEs, and tagging images with immutable Git commit SHAs instead of latest.",
+      "expected_output": "Adds Trivy step with exit-code 1 on CRITICAL/HIGH, and configures docker build with github.sha tag.",
+      "assertions": [
+        "Integrates Trivy vulnerability scanner targeting built container images",
+        "Sets exit code 1 to block pipeline on unpatched CRITICAL or HIGH severity CVEs",
+        "Tags container images with immutable Git commit SHA identifiers",
+        "Prohibits using the mutable latest tag for production container images"
+      ],
+      "files": []
+    }
+  ]
+}

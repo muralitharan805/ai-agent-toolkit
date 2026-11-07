@@ -1,0 +1,57 @@
+{
+  "catalog_name": "Sensitive Keys and PII Redaction Catalog",
+  "version": "1.0.0",
+  "default_redaction_string": "[REDACTED]",
+  "categories": [
+    {
+      "category": "Authentication & Secrets",
+      "keys": [
+        "password",
+        "passphrase",
+        "secret",
+        "secretkey",
+        "apikey",
+        "privatekey",
+        "clientsecret",
+        "credential"
+      ]
+    },
+    {
+      "category": "Authorization & Tokens",
+      "keys": [
+        "authorization",
+        "token",
+        "refreshtoken",
+        "accesstoken",
+        "jwt",
+        "bearer",
+        "cookie",
+        "sessionid"
+      ]
+    },
+    {
+      "category": "Financial & Payment Data",
+      "keys": [
+        "creditcard",
+        "cardnumber",
+        "cvv",
+        "cvc",
+        "pan",
+        "accountnumber",
+        "iban",
+        "routingnumber"
+      ]
+    },
+    {
+      "category": "Personally Identifiable Information (PII)",
+      "keys": [
+        "ssn",
+        "aadhaar",
+        "dateofbirth",
+        "dob",
+        "nationalid",
+        "taxid"
+      ]
+    }
+  ]
+}

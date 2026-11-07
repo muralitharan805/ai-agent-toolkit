@@ -1,0 +1,44 @@
+{
+  "skill_name": "compose-architect",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Mandatory 6-File Compose Topology Scaffolding",
+      "prompt": "Scaffold a multi-environment Docker Compose architecture supporting local development hot-reloading, standalone production, shared infrastructure, and zero-VPS remote image deployment.",
+      "expected_output": "Creates all 6 modular compose files (base, override, prod, shared, existing-infra, repo) adhering to separation of concerns.",
+      "assertions": [
+        "Defines base docker-compose.yml with application container and internal bridge network",
+        "Generates docker-compose.override.yml with development volume bind mounts",
+        "Configures docker-compose.existing-infra.yml attaching to external database networks",
+        "Provides docker-compose.repo.yml for pulling pre-built registry images without compilation"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Dynamic Port Mapping & Zero-Hardcoded Secrets",
+      "prompt": "Configure service port mappings and database credentials across Docker Compose files while eliminating hardcoded passwords and static ports.",
+      "expected_output": "Interpolates host ports dynamically using ${HOST_PORT:-${PORT:-3000}} and binds secrets exclusively via environment variables.",
+      "assertions": [
+        "Maps ports dynamically using ${HOST_PORT:-${PORT:-3000}}:${PORT:-3000}",
+        "Interpolates database passwords and JWT secrets from environment variables",
+        "Avoids plain-text credentials in version-controlled compose files",
+        "Provides sensible fallback values for non-sensitive configuration parameters"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Condition-Based Healthcheck Dependency Sequencing",
+      "prompt": "Configure dependent application containers to wait for PostgreSQL and Redis to become fully operational before starting execution.",
+      "expected_output": "Defines healthchecks for stateful services and configures depends_on with condition: service_healthy.",
+      "assertions": [
+        "Implements pg_isready healthcheck for PostgreSQL service",
+        "Implements redis-cli ping healthcheck for Redis service",
+        "Configures depends_on using condition: service_healthy on application service",
+        "Specifies interval, timeout, retries, and start_period health parameters"
+      ],
+      "files": []
+    }
+  ]
+}

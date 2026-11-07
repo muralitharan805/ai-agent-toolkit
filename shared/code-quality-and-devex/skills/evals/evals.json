@@ -1,0 +1,44 @@
+{
+  "skill_name": "code-quality-and-devex",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Strict TypeScript Configuration & Zero any Enforcement",
+      "prompt": "Configure a production tsconfig.json with strict compiler checks, noImplicitAny, strictNullChecks, and verify that any explicit any annotations are prohibited.",
+      "expected_output": "Configures strict compiler flags in tsconfig.json, rejects explicit any types, and applies unknown with type narrowing.",
+      "assertions": [
+        "Enables strict mode in TypeScript compiler configuration",
+        "Enables noImplicitAny and strictNullChecks to eliminate unhandled nullability bugs",
+        "Enforces replacement of explicit any types with unknown or specific interfaces",
+        "Ensures compiler does not allow silent type-checking bypasses"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Staged Pre-Commit Quality Gate with Husky & lint-staged",
+      "prompt": "Set up a pre-commit hook using Husky and lint-staged to run ESLint autofix, Prettier formatting, and type-checking on staged files before commit creation.",
+      "expected_output": "Initializes Husky pre-commit hook executing lint-staged on modified files with ESLint, Prettier, and tsc typecheck.",
+      "assertions": [
+        "Installs and configures Husky pre-commit hook script",
+        "Restricts linter and formatter execution to git staged files via lint-staged",
+        "Rejects git commits containing unresolvable linter errors or formatting deviations",
+        "Guarantees sub-second pre-commit feedback loops for developer velocity"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Conventional Commits Enforcement & Pre-Commit Secret Scanning",
+      "prompt": "Configure commitlint with Conventional Commits 1.0.0 rules via commit-msg hook, and integrate GitLeaks to block commits containing hardcoded credentials.",
+      "expected_output": "Sets up commitlint.config.js with conventional types, configures .husky/commit-msg, and adds GitLeaks protect to pre-commit hook.",
+      "assertions": [
+        "Configures @commitlint/cli with @commitlint/config-conventional standard rules",
+        "Validates commit header syntax according to <type>(<scope>): <description> format",
+        "Integrates GitLeaks pre-commit hook to scan staged diffs for leaked secrets",
+        "Blocks git commit execution immediately if an unredacted secret token is detected"
+      ],
+      "files": []
+    }
+  ]
+}

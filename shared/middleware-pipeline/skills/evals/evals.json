@@ -1,0 +1,44 @@
+{
+  "skill_name": "middleware-pipeline",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Deterministic 15-Step Middleware Ordering & Error Handler Positioning",
+      "prompt": "Inspect an Express server pipeline where the global error handler is mounted before the router and body compression is placed after body parsing, and refactor it into standard sequential order.",
+      "expected_output": "Reorders middlewares to mount Correlation ID, Real IP, Logger, Security Headers, CORS, Compression, Body Parser, Routes, and places the Error Handler as the final terminal middleware.",
+      "assertions": [
+        "Ensures global RFC-7807 error handler is mounted as the terminal (final) middleware",
+        "Positions compression middleware before body parser to avoid parse corruption",
+        "Injects correlation ID and real IP resolver before logging and security checks",
+        "Mounts versioned API router under '/api/v1' prefix"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Server Timeout & Keep-Alive Hardening for Cloud Load Balancers",
+      "prompt": "Configure an HTTP server instance deployed behind an AWS Application Load Balancer (60s idle timeout) to prevent 502 connection dropouts and Slowloris attacks.",
+      "expected_output": "Configures keepAliveTimeout to 65s, headersTimeout to 66s, and requestTimeout to 30s.",
+      "assertions": [
+        "Sets keepAliveTimeout to at least 65000ms to exceed ALB 60s idle timeout",
+        "Ensures headersTimeout strictly exceeds keepAliveTimeout",
+        "Enforces request read timeout of 30s to mitigate Slowloris resource exhaustion",
+        "Eliminates race condition where Node.js closes TCP connections during ALB transit"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Reverse Proxy Real IP Extraction & Rate Limiter Shielding",
+      "prompt": "Configure a rate limiter middleware for a service behind Cloudflare and an Nginx reverse proxy so rate limiting does not throttle the proxy internal IP.",
+      "expected_output": "Enables proxy trust and extracts true client IP using CF-Connecting-IP and X-Forwarded-For before executing the rate limiter.",
+      "assertions": [
+        "Enables proxy trust configuration (e.g. 'trust proxy: true')",
+        "Resolves client IP from verified upstream headers ('CF-Connecting-IP', 'X-Forwarded-For')",
+        "Prevents applying rate-limiting buckets to reverse proxy gateway IP addresses",
+        "Ensures legitimate users behind shared proxies maintain independent rate quotas"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+# ==============================================================================
+# Base Application Service Definition
+# ==============================================================================
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    ports:
+      - "${HOST_PORT:-${PORT:-3000}}:${PORT:-3000}"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-3000}
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-app_db}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@${REDIS_HOST:-redis}:${REDIS_PORT:-6379}
+    networks:
+      - internal_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:${PORT:-3000}/api/v1/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  internal_net:
+    driver: bridge

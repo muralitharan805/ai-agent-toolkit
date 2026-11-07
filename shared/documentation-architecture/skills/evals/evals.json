@@ -1,0 +1,44 @@
+{
+  "skill_name": "documentation-architecture",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Deterministic 5-Minute Developer Quick Start README",
+      "prompt": "Author a root README.md for a backend service providing prerequisites, one-command Docker Compose setup, frozen dependency install, database migrations, and verification health curl.",
+      "expected_output": "Creates README.md with prerequisites, step-by-step quick start using docker compose up, and curl health check verification.",
+      "assertions": [
+        "Includes a clear single-sentence summary of the service domain responsibilities",
+        "Declares explicit runtime prerequisites including Docker Compose and package manager",
+        "Outlines deterministic quick start instructions runnable within 5 minutes",
+        "Provides an explicit verification step using the readiness health endpoint"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Six-Pillar Technical Runbook Suite Setup",
+      "prompt": "Structure a docs/ directory covering the six mandatory architectural runbooks: architecture.md, development.md, testing.md, deployment.md, database.md, and troubleshooting.md.",
+      "expected_output": "Scaffolds docs/ folder with 6 pillar runbooks including architecture design, dev guides, and incident troubleshooting.",
+      "assertions": [
+        "Creates structured docs/ directory containing all six technical runbooks",
+        "Documents Clean Architecture layer topology and external system dependencies",
+        "Provides actionable production incident response and troubleshooting playbooks",
+        "Links technical runbooks directly from the main project README"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Declarative Mermaid Diagramming & Changelog Governance",
+      "prompt": "Embed a version-controlled Mermaid diagram in architecture.md illustrating system data flow, and initialize CHANGELOG.md adhering to the Keep a Changelog standard.",
+      "expected_output": "Adds Mermaid graph TD to architecture.md and initializes CHANGELOG.md with Added, Changed, and Fixed sections.",
+      "assertions": [
+        "Embeds declarative Mermaid.js diagrams directly within markdown documentation",
+        "Avoids unversioned binary images or external links for core system diagrams",
+        "Initializes root CHANGELOG.md adhering to the Keep a Changelog standard",
+        "Groups release modifications under standard semantic category headers"
+      ],
+      "files": []
+    }
+  ]
+}

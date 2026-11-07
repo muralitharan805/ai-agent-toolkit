@@ -1,0 +1,44 @@
+{
+  "skill_name": "resume-engineering-and-ats-optimization",
+  "evals": [
+    {
+      "id": 1,
+      "name": "ATS Parsing Simulation & 9-Part Scorecard Generation",
+      "prompt": "Act as a strict Senior Technical Recruiter and ATS Auditor. Review my resume text for a Senior Full Stack Developer role with 5 years experience specializing in Angular, Node.js, NestJS, MySQL, and AI Semantic Search. Generate the 9-part audit report.",
+      "expected_output": "Produces structured 9-part audit report with executive verdict, /10 scorecard across 10 dimensions, critical issues table, and honest shortlist decision without claiming real ATS execution.",
+      "assertions": [
+        "Audit outputs Part 1 to Part 9 adhering to the structured review format",
+        "ATS Scorecard includes heuristic ratings out of 10 for technical relevance, ATS readability, and seniority calibration",
+        "Identifies and flags formatting risks such as multi-column layouts or decorative tables",
+        "Prohibits claiming real ATS execution unless an actual parsing engine was run"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Bullet Impact Refactoring with Zero Metric Fabrication",
+      "prompt": "Rewrite these duty-style bullets: 'Responsible for writing APIs in NestJS' and 'Worked on AI semantic search with vector embeddings'. Do not fabricate numbers.",
+      "expected_output": "Transforms bullets into Action + Tech + Problem Solved + Measurable Outcome structure using strong engineering verbs and explicit metric placeholders without hallucinating fake numbers.",
+      "assertions": [
+        "Transforms bullets into Action + Tech + Problem Solved + Measurable Outcome structure",
+        "Replaces passive verbs (Responsible for, Worked on) with strong engineering action verbs",
+        "Uses explicit metric placeholders like [by X%] or [reducing latency by Y ms] instead of hallucinating fake numbers",
+        "Formulates clarifying questions to discover verifiable metrics from the candidate"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Career Switch Calibration (Marketing to Engineering)",
+      "prompt": "Evaluate candidate background with 5 years of software development (March 2021-Present) preceded by 4.5 years in Email Marketing (2016-2021). Frame career switch appropriately.",
+      "expected_output": "Accurately separates 5+ years of dedicated software development tenure from total career history, framing earlier marketing tenure as professional maturity without engineering penalty or resume visual dilution.",
+      "assertions": [
+        "Separates software engineering tenure (5+ years) from total career history without conflating them",
+        "Does not represent total career experience as 9 years of software development",
+        "Frames earlier marketing tenure as an intentional professional maturity asset rather than an engineering penalty or gap",
+        "Allocates 90%+ of resume visual space to verified software engineering achievements"
+      ],
+      "files": []
+    }
+  ]
+}

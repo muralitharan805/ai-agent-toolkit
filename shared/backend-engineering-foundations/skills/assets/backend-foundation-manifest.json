@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BackendFoundationManifest",
+  "description": "Baseline verification schema for language-agnostic production backend foundations.",
+  "type": "object",
+  "required": [
+    "serviceName",
+    "runtime",
+    "pillars",
+    "scaffoldingPhases"
+  ],
+  "properties": {
+    "serviceName": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "runtime": {
+      "type": "string",
+      "enum": ["nodejs-nestjs", "java-springboot", "go-standard", "python-fastapi", "dotnet-core", "rust-axum"]
+    },
+    "pillars": {
+      "type": "object",
+      "required": [
+        "reliable",
+        "predictable",
+        "observable",
+        "secure",
+        "testable",
+        "deployable",
+        "maintainable"
+      ],
+      "properties": {
+        "reliable": {
+          "type": "object",
+          "properties": {
+            "transactionalOutboxEnabled": { "type": "boolean" },
+            "idempotencyLockTtlSeconds": { "type": "integer", "minimum": 60 },
+            "circuitBreakerThreshold": { "type": "number", "minimum": 0.1, "maximum": 1.0 }
+          },
+          "required": ["transactionalOutboxEnabled", "idempotencyLockTtlSeconds"]
+        },
+        "predictable": {
+          "type": "object",
+          "properties": {
+            "failFastConfigEnabled": { "type": "boolean" },
+            "preStopDrainDurationSeconds": { "type": "integer", "minimum": 5 },
+            "primaryKeyType": { "type": "string", "enum": ["uuidv7", "snowflake-64bit"] }
+          },
+          "required": ["failFastConfigEnabled", "preStopDrainDurationSeconds", "primaryKeyType"]
+        },
+        "observable": {
+          "type": "object",
+          "properties": {
+            "structuredJsonLogs": { "type": "boolean" },
+            "correlationIdHeader": { "type": "string", "default": "X-Correlation-ID" },
+            "redMetricsEnabled": { "type": "boolean" },
+            "separateStartupLivenessReadiness": { "type": "boolean" }
+          },
+          "required": ["structuredJsonLogs", "redMetricsEnabled", "separateStartupLivenessReadiness"]
+        },
+        "secure": {
+          "type": "object",
+          "properties": {
+            "refreshCookieHttpOnly": { "type": "boolean" },
+            "parameterStrippingEnabled": { "type": "boolean" },
+            "rowLevelSecurityEnabled": { "type": "boolean" }
+          },
+          "required": ["refreshCookieHttpOnly", "parameterStrippingEnabled"]
+        },
+        "testable": {
+          "type": "object",
+          "properties": {
+            "testcontainersIsolation": { "type": "boolean" },
+            "timeFreezingSupported": { "type": "boolean" },
+            "unitIntegrationRatio": { "type": "string", "default": "70/20/10" }
+          },
+          "required": ["testcontainersIsolation", "timeFreezingSupported"]
+        },
+        "deployable": {
+          "type": "object",
+          "properties": {
+            "expandContractMigrations": { "type": "boolean" },
+            "nonRootContainerUser": { "type": "boolean" },
+            "lockTimeoutSeconds": { "type": "integer", "maximum": 5 }
+          },
+          "required": ["expandContractMigrations", "nonRootContainerUser", "lockTimeoutSeconds"]
+        },
+        "maintainable": {
+          "type": "object",
+          "properties": {
+            "livingOpenApiVersion": { "type": "string", "default": "3.1" },
+            "adrCatalogPath": { "type": "string", "default": "docs/adr" }
+          },
+          "required": ["livingOpenApiVersion"]
+        }
+      }
+    },
+    "scaffoldingPhases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["day", "name", "completed"],
+        "properties": {
+          "day": { "type": "integer", "minimum": 0, "maximum": 4 },
+          "name": { "type": "string" },
+          "completed": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

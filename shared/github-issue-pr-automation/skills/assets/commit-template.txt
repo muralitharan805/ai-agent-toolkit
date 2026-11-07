@@ -1,0 +1,16 @@
+# <type>(<scope>): <short summary in imperative mood, max 72 chars>
+#
+# | Type     | Description                                           |
+# |----------|-------------------------------------------------------|
+# | feat     | A new feature or functionality                        |
+# | fix      | A bug fix or patch                                    |
+# | docs     | Documentation updates only                            |
+# | refactor | Code refactoring (no behavior change, no bug fix)    |
+# | test     | Adding or fixing test suites                          |
+# | perf     | Performance improvements                              |
+# | ci       | CI/CD pipelines and deployment scripts                |
+# | chore    | Maintenance, dependencies, tooling updates            |
+#
+# [Optional detailed body explaining what changed and why]
+#
+# [Optional footer: Closes #<issue-id> or BREAKING CHANGE: <reason>]

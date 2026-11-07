@@ -1,0 +1,44 @@
+{
+  "skill_name": "angular-strapi-integration",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Type-Safe Strapi Client & SSR TransferState Caching",
+      "prompt": "Implement a generic StrapiService in Angular utilizing TransferState caching to prevent duplicate API queries during SSR hydration.",
+      "expected_output": "Creates StrapiService with getWithTransferState() checking transferState.hasKey on client and transferState.set on server using isPlatformBrowser.",
+      "assertions": [
+        "Implements StrapiService with generic get and getWithTransferState methods",
+        "Utilizes TransferState makeStateKey to serialize data on the server",
+        "Consumes and evicts transferred state on client hydration",
+        "Injects PLATFORM_ID to guard server vs browser execution"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Dynamic Media Resolution & StrapiMediaPipe",
+      "prompt": "Build a standalone StrapiMediaPipe to resolve relative Strapi upload paths against environment.strapiApiUrl while preserving absolute cloud storage URLs.",
+      "expected_output": "Creates a standalone pipe that returns absolute URLs untouched and prepends baseUrl to relative paths starting with /.",
+      "assertions": [
+        "Declares standalone pipe with name strapiMedia",
+        "Preserves external absolute URLs beginning with http:// or https://",
+        "Prepends configured baseUrl to relative media paths",
+        "Handles null, undefined, and empty string inputs gracefully"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Zero-Hardcoding Invariant & Proactive Schema Prompting",
+      "prompt": "Enforce zero hardcoded copy in Angular components consuming Strapi and provide a proactive schema prompt when a required field is absent from the CMS.",
+      "expected_output": "Binds all copy dynamically from Strapi models and outputs a copy-pasteable prompt for Strapi when required schema fields are missing.",
+      "assertions": [
+        "Enforces zero hardcoded text strings in component templates",
+        "Defines typed StrapiDocument interfaces with flat v5 schema properties",
+        "Provides structured proactive schema prompt template for missing CMS fields",
+        "Enforces zero explicit any type annotations across models and services"
+      ],
+      "files": []
+    }
+  ]
+}

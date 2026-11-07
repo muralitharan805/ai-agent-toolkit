@@ -1,0 +1,70 @@
+{
+  "skill_name": "solution-strategy",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Non-Software Spreadsheet Sufficiency Gate",
+      "prompt": "Evaluate solution strategy for an accounting firm struggling with invoice reconciliation where a standardized Excel template with validation formulas eliminates 85% of errors.",
+      "expected_output": "Non-software sufficiency gate passes with STRUCTURED_SPREADSHEET. Software development is rejected. SaaS is marked REJECTED. Reversibility is TYPE_2.",
+      "assertions": [
+        "Evaluates non-software sufficiency first",
+        "Selects STRUCTURED_SPREADSHEET class",
+        "Rejects unnecessary software development",
+        "Marks SaaS status REJECTED"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Single-User Local Script Selection",
+      "prompt": "Evaluate solution strategy for a developer processing local log dumps into CSV on their personal workstation, with no remote collaboration.",
+      "expected_output": "Constraint audit indicates single_user_only=true, local_data_only=true, desktop_access=true. Selects LOCAL_SCRIPT class. SaaS is marked REJECTED. Reversibility is TYPE_2. Defines STS script pilot.",
+      "assertions": [
+        "Identifies single_user_only and local_data_only constraints",
+        "Selects LOCAL_SCRIPT class",
+        "Rejects SaaS development as over-engineering",
+        "Defines local script STS pilot"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Browser Workflow Surface Selection",
+      "prompt": "Evaluate solution strategy for a sales recruiter repeating a manual data-entry flow across LinkedIn web pages where official APIs are unavailable.",
+      "expected_output": "Constraint audit indicates browser_only_surface=true, api_integrations_available=false. Selects BROWSER_EXTENSION class. Notes DOM fragility risks. SaaS is marked REJECTED.",
+      "assertions": [
+        "Identifies browser-only surface constraint",
+        "Selects BROWSER_EXTENSION class",
+        "Documents third-party DOM fragility risks",
+        "Avoids full SaaS platform over-engineering"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Headless Integration Service Selection",
+      "prompt": "Evaluate solution strategy for e-commerce orders needing automated synchronization between Shopify webhooks and QuickBooks API on a recurring schedule with no interactive UI needed.",
+      "expected_output": "Constraint audit indicates api_integrations_available=true, background_execution=true, cloud_sync=true, UI need minimal. Selects INTEGRATION_SERVICE. SaaS UI is marked NOT_YET_JUSTIFIED. Defines headless worker STS.",
+      "assertions": [
+        "Recognizes API availability and background execution requirements",
+        "Selects INTEGRATION_SERVICE class",
+        "Gates SaaS UI as NOT_YET_JUSTIFIED",
+        "Defines headless worker STS"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "SaaS Justification Gate Passing",
+      "prompt": "Evaluate solution strategy for a candidate with proven multi-user team workflows, persistent cloud state, background queue processing, role-based permissions, and verified recurring commercial willingness to pay.",
+      "expected_output": "Constraint audit proves multi_user_required=true, cloud_sync=true, background_jobs=true, commercial_wtp=true. Passes SaaS justification gate as STRONG_CANDIDATE. Selects MULTI_TENANT_SAAS. Reversibility is TYPE_1. Defines STS concierge pilot.",
+      "assertions": [
+        "Applies 7-point SaaS justification scorecard",
+        "Validates multi-user and commercial WTP requirements",
+        "Classifies SaaS as STRONG_CANDIDATE",
+        "Designates TYPE_1 reversibility tier and concierge STS"
+      ],
+      "files": []
+    }
+  ]
+}

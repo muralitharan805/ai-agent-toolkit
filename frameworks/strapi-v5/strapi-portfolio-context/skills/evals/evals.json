@@ -1,0 +1,44 @@
+{
+  "skill_name": "strapi-portfolio-context",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Portfolio Collections & Single Types Schema Scaffolding",
+      "prompt": "Scaffold a complete Strapi v5 portfolio backend schema declaring Project, Skill, Experience, and Article collections along with Global and About single types.",
+      "expected_output": "Generates schema.json files adhering to Strapi v5 conventions with draftAndPublish and relational mappings.",
+      "assertions": [
+        "Defines schema.json for Project, Skill, Experience, and Article collection types",
+        "Declares Global and About single types for global site settings",
+        "Enables draftAndPublish: true on Project and Article collections",
+        "Implements many-to-many relation between Project and Skill entities"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "UID Slugs & Blocks Rich Content Architecture",
+      "prompt": "Configure slug attributes across Strapi v5 collections using UID type and structure article content using the modern Blocks editor.",
+      "expected_output": "Configures type: uid attached to title/name targetField and declares content using type: blocks.",
+      "assertions": [
+        "Sets slug attributes with type: uid targeting title or name fields",
+        "Uses modern type: blocks for rich text content rather than plain text strings",
+        "Defines Shared.Seo and Shared.SocialLink reusable components",
+        "Ensures slugs are unique and indexed for frontend SPA routing"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Public Role Permission & Media Storage Guidelines",
+      "prompt": "Instruct on configuring Public role permissions for frontend consumption and establishing cloud media storage providers.",
+      "expected_output": "Details granting find/findOne permissions in Strapi Admin and warns against local public/uploads in production.",
+      "assertions": [
+        "Specifies granting find and findOne permissions to Public role in Admin UI",
+        "Recommends third-party upload providers (Cloudinary/S3) over local public/uploads",
+        "Enforces pnpm package manager for all Strapi plugin installations",
+        "Documents the flat REST API response structure of Strapi v5"
+      ],
+      "files": []
+    }
+  ]
+}

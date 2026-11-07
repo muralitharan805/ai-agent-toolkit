@@ -1,0 +1,44 @@
+{
+  "skill_name": "chrome-devtools",
+  "evals": [
+    {
+      "id": 1,
+      "name": "SPA Hydration & Accessibility Tree Snapshotting",
+      "prompt": "Navigate to an Angular single-page application utilizing Signals reactivity, synchronize component hydration, and extract interactive element UIDs via accessibility tree snapshotting.",
+      "expected_output": "Verifies server readiness, waits for reactive signal resolution, executes take_snapshot, maps element UIDs without blind sleep delays, and prepares interaction targets.",
+      "assertions": [
+        "Verifies dev server port reachability prior to browser navigation",
+        "Waits for signal hydration and network idle before DOM query",
+        "Executes take_snapshot to retrieve compact accessibility tree and element UIDs",
+        "Discovers interactive element UIDs without relying on brittle CSS selectors"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "WCAG 2.1 AA Mobile Touch Target & Contrast Audit",
+      "prompt": "Audit a mobile web page layout on a 375px viewport for WCAG 2.1 AA compliance, checking touch target sizes and text contrast ratios.",
+      "expected_output": "Inspects touch targets for 44x44px minimum bounding box, verifies 4.5:1 text contrast ratio, and checks semantic landmarks.",
+      "assertions": [
+        "Enforces minimum 44x44px touch target dimensions on mobile controls",
+        "Verifies normal body text maintains at least 4.5:1 contrast against surface",
+        "Validates presence of single h1 tag and semantic landmarks",
+        "Outputs structured audit results with identified pass/fail criteria"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Interactive UI State Assertion & Visual Verification",
+      "prompt": "Trigger a form submission flow in the browser, assert reactive DOM mutation, capture a visual screenshot artifact, and update the walkthrough report.",
+      "expected_output": "Interacts with form inputs via explicit UIDs, re-takes snapshot to verify updated DOM state, saves screenshot artifact to brain, and documents visual proof.",
+      "assertions": [
+        "Interacts with form controls using explicit element UIDs",
+        "Re-fetches DOM snapshot after state mutation to confirm DOM update",
+        "Captures visual screenshot and saves to active workspace brain directory",
+        "Rejects speculative execution without empirical DOM or visual proof"
+      ],
+      "files": []
+    }
+  ]
+}

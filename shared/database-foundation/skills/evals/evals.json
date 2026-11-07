@@ -1,0 +1,44 @@
+{
+  "skill_name": "database-foundation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Production Connection Pool Sizing & Timeout Defense",
+      "prompt": "Configure database connection pool settings for a high-traffic microservice in production, enforcing minimum/maximum connections, acquire timeouts, and query statement timeouts to prevent connection exhaustion.",
+      "expected_output": "Configures connection pool with min 2, max 10, acquire timeout 30s, idle timeout 10m, and query timeout 30s with SSL enabled.",
+      "assertions": [
+        "Configures pool.min (>= 2) to maintain warm connections and eliminate handshake latency",
+        "Configures pool.max (e.g. 10) to prevent database thread exhaustion and connection starvation",
+        "Enforces acquireTimeout (30s) to fail fast when pool is exhausted instead of hanging requests",
+        "Enforces statement or queryTimeout (30s) to terminate runaway unindexed queries"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Versioned Idempotent SQL Migrations & Audit Columns",
+      "prompt": "Author a database migration file creating an orders table that adheres to production standards: idempotent guards, both up and down migrations, and mandatory audit columns with soft deletion.",
+      "expected_output": "Generates idempotent SQL up/down migration with UUID primary key, created_at, updated_at, deleted_at, created_by, and updated_by.",
+      "assertions": [
+        "Provides both forward (up) and rollback (down) SQL migration blocks",
+        "Includes idempotent guards (IF NOT EXISTS, IF EXISTS) across table and index statements",
+        "Includes mandatory audit columns: created_at, updated_at, and nullable deleted_at for soft deletes",
+        "Strictly avoids automatic schema synchronization (synchronize: true) in production"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Foreign Key Indexing & Slow Query Telemetry",
+      "prompt": "Review a relational schema to ensure foreign keys are indexed with partial filters for soft deletes, and configure slow query logging for operations taking more than 200ms.",
+      "expected_output": "Creates explicit indexes for foreign key columns with partial filters for active records and logs queries exceeding 200ms threshold.",
+      "assertions": [
+        "Creates explicit index for foreign key columns to prevent table locks and full-table scans",
+        "Applies partial index filter (WHERE deleted_at IS NULL) to optimize index footprint",
+        "Logs database queries taking longer than 200ms as structured WARN events",
+        "Sanitizes query strings to ensure credentials or PII parameters are not logged"
+      ],
+      "files": []
+    }
+  ]
+}

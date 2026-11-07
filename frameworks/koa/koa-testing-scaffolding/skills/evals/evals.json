@@ -1,0 +1,69 @@
+{
+  "skill": "koa-testing-scaffolding",
+  "evals": [
+    {
+      "id": "eval-scaffold-dir-structure",
+      "prompt": "Set up a complete test suite directory structure and Vitest configuration for our Koa backend with Sequelize and MySQL.",
+      "assertions": [
+        {
+          "type": "directory_exists",
+          "path": "tests/unit/services",
+          "description": "Ensures unit testing services directory is created"
+        },
+        {
+          "type": "directory_exists",
+          "path": "tests/integration/transactions",
+          "description": "Ensures transaction integration directory is created"
+        },
+        {
+          "type": "directory_exists",
+          "path": "tests/api/auth",
+          "description": "Ensures API route testing directory is created"
+        },
+        {
+          "type": "content_match",
+          "target": "vitest.config.js",
+          "pattern": "coverage:\\s*\\{[\\s\\S]*?provider:\\s*'v8'",
+          "description": "Asserts Vitest uses V8 coverage provider"
+        }
+      ]
+    },
+    {
+      "id": "eval-transaction-rollback-pattern",
+      "prompt": "Write a database integration test for PropertyService ensuring transaction rollback when an error occurs.",
+      "assertions": [
+        {
+          "type": "content_match",
+          "pattern": "sequelize\\.transaction\\(\\)",
+          "description": "Verifies that an uncommitted transaction is initialized"
+        },
+        {
+          "type": "content_match",
+          "pattern": "transaction\\.rollback\\(\\)",
+          "description": "Verifies that transaction is rolled back in afterEach"
+        },
+        {
+          "type": "prohibition",
+          "pattern": "vi\\.mock\\(.*models",
+          "description": "Prohibits mocking Sequelize models in database integration tests"
+        }
+      ]
+    },
+    {
+      "id": "eval-idor-security-test",
+      "prompt": "Create an API test asserting that User B cannot delete a resource owned by User A.",
+      "assertions": [
+        {
+          "type": "content_match",
+          "pattern": "supertest|request\\(app\\.callback\\(\\)\\)",
+          "description": "Verifies that Supertest wraps app.callback()"
+        },
+        {
+          "type": "content_match",
+          "pattern": "expect\\(.*status\\)\\.toBe\\(403\\)",
+          "description": "Asserts 403 Forbidden is returned on unauthorized resource access"
+        }
+      ]
+    }
+  ]
+}

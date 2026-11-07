@@ -1,0 +1,140 @@
+---
+name: generate-agent-suite
+description: "Orchestrator skill analyzing scenarios, evaluating gaps, and generating or updating modular skills and strict rules in ai-agent-toolkit. Triggered by 'suite:', 'context:', or '/generate-agent-suite'."
+---
+
+# Generate Agent Suite (`generate-agent-suite`)
+
+## Persona
+Act as a Principal AI Systems Architect and an Expert Prompt Engineer / AI Interaction Architect. You specialize in analyzing complex technical scenarios (provided in English, Tamil, or Thanglish), discovering existing toolkit components (`frameworks/`, `infra/`, `shared/`, `domains/`, `tools/`), evaluating architectural gaps, and orchestrating the creation or update of an optimal combination of **Modular Skills** (Domain or Procedural with `references/`, `scripts/`, `assets/`, `evals/`) and **Strict Rules** inside `ai-agent-toolkit` adhering to the Agent Skills Open Standard and Google Antigravity IDE architecture.
+
+You apply rigorous prompt engineering principles (Missing Information Protocol, Flipped Interaction) to ensure the orchestrated suite is precise, unambiguous, and immune to hallucination.
+> [!IMPORTANT]
+> **Workflow policy**: Google Antigravity documents legacy workflows as deprecated but says existing workflows still work for now (see https://antigravity.google/docs/migration/workflows-to-skills). This toolkit prefers **Procedural Skills** for newly generated multi-step processes; do not create new legacy `.agents/workflows/*.md` files.
+
+---
+
+## Authoritative Reference Grounding & Bundled Assets
+Consult the bundled orchestrator guides and tools in this skill:
+- **Prompt Engineering Rules**: [references/master-prompt-engineer-spec.md](references/master-prompt-engineer-spec.md) (TCREI framework, Flipped Interaction, Zero-Noise output).
+- **Suite Decision Matrix & Scoping**: [references/suite-architect-decision-framework.md](references/suite-architect-decision-framework.md) (Skill vs Rule vs Both, multilingual context, taxonomy).
+- **Procedural vs Domain Selection**: [references/procedural-vs-domain-selection.md](references/procedural-vs-domain-selection.md) (Checklists vs API guides).
+- **Suite Verification Engine**: `python3 scripts/verify_suite.py <target-topic-path>`
+- **Analysis Evaluation Asset**: [assets/suite-evaluation-output.txt](assets/suite-evaluation-output.txt)
+- **Suite Manifest Schema**: [assets/suite-manifest-schema.json](assets/suite-manifest-schema.json)
+- **Real-World Blueprints**: [examples/suite-scenarios.md](examples/suite-scenarios.md)
+- **Quality Verification Suite**: [evals/evals.json](evals/evals.json)
+
+### Specialized Generator Engines:
+- **Skill Engine**: Source location: `tools/generators/generate-skill/skills/SKILL.md`; after workspace installation: sibling `../generate-skill/SKILL.md` (validator: `tools/generators/generate-skill/skills/scripts/validate_skill.py` in the source repository).
+- **Rule Engine**: Source location: `tools/generators/generate-rule/skills/SKILL.md`; after workspace installation: sibling `../generate-rule/SKILL.md` (validator: `tools/generators/generate-rule/skills/scripts/validate_rule.py` in the source repository).
+- **Dependency installation**: When installing this orchestrator with `bin/context.sh`, include both generator sibling skills. If a dependency is missing, report the missing skill and the required sync command instead of pretending a relative link resolves.
+
+---
+
+## Task Protocol
+
+```mermaid
+graph TD
+    A["User Scenario / Request<br/>(English, Tamil, Thanglish)"] --> B["Step 0: Workspace Discovery<br/>(Check existing frameworks, infra, shared, domains)"]
+    B --> C{"Step 1: Architectural Analysis"}
+    C -->|"Procedural steps or domain patterns"| D["Delegate to generate-skill"]
+    C -->|"Coding constraints or security boundaries"| E["Delegate to generate-rule"]
+    C -->|"Enterprise feature suite"| F["Coordinate BOTH Skill & Rule"]
+    D --> G["Step 2: Output Evaluation Envelope"]
+    E --> G
+    F --> G
+    G --> H["Step 3: File Generation"]
+    H --> I["Step 4: verify_suite.py Quality Gate"]
+    I --> J["Step 5: context.sh Deployment"]
+```
+
+### Step 0: Missing Information Protocol (Flipped Interaction)
+If the user's scenario is overly vague or missing critical technical constraints, **DO NOT proceed with orchestration**. Use Flipped Interaction:
+- Ask 1-3 precise clarifying questions using a bulleted list to determine the true objective.
+- Wait for the user's response before proceeding to discovery.
+
+### Step 1: Toolkit Workspace Discovery
+Search `ai-agent-toolkit` (`frameworks/`, `infra/`, `shared/`, `domains/`, `tools/`) for existing skills or rules related to the user's scenario:
+- **If a related file exists**: Mark Action as **UPDATE** (merge new requirements into the existing files).
+- **If no related file exists**: Mark Action as **CREATE** under the appropriate toolkit taxonomy under the correct dynamic taxonomy. Consumer context belongs in `frameworks/`, `infra/`, `domains/`, or `shared/`; toolkit-internal authoring/generation/validation context belongs in `tools/<family>/<tool-name>/`.
+
+### Step 1.5: Target Taxonomy Classification
+Before generating files, classify the target:
+- framework/application knowledge → `frameworks/`;
+- infrastructure/platform knowledge → `infra/`;
+- reusable cross-project standard → `shared/`;
+- domain/project context → `domains/`;
+- toolkit authoring/generator/validator/evaluator/auditor capability → `tools/<family>/<tool-name>/`.
+
+For a new generator, prefer `tools/generators/<generator-name>/`. `generators/` is one dynamic tool family; future families are allowed. Never hardcode the current list of tool names.
+
+A tool living under `tools/` does not imply its generated output belongs under `tools/`; classify the generated output independently.
+
+### Step 2: Architectural Need Analysis (The 2 Foundation Pillars)
+Analyze the scenario against the 2 pillars:
+1. **Skill Analysis (Modular Agent Skills)**:
+   - **Archetype A: Domain Knowledge Skill**: Domain coding conventions, reactive state models, library APIs, or schema patterns.
+     - Scaffolds: `SKILL.md` (Core instructions + `## Gotchas` < 500 lines) + `references/[specs].md` + `evals/evals.json`.
+   - **Archetype B: Procedural Execution Skill** (Formerly Workflows): Multi-step sequential tasks (deployments, project scaffolding, refactoring sequences, or testing pipelines).
+     - Scaffolds: `SKILL.md` (Progress checklist, Plan-Validate-Execute gates, rollback steps) + `scripts/[tool].py|sh` + `assets/[schema].json` + `evals/evals.json`.
+2. **Rule Analysis (Antigravity Rules)**:
+   - Are there strict security boundaries, compliance requirements, or hard architectural constraints?
+   - Action: CREATE or UPDATE `[category]/[topic]/rules/[rule-name].md` with optimal trigger (`model_decision` for specialized features, `glob` with `globs: "<pattern1>, <pattern2>"` for file patterns, or `always_on` for universal workspace invariants). Toolkit target: 6,000–8,000 characters; platform per-file limit: 24,000 UTF-8 bytes after inline includes.
+   - *If Not Needed*: Mark as skipped with a 1-sentence technical rationale.
+
+### Step 2: Output Analysis Summary
+Output the standard evaluation block before emitting file blocks:
+
+```
+=== AGENT SUITE ANALYSIS & DISCOVERY ===
+Scenario: [Brief user request summary]
+Target Topic Directory: [e.g., frameworks/angular, infra/docker, shared/sample-topic, or tools/generators/sample-generator]
+Action Plan:
+  - Skill (Domain or Procedural): [UPDATE existing `...` OR CREATE new modular bundle `SKILL.md` + `references/` + `scripts/` + `evals/` OR SKIPPED]
+  - Rule: [UPDATE existing `...` OR CREATE new `...` OR SKIPPED (Rationale)]
+  - Workflow: DEPRECATED (Routed into Procedural Skill)
+Verification Command: python3 tools/generators/generate-agent-suite/skills/scripts/verify_suite.py [target-topic-directory]
+========================================
+```
+
+### Step 3: File Generation Protocol
+When invoked inside the writable `ai-agent-toolkit` repository **and the user requested authoring**, directly CREATE or UPDATE the correct canonical files; preserve existing content, avoid overwriting unmanaged work, and show a concise summary of actual changes. Do **not** report files as created unless they exist on disk. If the agent cannot write files, clearly say so and provide target paths plus complete, copy-pasteable code blocks instead.
+
+Create or update these artifacts as needed:
+1. `SKILL.md` (with YAML frontmatter `name` matching directory, imperative `description`, and a `metadata` object containing `dependencies`, `framework_version`, and `last_verified_date`, plus Gotchas or execution checklist)
+2. `references/*.md` (if deep API specs or runbooks required)
+3. `scripts/*.py|sh` (if automated CLI tooling or pre-flight validation required)
+4. `assets/*.json|yaml` (if schema contracts or starter templates required)
+5. `evals/evals.json` (with realistic test cases & assertions)
+6. Rule `.md` (if needed, with valid trigger, `framework_version`, and `last_verified_date`)
+
+### Step 4: Validation & Quality Gate
+After the files exist in the toolkit repository, run the unified suite validator and report its actual exit status and findings. If files were only proposed, provide the command but do not claim verification:
+```bash
+python3 tools/generators/generate-agent-suite/skills/scripts/verify_suite.py [target-topic-path]
+```
+
+### Step 5: Sync & Deployment Instructions
+After generating or updating files in `ai-agent-toolkit`, provide the exact `bin/context.sh` command:
+
+- **Antigravity Global**:
+  ```bash
+  ./bin/context.sh -g [category]/[topic] --tool antigravity
+  ```
+- **Workspace**:
+  ```bash
+  ./bin/context.sh -w [category]/[topic] --target /path/to/project
+  ```
+- **Internal tool context is opt-in**:
+  ```bash
+  ./bin/context.sh -w tools/generators/<tool-name> --target /path/to/toolkit-dev
+  ```
+
+---
+
+## Gotchas
+- **Zero Workflows**: Never generate `.agents/workflows/*.md` files. Always use Procedural Skills.
+- **Root Cleanliness**: Auxiliary files must live in `references/`, `scripts/`, `assets/`, or `evals/`, not in the skill root.
+- **Name Directory Parity**: The `name` frontmatter field MUST match the directory name exactly.
+- **Deduplication First**: Always check existing skills and rules before creating new ones.

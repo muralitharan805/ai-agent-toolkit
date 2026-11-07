@@ -1,0 +1,70 @@
+{
+  "skill_name": "discovery-state",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Schema Bootstrapping & PRAGMA Verification",
+      "prompt": "Bootstrap a new discovery SQLite database and verify WAL mode, foreign keys, 4 relational tables, FTS5 virtual table, and v_discovery_dashboard view are active.",
+      "expected_output": "Initializes database successfully, sets journal_mode=wal, foreign_keys=1, creates research_runs, candidates, evidence_signals, experiments, discovery_fts, and v_discovery_dashboard.",
+      "assertions": [
+        "Enforces PRAGMA foreign_keys = ON and journal_mode = WAL",
+        "Creates all 4 relational tables with JSON check constraints",
+        "Provisions discovery_fts FTS5 virtual table",
+        "Deploys v_discovery_dashboard master decision view"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Deterministic Context Pack Assembly for Problem Evaluation",
+      "prompt": "Assemble a dynamic context pack for the problem-evaluation agent given research run RUN-001 with 15 unlinked signals across Reddit and HackerNews.",
+      "expected_output": "Computes deterministic counts (total_signals=15, platform breakdown, L1-L5 distribution), injects plan and unlinked signals without raw DDL or SQL queries.",
+      "assertions": [
+        "Computes total_signals deterministically in Python",
+        "Aggregates platform breakdown and evidence level distribution",
+        "Excludes raw SQL DDL and schema boilerplate",
+        "Hydrates complete standalone Context Pack"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Signal Linkage & Atomic Candidate Upsert",
+      "prompt": "Upsert candidate CAND-001 with 35-point score 29, link 4 supporting signal IDs atomically, and advance research run stage to EVALUATED.",
+      "expected_output": "Executes atomic transaction inserting candidate, updates candidate_id on supporting signals, indexes candidate in discovery_fts, and advances research_runs.current_stage to EVALUATED.",
+      "assertions": [
+        "Performs atomic multi-row database transaction",
+        "Updates candidate_id on specified evidence signals",
+        "Advances parent research_run stage to EVALUATED",
+        "Updates discovery_fts search index"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Negative Knowledge Preservation On Experiment Failure",
+      "prompt": "Record a failed experiment assessment where observed value 1.5 missed threshold 3.0, and verify candidate validation status and lifecycle status.",
+      "expected_output": "Records experiment outcome as EXPERIMENT_FAILED, updates candidate validation_status=EXPERIMENT_FAILED and lifecycle_status=PARKED without deleting the record, preserving negative knowledge.",
+      "assertions": [
+        "Records outcome_verdict as EXPERIMENT_FAILED",
+        "Updates candidate validation_status to EXPERIMENT_FAILED",
+        "Sets candidate lifecycle_status to PARKED",
+        "Strictly forbids hard deletion of failed experiment"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "Master Discovery Dashboard Querying",
+      "prompt": "Query v_discovery_dashboard to retrieve all candidates that have validation_status VALIDATED and lifecycle_status READY_TO_BUILD.",
+      "expected_output": "Queries view without complex JOINs, returns flattened records with total_evidence_count and latest_experiment_verdict.",
+      "assertions": [
+        "Queries v_discovery_dashboard view directly",
+        "Filters by validation_status and lifecycle_status",
+        "Returns flattened candidate records with total evidence count",
+        "Eliminates multi-table JOINs for callers"
+      ],
+      "files": []
+    }
+  ]
+}

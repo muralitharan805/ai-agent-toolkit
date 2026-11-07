@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SolutionConstraintsSchema",
+  "description": "Validation schema for the 15 operational solution constraints evaluated from problem evidence.",
+  "type": "object",
+  "required": [
+    "single_user_only",
+    "multi_user_required",
+    "local_data_only",
+    "cloud_sync_required",
+    "offline_capable_required",
+    "browser_only_surface",
+    "desktop_os_access_required",
+    "mobile_surface_required",
+    "scheduled_background_execution_required",
+    "event_driven_trigger_required",
+    "api_integrations_available",
+    "realtime_latency_sensitive",
+    "audit_trail_or_compliance_required",
+    "recurring_commercial_wtp_validated",
+    "high_domain_complexity_rules"
+  ],
+  "properties": {
+    "single_user_only": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "multi_user_required": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "local_data_only": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "cloud_sync_required": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "offline_capable_required": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "browser_only_surface": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "desktop_os_access_required": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "mobile_surface_required": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "scheduled_background_execution_required": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "event_driven_trigger_required": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "api_integrations_available": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "realtime_latency_sensitive": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "audit_trail_or_compliance_required": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "recurring_commercial_wtp_validated": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    },
+    "high_domain_complexity_rules": {
+      "type": ["boolean", "string"],
+      "enum": [true, false, "UNKNOWN"]
+    }
+  },
+  "additionalProperties": false
+}

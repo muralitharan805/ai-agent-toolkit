@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SkillEvaluationDeterministicReport",
+  "description": "Schema for run_evals.py output; semantic assertions are NOT_EVALUATED without an actual agent run/grade.",
+  "type": "object",
+  "required": [
+    "skill_name",
+    "evaluated_at",
+    "evaluator",
+    "verdict",
+    "deterministic_coverage_percent",
+    "benchmark",
+    "summary",
+    "test_cases"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "skill_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evaluator": {
+      "type": "string"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "verified",
+        "failed",
+        "not_evaluated"
+      ]
+    },
+    "deterministic_coverage_percent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "benchmark": {
+      "type": "null",
+      "description": "The deterministic runner does not execute baseline/equipped agent runs."
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_test_cases",
+        "verified_test_cases",
+        "failed_test_cases",
+        "not_evaluated_test_cases",
+        "total_assertions",
+        "verified_assertions",
+        "failed_assertions",
+        "not_evaluated_assertions"
+      ],
+      "properties": {
+        "total_test_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "verified_test_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed_test_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_evaluated_test_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_assertions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "verified_assertions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed_assertions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_evaluated_assertions": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "test_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "assertions_total",
+          "assertions_verified",
+          "assertions_failed",
+          "assertions_not_evaluated",
+          "details"
+        ],
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "integer"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "failed",
+              "not_evaluated"
+            ]
+          },
+          "assertions_total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "assertions_verified": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "assertions_failed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "assertions_not_evaluated": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "assertion",
+                "status",
+                "evidence",
+                "remediation"
+              ],
+              "properties": {
+                "assertion": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "verified",
+                    "failed",
+                    "not_evaluated"
+                  ]
+                },
+                "evidence": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "remediation": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

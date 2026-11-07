@@ -1,0 +1,49 @@
+{
+  "skill_name": "local-development-environment",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Docker Compose with Healthchecks and Service Dependencies",
+      "prompt": "Create a docker-compose.yml for a backend project requiring PostgreSQL, Redis, and a message broker, ensuring the application cannot start until all services are healthy.",
+      "expected_output": "All services define healthcheck blocks with proper commands and retry counts. Application service uses depends_on with condition: service_healthy. All image tags are pinned to specific versions.",
+      "assertions": [
+        "PostgreSQL service includes healthcheck using pg_isready command",
+        "Redis service includes healthcheck using redis-cli ping command",
+        "All image tags are pinned to specific versions (not 'latest')",
+        "App service uses depends_on with condition: service_healthy on DB and Redis",
+        "Mailhog or equivalent mail catcher service is included",
+        "Named volumes defined for persistent data storage"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Credential Parity Between docker-compose.yml and .env.example",
+      "prompt": "Verify that the database and Redis credentials in docker-compose.yml exactly match the connection strings in .env.example.",
+      "expected_output": "DATABASE_URL in .env.example uses the same username, password, and database name as POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB in docker-compose.yml. REDIS_URL matches docker-compose Redis port.",
+      "assertions": [
+        "DATABASE_URL username matches POSTGRES_USER in docker-compose.yml",
+        "DATABASE_URL password matches POSTGRES_PASSWORD in docker-compose.yml",
+        "DATABASE_URL database name matches POSTGRES_DB in docker-compose.yml",
+        "REDIS_URL port matches the exposed port in docker-compose.yml Redis service",
+        "Every .env.example variable has a descriptive comment above it"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "One-Command Setup Script (scripts/setup-local.sh)",
+      "prompt": "Create an idempotent setup script that a new engineer can run once after git clone to have a fully working local development environment.",
+      "expected_output": "Script checks for .env, copies from .env.example if missing, runs docker compose up with --wait flag, installs dependencies, runs migrations, seeds dev data, and prints a local service URL table.",
+      "assertions": [
+        "Script copies .env.example to .env only if .env does not already exist",
+        "Runs docker compose up -d --wait to wait for all healthchecks to pass",
+        "Installs project dependencies via pnpm install or equivalent",
+        "Runs database migrations after services are healthy",
+        "Prints formatted local service URL table at the end",
+        "Script uses set -euo pipefail for error safety"
+      ],
+      "files": []
+    }
+  ]
+}

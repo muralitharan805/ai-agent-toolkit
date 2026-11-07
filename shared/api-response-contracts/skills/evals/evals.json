@@ -1,0 +1,44 @@
+{
+  "skill_name": "api-response-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Success & Paginated Envelope Conformance",
+      "prompt": "Implement an API endpoint returning a paginated list of orders wrapped in the standard response envelope with correlationId and pagination metadata.",
+      "expected_output": "Returns a response payload matching the standard shape with success: true, data array, pagination object, and meta object.",
+      "assertions": [
+        "Wraps successful list response in standard { success: true, data, pagination, meta } envelope",
+        "Includes standard pagination fields (page, pageSize, totalItems, totalPages, hasNextPage, hasPreviousPage)",
+        "Injects request correlationId and ISO-8601 timestamp into the meta object",
+        "Sets X-Correlation-ID and X-Response-Time operational HTTP response headers"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Standard Error Code Catalog & Status Code Resolution",
+      "prompt": "Create an error responder that translates entity not found, validation failures, and duplicate conflicts into standard error codes and matching HTTP status codes.",
+      "expected_output": "Resolves NOT_FOUND to 404, VALIDATION_ERROR to 400 with details, and CONFLICT to 409 using the standard error envelope.",
+      "assertions": [
+        "Emits error payload with success: false and standard error object",
+        "Restricts error code string strictly to the standard 9-code enum catalog",
+        "Maps VALIDATION_ERROR to 400, NOT_FOUND to 404, and CONFLICT to 409",
+        "Includes structured field-level error details array for validation failures"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Zero Database Error Leakage & Stack Trace Masking",
+      "prompt": "Refactor an error handling filter that previously sent raw PostgreSQL error messages and stack traces to clients during database query failures.",
+      "expected_output": "Logs the complete database error and stack trace server-side, but returns a sanitized INTERNAL_SERVER_ERROR or CONFLICT response to the client.",
+      "assertions": [
+        "Completely eliminates raw database error strings and SQL queries from client response body",
+        "Suppresses stack traces and internal file paths in production error envelopes",
+        "Logs full diagnostic error context server-side alongside the request correlationId",
+        "Returns safe, human-readable client message with an RFC-7807 aligned error envelope"
+      ],
+      "files": []
+    }
+  ]
+}

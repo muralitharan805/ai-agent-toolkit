@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ModularSkillOutput",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["success", "ready", "failed"]
+    },
+    "action": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["status", "action"]
+}

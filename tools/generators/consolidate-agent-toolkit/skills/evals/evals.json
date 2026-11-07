@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "consolidate-agent-toolkit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Scan and Identify Duplicate & Fragmented Clusters",
+      "prompt": "Scan the ai-agent-toolkit repository for overlapping skills or duplicate rules and report consolidation candidates.",
+      "expected_output": "Heuristic repeated-name and topic-prefix report identifying manual consolidation candidates, not proven semantic duplicates.",
+      "assertions": [
+        "Runs scripts/scan_duplicates.py against a specific target or the toolkit repository",
+        "Clusters names by filename prefixes and marks them as manual-review candidates",
+        "Does not scan excluded tools/generators/ and auxiliary directories when targeting the toolkit root"
+      ],
+      "files": [
+        "tools/generators/consolidate-agent-toolkit/skills/SKILL.md",
+        "tools/generators/consolidate-agent-toolkit/skills/scripts/scan_duplicates.py"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Execute Zero-Loss 5-Pillar Skill Consolidation",
+      "prompt": "Consolidate two fragmented skills in the repository into a single master 5-pillar skill bundle without losing unique knowledge.",
+      "expected_output": "Human-reviewed refactoring proposal preserving unique references, scripts, assets, eval cases and Gotchas before any deletion.",
+      "assertions": [
+        "Follows the four-stage human-reviewed merge protocol with explicit user approval before deletion",
+        "Preserves all unique instructions, code examples, schemas, and Gotchas in the master bundle",
+        "Validates the master skill bundle with validate_skill.py and runs evals"
+      ],
+      "files": [
+        "tools/generators/consolidate-agent-toolkit/skills/references/merging-and-deduplication-playbook.md"
+      ]
+    }
+  ]
+}

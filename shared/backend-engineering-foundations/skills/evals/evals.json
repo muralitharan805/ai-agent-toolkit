@@ -1,0 +1,44 @@
+{
+  "skill_name": "backend-engineering-foundations",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Clean Architecture Boundaries & Fail-Fast Configuration",
+      "prompt": "Evaluate a new backend service architecture to ensure strict Clean Architecture dependency boundaries and fail-fast configuration before any feature code is authored.",
+      "expected_output": "Verifies that domain entities and use cases have zero external dependencies and static configuration terminates immediately on invalid schemas.",
+      "assertions": [
+        "Enforces strict 4-layer dependency inversion with outer-to-inner dependencies only",
+        "Validates fail-fast configuration schema during boot with non-zero exit on failure",
+        "Pre-warms database connection pool before opening network listener sockets",
+        "Includes Kubernetes preStop 5-second sleep hook to prevent in-flight connection drops"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Transactional Outbox & Dual-Write Elimination",
+      "prompt": "Review an order creation endpoint where an order record is inserted into the database and an event is emitted to a message broker.",
+      "expected_output": "Rejects direct dual-write to message queue and enforces the Transactional Outbox pattern where state and event are committed atomically in the same ACID transaction.",
+      "assertions": [
+        "Identifies dual-write vulnerability between database transaction and message broker",
+        "Requires Transactional Outbox table insertion within the primary business transaction",
+        "Ensures outbox publisher operates asynchronously via CDC or background poller",
+        "Enforces idempotent message consumers with unique deduplication keys"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Database Pool Sizing & Zero-Downtime Safe DDL Migrations",
+      "prompt": "Design the database connection pool sizing and DDL migration strategy for a high-concurrency production service running across 10 Kubernetes pods.",
+      "expected_output": "Applies the pool sizing formula (cores * 2 + spindles), introduces a connection proxy (PgBouncer), and enforces Expand-and-Contract safe DDL with lock timeouts.",
+      "assertions": [
+        "Calculates connection pool size using the (CPU_Cores * 2) + Spindles formula",
+        "Mandates connection proxy layer between multi-pod deployments and the database",
+        "Requires lock_timeout = '2s' on all DDL migration statements",
+        "Enforces 3-phase Expand-and-Contract pattern for non-breaking schema evolution"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "catalog_name": "Multi-Domain Curiosity Trigger Bank for Strategic AI Mentorship",
+  "version": "2.0.0",
+  "domains": [
+    {
+      "domain": "Systems Thinking & Strategic Decision Making",
+      "triggers": [
+        "Jeff Bezos-oda 'Type 1 (One-way door / Irreversible) vs Type 2 (Two-way door / Reversible)' decision model pathi kelvi patturukengala? High-velocity teams-la analysis paralysis-ah cure panna idhu golden rule!",
+        "Chesterton's Fence mental model pathi theriyuma? Legacy architecture or business policy-ah mathuradhuku munnadi 'why it was built in the first place' nu purinjikira discipline disaster-ah thadukum!",
+        "Conway's Law pathi kelvi patturukengala? Oru organization-oda team communication structure dhaan avanga software architecture-ah direct-ah shape pannum!",
+        "Goodhart's Law: 'When a measure becomes a target, it ceases to be a good measure' - idhu sprint velocity or code coverage metrics-la epdi manipulate aagudhu theriyuma?"
+      ]
+    },
+    {
+      "domain": "Angular Modern Reactivity (v19+)",
+      "triggers": [
+        "Angular 19-la `rxResource` pathi therinjuka aasaiya iruka? Idhu async HTTP requests-ah automatic abort/cancellation semantics-oda declarative signals-ah convert pannum!",
+        "`linkedSignal` eppo use pannanum nu theriyuma? Parent signal change aagumbodhu local state reset aaga idhu dhaan modern Angular idiomatic solution!",
+        "Angular Zoneless mode (`provideExperimentalZonelessChangeDetection`) run pannum bodhu microtask change detection evlo lightning-fast aagum theriyuma?"
+      ]
+    },
+    {
+      "domain": "NestJS Backend & Distributed Systems",
+      "triggers": [
+        "NestJS-la custom `AsyncLocalStorage` use panni request context and correlation ID-ah controllers to deep database repositories varaikum parameter illama pass panra pattern pathi therinjuka aasaiya iruka?",
+        "Distributed systems-la 'Idempotency Keys' and 'Transactional Outbox Pattern' payment gateways-la duplicate charge avoid panna epdi use aagudhu theriyuma?",
+        "Clean Architecture-la Domain Entities vs Prisma/TypeORM Models strict separation maintain panradhu edhuku enterprise-la mandatory theriyuma?"
+      ]
+    },
+    {
+      "domain": "Product Strategy & Business Dynamics",
+      "triggers": [
+        "Clayton Christensen-oda 'Jobs to Be Done (JTBD)' framework pathi kelvi patturukengala? Users features-ah buy panna maattanga, avanga life-la oru specific job finish panna dhaan product-ah 'hire' panranga!",
+        "North Star Metric vs Vanity Metrics - product retention and sustainable revenue drive panna entha single input metric optimize pannanum nu analyze panlama?"
+      ]
+    },
+    {
+      "domain": "Career Advancement & Strategic Leadership",
+      "triggers": [
+        "Staff Engineer archetype-la 'The Solver' vs 'The Architect' vs 'The Right Hand' pathi kelvi patturukengala? Senior to Principal level leap eduka entha archetype ungala best describe pannum?",
+        "Mentorship vs Sponsorship difference theriyuma? Mentors ungaluku advice tharuvanga, but Sponsors closed room discussions-la ungakaga opportunity advocate pannuvanga!"
+      ]
+    }
+  ]
+}

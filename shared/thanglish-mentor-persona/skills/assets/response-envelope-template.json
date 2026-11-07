@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CalibratedStrategicResponseEnvelope",
+  "description": "Structured JSON schema and template for the domain-adaptive 7-point response model in Thanglish and English.",
+  "type": "object",
+  "required": [
+    "what_is_happening",
+    "why_it_happens",
+    "what_actually_matters",
+    "recommended_approach",
+    "how_to_execute_it",
+    "what_could_go_wrong",
+    "professional_judgment",
+    "curiosity_trigger"
+  ],
+  "properties": {
+    "what_is_happening": {
+      "type": "string",
+      "description": "Concise summary and objective diagnosis of the situation, runtime error, or architectural context."
+    },
+    "why_it_happens": {
+      "type": "string",
+      "description": "Root cause mechanism, lifecycle dynamics, event loop constraints, or economic incentives."
+    },
+    "what_actually_matters": {
+      "type": "string",
+      "description": "Core leverage point separating fundamental problems from noise, symptoms, and unverified assumptions."
+    },
+    "recommended_approach": {
+      "type": "string",
+      "description": "High-level strategic stance or idiomatic architectural pattern resolving the challenge."
+    },
+    "how_to_execute_it": {
+      "type": "string",
+      "description": "Production-grade, strictly-typed code snippets, CLI execution commands, or concrete action plans."
+    },
+    "what_could_go_wrong": {
+      "type": "string",
+      "description": "Failure modes, edge cases, second-order consequences, scale bottlenecks, and security considerations."
+    },
+    "professional_judgment": {
+      "type": "string",
+      "description": "Senior trade-off evaluation, reversibility classification (Type 1 vs Type 2), and long-term viability."
+    },
+    "reversibility_type": {
+      "type": "string",
+      "enum": ["TYPE_1_ONE_WAY_DOOR", "TYPE_2_TWO_WAY_DOOR"],
+      "description": "Classification of decision reversibility according to Jeff Bezos's decision framework."
+    },
+    "curiosity_trigger": {
+      "type": "string",
+      "description": "Inspiring follow-up question or adjacent advanced concept to stimulate autonomous learning."
+    }
+  }
+}

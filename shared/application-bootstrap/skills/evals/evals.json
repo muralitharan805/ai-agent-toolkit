@@ -1,0 +1,44 @@
+{
+  "skill_name": "application-bootstrap",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Deterministic 13-Step Boot Sequencing & Infrastructure Gate",
+      "prompt": "Implement an application bootstrap entry point that connects to PostgreSQL with exponential backoff and sets up SIGTERM hooks before calling server.listen().",
+      "expected_output": "Orchestrates the 13-step startup sequence, connects to the database store before listening, and binds termination hooks before opening the port.",
+      "assertions": [
+        "Executes startup sequence in strict chronological order from config validation to server listen",
+        "Ensures database connection is verified healthy before server.listen() is invoked",
+        "Binds OS termination signals (SIGTERM/SIGINT) prior to opening the network port",
+        "Restricts main entry point exclusively to technical wiring with zero business logic"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Process-Level Crash Handlers & Structured Fatal Logging",
+      "prompt": "Add process-level crash interceptors to a Node.js backend to capture unhandled promise rejections and uncaught exceptions with structured fatal logs.",
+      "expected_output": "Registers 'unhandledRejection' and 'uncaughtException' listeners that log the error stack as JSON and exit with code 1.",
+      "assertions": [
+        "Registers explicit 'unhandledRejection' process listener",
+        "Registers explicit 'uncaughtException' process listener",
+        "Emits structured FATAL level log including complete error stack and context",
+        "Terminates process with non-zero exit code (1) to prevent degraded zombie state"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Resilient Database Connection with Exponential Backoff Retries",
+      "prompt": "Implement an asynchronous database connection pool initializer that retries failed connections 3 times using exponential backoff before aborting.",
+      "expected_output": "Implements a retry loop with increasing backoff delay and jitter, logging warnings on retries and terminating on final failure.",
+      "assertions": [
+        "Implements minimum 3 retry attempts for transient startup connection failures",
+        "Calculates delay using exponential backoff to avoid thundering herd problem",
+        "Executes a health check ping query (e.g. 'SELECT 1') to verify connection health",
+        "Logs fatal diagnostic error and exits cleanly if all retry attempts fail"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# Ignore OS & Editor Files
+.DS_Store
+*.log
+node_modules/
+.agents/
+.claude/
+
+# Ignore Python Cache & Local SQLite DBs
+__pycache__/
+*.pyc
+*.sqlite*
+*.db*
+
+# Generated evaluation reports are not automatically verified agent benchmarks.
+# Keep them local unless backed by real runs and deliberately reviewed.
+**/evals/grading.json
+
+# Ignore Private Project Business Domains (Open-Source Protection)
+domains/*
+!domains/README.md
+.venv/
+venv/

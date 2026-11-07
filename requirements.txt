@@ -1,0 +1,8 @@
+# AI Agent Toolkit Dependencies
+pydantic>=2.0.0
+PyYAML>=6.0.0
+
+# Optional test and execution runner dependencies
+pytest>=8.0.0
+uv>=0.1.0
+

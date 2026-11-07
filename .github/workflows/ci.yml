@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-quality:
+    name: Core quality gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python test dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Validate Bash syntax
+        run: bash -n bin/context.sh
+
+      - name: Compile Python sources
+        run: |
+          python -m compileall -q \
+            bin \
+            tests \
+            tools \
+            shared
+
+      - name: Run unit and integration tests
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Validate representative Agent Skill
+        run: |
+          # Smoke-test one real skill. Strict mode is intentionally deferred until
+          # the existing catalog is fully warning-free.
+          uv run tools/generators/generate-skill/skills/scripts/validate_skill.py \
+            frameworks/angular/angular-enterprise-forms/skills
+
+  security-scan:
+    name: Gitleaks secret scanning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout full Git history
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"

@@ -1,0 +1,44 @@
+{
+  "skill_name": "security-auditing-and-pen-testing",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Hardcoded Credentials & Secret Hygiene Audit",
+      "prompt": "Audit a project repository containing hardcoded database passwords in configuration files and a missing .gitignore entry for .env.",
+      "expected_output": "Flags plain-text credentials, ensures .env is listed in .gitignore, verifies .env.example parity without sensitive data, and extracts secrets to environment variables.",
+      "assertions": [
+        "Detects hardcoded database credentials in source or config files",
+        "Ensures .env is excluded in .gitignore",
+        "Enforces .env.example parity with junior-friendly descriptive comments",
+        "Loads database credentials exclusively through validated environment variables"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "SQL Injection & Insecure Client-Side Token Storage Audit",
+      "prompt": "Audit backend repositories for raw SQL string concatenations and frontend applications storing JWT refresh tokens in browser localStorage.",
+      "expected_output": "Flags raw query string interpolations as critical SQL injection vulnerabilities, converts to parameterized ORM queries, and refactors token storage to secure HTTP-Only cookies.",
+      "assertions": [
+        "Flags raw SQL query string interpolation as critical injection vulnerability",
+        "Refactors database queries to use parameterized prepared statements or ORM queries",
+        "Flags insecure JWT token storage in browser localStorage",
+        "Recommends storing refresh tokens in HTTP-Only, Secure, SameSite cookies"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Security Headers & Permissive CORS Lockdown",
+      "prompt": "Audit web application entrypoint for missing Helmet security headers and overly permissive CORS wildcard configurations.",
+      "expected_output": "Configures Helmet middleware with Content-Security-Policy and HSTS, and restricts CORS origin to validated domain whitelist.",
+      "assertions": [
+        "Verifies presence of Helmet middleware for HTTP security headers in main.ts",
+        "Enforces Content-Security-Policy (CSP) and Strict-Transport-Security (HSTS)",
+        "Detects permissive CORS wildcard origins with credentials",
+        "Restricts CORS configuration to an explicit domain whitelist"
+      ],
+      "files": []
+    }
+  ]
+}

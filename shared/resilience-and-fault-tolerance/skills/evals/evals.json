@@ -1,0 +1,44 @@
+{
+  "skill_name": "resilience-and-fault-tolerance",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Strict Timeouts on External I/O Boundaries",
+      "prompt": "Configure an HTTP client to communicate with an external payment provider, enforcing strict socket connection timeouts (2000ms), read timeouts (5000ms), and limiting retries exclusively to transient 5xx or 429 status codes.",
+      "expected_output": "Configures bounded timeouts on HTTP requests and filters retries to only transient status codes with jittered backoff.",
+      "assertions": [
+        "Configures explicit connect and read timeout limits on outbound HTTP requests",
+        "Eliminates unbounded socket or thread waiting on slow external APIs",
+        "Restricts retry logic strictly to transient errors (5xx, 429, timeouts)",
+        "Strictly forbids retrying 4xx client errors (400, 401, 403, 404)"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Circuit Breaker Protection with Fast Failure",
+      "prompt": "Implement a Circuit Breaker around a flaky downstream notification service that trips to OPEN after 5 consecutive failures and fails fast without executing network calls until a cooldown probe succeeds.",
+      "expected_output": "Implements Closed, Open, Half-Open state machine to fail fast when downstream is degraded and probe periodically.",
+      "assertions": [
+        "Maintains Closed, Open, and Half-Open circuit breaker states",
+        "Trips circuit to OPEN when failure count or error rate exceeds threshold",
+        "Fails fast immediately without making network calls when in OPEN state",
+        "Permits a single canary probe in HALF-OPEN state before fully restoring to CLOSED"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "HTTP Idempotency-Key Handling on Mutating Endpoints",
+      "prompt": "Create an idempotency middleware for POST /payments that reads the Idempotency-Key header, prevents concurrent in-flight double execution, and caches the completed response for 24 hours.",
+      "expected_output": "Validates Idempotency-Key header, acquires in-progress lock, and returns cached completed response on subsequent retries.",
+      "assertions": [
+        "Inspects Idempotency-Key header on mutating HTTP endpoints",
+        "Returns cached response payload immediately for completed idempotent requests",
+        "Prevents concurrent in-flight execution race conditions with status locks (409 Conflict)",
+        "Stores completed idempotent response with a 24-hour TTL in cache"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "eval-skill",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Objective Assertion Evaluation & Visual Scorecard",
+      "prompt": "Evaluate frameworks/angular/skills/angular-enterprise-forms against its test suite in evals/evals.json and output a visual scorecard.",
+      "expected_output": "Evidence-aware evaluation report: explicit deterministic file existence checks, semantic NOT_EVALUATED statuses without an agent run, and no invented baseline uplift.",
+      "assertions": [
+        "Discovers target skill directory and validates SKILL.md and evals/evals.json",
+        "Verifies a file-presence assertion only when its text exactly equals files_exist and a files array is given",
+        "Reports semantic assertions as NOT_EVALUATED without actual agent-run evidence",
+        "Emits a deterministic coverage score and benchmark: null unless separate empirical results exist"
+      ],
+      "files": [
+        "tools/generators/eval-skill/skills/SKILL.md",
+        "tools/generators/eval-skill/skills/scripts/run_evals.py"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Failure Diagnostics & Remediation Prescription",
+      "prompt": "Run evaluations where a semantic assertion has no grader and a declared files_exist check is missing its expected file.",
+      "expected_output": "Marks the absent explicit files_exist assertion as failed, leaves semantic claims NOT_EVALUATED, and never fabricates benchmark results.",
+      "assertions": [
+        "Explicit files_exist check fails when expected files are absent",
+        "Natural-language assertions mentioning 'file' or 'scaffold' do not auto-pass",
+        "Output schema uses verdict verified/failed/not_evaluated and benchmark null",
+        "Returns a nonzero status for failed or unverified actual evaluations"
+      ],
+      "files": [
+        "tools/generators/eval-skill/skills/assets/grading-schema.json"
+      ]
+    }
+  ]
+}

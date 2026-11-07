@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "mode": "ASSESS",
+  "experiment_id": "EXP-001",
+  "candidate_id": "CAND-001",
+  "status": "EXPERIMENT_PASSED",
+  "experiment_completed": true,
+  "experiment_passed": true,
+  "observed_result": {
+    "sample_achieved": 5,
+    "observed_value": 4.0,
+    "target_threshold": 3.0,
+    "direction": ">="
+  },
+  "artifact_review": {
+    "artifact_path": "evidence/EXP-001-log.csv",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "human_review_completed": true,
+    "audited_by": "Murali Tharan",
+    "audit_date": "2026-09-26"
+  },
+  "validation_assessment": {
+    "problem_behavior_observed": true,
+    "market_demand_validated": false,
+    "willingness_to_pay_validated": false,
+    "solution_adoption_validated": false,
+    "retention_validated": false
+  },
+  "supported_claims": [
+    "At least 3 of 5 tested multi-channel sellers exhibited >= 3 manual synchronization events over 7 days."
+  ],
+  "unsupported_claims": [
+    "Widespread market demand exists across entire retail domain.",
+    "Merchants will pay recurring subscription fees for sync software."
+  ],
+  "remaining_unknowns": [
+    "Statistical generalizability across single-channel sellers",
+    "Commercial willingness to pay",
+    "Retention beyond 14 days"
+  ],
+  "next_action": "READY_FOR_SOLUTION_STRATEGY"
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "{{SKILL_NAME}}",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Primary Capability Execution",
+      "prompt": "Implement the core functionality of {{SKILL_NAME}} adhering to modern enterprise architecture standards.",
+      "expected_output": "Production-ready solution with clean modular structure, zero any types, and modern framework patterns.",
+      "assertions": [
+        "Uses current idiomatic framework APIs without deprecated legacy patterns",
+        "Enforces strict TypeScript typing with zero any annotations",
+        "Includes comprehensive error handling with guard clauses and early returns",
+        "Documents public API methods with TSDoc or JSDoc block comments"
+      ],
+      "files": [
+        "path/to/expected/output.file"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Edge Case & Gotcha Resilience",
+      "prompt": "Handle unexpected edge cases, reactive state resets, and error conditions in {{SKILL_NAME}}.",
+      "expected_output": "Robust implementation mitigating known pitfalls defined in the skill's Gotchas section.",
+      "assertions": [
+        "Explicitly handles memory leaks, subscriptions cleanup, or lifecycle unmounting",
+        "Validates input boundaries prior to performing business logic",
+        "Provides clear recovery or fallback mechanisms for failed operations"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BrowserAuditReport",
+  "description": "Schema and structure for Chrome DevTools browser testing, visual DOM verification, and accessibility audit reports.",
+  "type": "object",
+  "required": [
+    "target_url",
+    "timestamp",
+    "viewport",
+    "dom_verification",
+    "accessibility_audit",
+    "performance_audit",
+    "console_hygiene",
+    "status"
+  ],
+  "properties": {
+    "target_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "The exact URL audited."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 execution timestamp."
+    },
+    "viewport": {
+      "type": "object",
+      "required": ["width", "height", "is_mobile"],
+      "properties": {
+        "width": { "type": "integer", "default": 1280 },
+        "height": { "type": "integer", "default": 800 },
+        "is_mobile": { "type": "boolean", "default": false }
+      }
+    },
+    "dom_verification": {
+      "type": "object",
+      "required": ["snapshot_taken", "element_uids_verified", "visual_screenshot_path"],
+      "properties": {
+        "snapshot_taken": { "type": "boolean" },
+        "element_uids_verified": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "visual_screenshot_path": {
+          "type": ["string", "null"],
+          "description": "Path to saved screenshot in workspace brain directory."
+        },
+        "hydration_confirmed": { "type": "boolean" }
+      }
+    },
+    "accessibility_audit": {
+      "type": "object",
+      "required": ["wcag_level", "touch_targets_passed", "contrast_passed", "landmarks_passed"],
+      "properties": {
+        "wcag_level": { "type": "string", "enum": ["AA", "AAA"], "default": "AA" },
+        "touch_targets_passed": { "type": "boolean" },
+        "min_touch_target_px": { "type": "integer", "default": 44 },
+        "contrast_passed": { "type": "boolean" },
+        "min_contrast_ratio": { "type": "number", "default": 4.5 },
+        "landmarks_passed": { "type": "boolean" },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule", "element", "details"],
+            "properties": {
+              "rule": { "type": "string" },
+              "element": { "type": "string" },
+              "details": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "performance_audit": {
+      "type": "object",
+      "properties": {
+        "lcp_sec": { "type": "number" },
+        "cls_score": { "type": "number" },
+        "inp_ms": { "type": "number" },
+        "layout_reservations_verified": { "type": "boolean" }
+      }
+    },
+    "console_hygiene": {
+      "type": "object",
+      "required": ["uncaught_errors", "network_failures"],
+      "properties": {
+        "uncaught_errors": { "type": "integer", "default": 0 },
+        "network_failures": { "type": "integer", "default": 0 },
+        "warnings": { "type": "integer", "default": 0 }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PASSED", "FAILED", "WARNING"],
+      "description": "Overall audit status."
+    }
+  }
+}

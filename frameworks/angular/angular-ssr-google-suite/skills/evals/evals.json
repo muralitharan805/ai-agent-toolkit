@@ -1,0 +1,44 @@
+{
+  "skill_name": "angular-ssr-google-suite",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Dynamic XML Sitemap Stream in server.ts & Edge Caching",
+      "prompt": "Implement an edge request handler in src/server.ts intercepting /sitemap.xml to stream raw XML with edge Cache-Control headers before delegating to AngularAppEngine.",
+      "expected_output": "Creates a request handler returning a raw Response with application/xml; charset=UTF-8 and Cache-Control headers for /sitemap.xml, passing other requests to AngularAppEngine.",
+      "assertions": [
+        "Intercepts /sitemap.xml in server request handler returning a native Response",
+        "Sets Content-Type to application/xml; charset=UTF-8",
+        "Applies edge cache headers Cache-Control with public max-age",
+        "Delegates general application requests to AngularAppEngine"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Platform Guarding & Node Native API Isolation in Edge SSR",
+      "prompt": "Build an SSR-safe SEO service and component using isPlatformBrowser to guard window/document access and eliminating Node.js native module dependencies.",
+      "expected_output": "Implements SeoService with PLATFORM_ID injection and isPlatformBrowser checks for canonical URL resolution, strictly avoiding Node.js native modules like fs and path.",
+      "assertions": [
+        "Injects PLATFORM_ID and uses isPlatformBrowser to guard browser DOM access",
+        "Avoids importing forbidden Node native modules (fs, path, crypto, child_process)",
+        "Strips query parameters from canonical URL in setCanonicalUrl",
+        "Enforces strict TypeScript typing with zero explicit any annotations"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Cloudflare Pages _routes.json Bypass & SSR Legal Policy Compliance",
+      "prompt": "Configure Cloudflare Pages edge route bypass manifest (_routes.json), AdSense ads.txt authorization, and standalone SSR-safe legal policy pages.",
+      "expected_output": "Provides public/_routes.json excluding static assets and sitemaps from Worker execution, public/ads.txt, and standalone PrivacyPolicyComponent and TermsOfServiceComponent with keyword-rich titles.",
+      "assertions": [
+        "Defines _routes.json excluding /sitemap.xml, /robots.txt, and /assets/*",
+        "Deploys public/ads.txt declaring authorized publisher status",
+        "Scaffolds standalone PrivacyPolicyComponent disclosing GA4 and AdSense DART cookies",
+        "Registers keyword-rich route titles for legal policy endpoints"
+      ],
+      "files": []
+    }
+  ]
+}

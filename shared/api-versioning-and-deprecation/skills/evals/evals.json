@@ -1,0 +1,47 @@
+{
+  "skill_name": "api-versioning-and-deprecation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Breaking vs Non-Breaking Change Classification",
+      "prompt": "Classify the following API changes as breaking or non-breaking: (a) adding an optional 'nickname' field to user response, (b) renaming 'fullName' to 'displayName' in response, (c) adding a new required 'tenantId' field to request body, (d) adding a new GET /api/v1/users/:id/activity endpoint.",
+      "expected_output": "Correctly classifies: (a) non-breaking, (b) breaking, (c) breaking, (d) non-breaking. Explains that breaking changes require a new major version with full deprecation lifecycle.",
+      "assertions": [
+        "Identifies adding optional response field as non-breaking",
+        "Identifies renaming existing response field as breaking",
+        "Identifies adding required request field as breaking",
+        "Identifies adding new endpoint as non-breaking",
+        "States breaking changes require a new major version increment"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "RFC 8594 Deprecation Headers on Deprecated API Version",
+      "prompt": "Add proper deprecation signaling to all v1 API responses when v2 has been released, using industry-standard HTTP headers.",
+      "expected_output": "Applies Deprecation: true, Sunset header with RFC 7231 date format, and Link header with successor-version relation at the router/middleware level, covering all v1 endpoints without per-endpoint changes.",
+      "assertions": [
+        "Sets Deprecation: true header on all v1 responses",
+        "Sets Sunset header with RFC 7231 HTTP-date format specifying exact sunset date",
+        "Sets Link header with rel='successor-version' pointing to v2 equivalent",
+        "Headers applied at router/middleware level — not per individual endpoint",
+        "Implementation covers all endpoints under the versioned route prefix"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "HTTP 410 Gone Response After Sunset Date",
+      "prompt": "Implement the post-sunset behavior for v1 API where all endpoints return the correct HTTP status with a migration guide.",
+      "expected_output": "All v1 routes return HTTP 410 Gone (not 404), with a JSON body containing error code API_DEPRECATED, human-readable message, and migrationGuide URL.",
+      "assertions": [
+        "Returns HTTP 410 Gone status code (not 404 Not Found)",
+        "Response body includes error field with value 'API_DEPRECATED'",
+        "Response body includes migrationGuide URL pointing to migration documentation",
+        "Response body includes sunsetDate field with the actual shutdown date",
+        "Applied at router/middleware level covering all deprecated version endpoints"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SolutionAssessmentSchema",
+  "description": "Validation schema for the complete Solution Strategy assessment report.",
+  "type": "object",
+  "required": [
+    "assessment_id",
+    "candidate_id",
+    "evaluation_date",
+    "assessed_by",
+    "non_software_evaluation",
+    "constraints",
+    "solution_class",
+    "saas_justification",
+    "smallest_testable_solution",
+    "technical_operational_profile",
+    "reversibility_tier"
+  ],
+  "properties": {
+    "assessment_id": {
+      "type": "string",
+      "pattern": "^sol_[a-z0-9_]+$"
+    },
+    "candidate_id": {
+      "type": "string"
+    },
+    "evaluation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "assessed_by": {
+      "type": "string",
+      "minLength": 2
+    },
+    "non_software_evaluation": {
+      "type": "object",
+      "required": [
+        "is_sufficient",
+        "recommended_non_software_class",
+        "friction_reduction_percentage",
+        "justification",
+        "software_transition_triggers"
+      ],
+      "properties": {
+        "is_sufficient": { "type": "boolean" },
+        "recommended_non_software_class": {
+          "type": ["string", "null"],
+          "enum": [
+            "CHECKLIST_OR_SOP",
+            "STRUCTURED_SPREADSHEET",
+            "MANUAL_CONCIERGE_SERVICE",
+            "PROCESS_OR_POLICY_REDESIGN",
+            null
+          ]
+        },
+        "friction_reduction_percentage": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "justification": { "type": "string" },
+        "software_transition_triggers": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "constraints": {
+      "$ref": "./solution-constraints.schema.json"
+    },
+    "solution_class": {
+      "type": "string",
+      "enum": [
+        "CHECKLIST_OR_SOP",
+        "STRUCTURED_SPREADSHEET",
+        "MANUAL_CONCIERGE_SERVICE",
+        "PROCESS_OR_POLICY_REDESIGN",
+        "LOCAL_SCRIPT",
+        "CLI_UTILITY",
+        "DESKTOP_APP",
+        "BROWSER_EXTENSION",
+        "BROWSER_AUTOMATION",
+        "INTEGRATION_SERVICE",
+        "WEBHOOK_HANDLER",
+        "INTERNAL_TOOL",
+        "STATIC_SITE_OR_JAMSTACK",
+        "SINGLE_USER_WEB_APP",
+        "MULTI_TENANT_SAAS",
+        "API_PLATFORM",
+        "EMBEDDED_LIBRARY_OR_SDK"
+      ]
+    },
+    "saas_justification": {
+      "type": "object",
+      "required": [
+        "verdict",
+        "multi_user_status",
+        "commercial_wtp_status",
+        "justification"
+      ],
+      "properties": {
+        "verdict": {
+          "type": "string",
+          "enum": ["STRONG_CANDIDATE", "NOT_YET_JUSTIFIED", "REJECTED"]
+        },
+        "multi_user_status": {
+          "type": "string",
+          "enum": ["PROVEN", "UNPROVEN", "NOT_APPLICABLE"]
+        },
+        "commercial_wtp_status": {
+          "type": "string",
+          "enum": ["PROVEN", "UNPROVEN", "NOT_APPLICABLE"]
+        },
+        "justification": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "smallest_testable_solution": {
+      "type": "object",
+      "required": [
+        "archetype",
+        "target_hypothesis",
+        "estimated_build_days",
+        "pilot_population",
+        "observation_duration_days",
+        "success_threshold",
+        "falsification_rule",
+        "next_step_if_passed",
+        "next_step_if_failed"
+      ],
+      "properties": {
+        "archetype": {
+          "type": "string",
+          "enum": [
+            "CONCIERGE_PILOT",
+            "LOCAL_SCRIPT_PILOT",
+            "NO_CODE_WORKFLOW",
+            "THIN_EXTENSION_PROTOTYPE",
+            "SPREADSHEET_PILOT"
+          ]
+        },
+        "target_hypothesis": { "type": "string" },
+        "estimated_build_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 14
+        },
+        "pilot_population": { "type": "string" },
+        "observation_duration_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "success_threshold": { "type": "string" },
+        "falsification_rule": { "type": "string" },
+        "next_step_if_passed": { "type": "string" },
+        "next_step_if_failed": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "technical_operational_profile": {
+      "type": "object",
+      "required": [
+        "execution_surface",
+        "state_locality",
+        "network_topography",
+        "concurrency_model",
+        "failure_modes"
+      ],
+      "properties": {
+        "execution_surface": { "type": "string" },
+        "state_locality": { "type": "string" },
+        "network_topography": { "type": "string" },
+        "concurrency_model": { "type": "string" },
+        "failure_modes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "reversibility_tier": {
+      "type": "string",
+      "enum": ["TYPE_1", "TYPE_2"]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,70 @@
+{
+  "skill_name": "problem-evaluation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Signal Clustering across Varied Source Phrasing",
+      "prompt": "Evaluate three signals describing seller inventory updates: Signal 1 complains about manual Shopify stock changes, Signal 2 describes Amazon inventory adjustments, Signal 3 describes re-entering counts in eBay dashboard.",
+      "expected_output": "Clusters all three signals into a single unified problem candidate (Manual Multi-Channel Inventory Synchronization), links all 3 signal IDs as supporting evidence, and reconstructs a cohesive 14-node workflow.",
+      "assertions": [
+        "Clusters synonymous signals into a single candidate problem",
+        "Links all supporting signal IDs without dropping sources",
+        "Constructs 14-node workflow mapping with explicit unknown labeling",
+        "Produces valid ProblemEvaluation JSON conforming to schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Distinct Workflow Separation Despite Shared Industry Keywords",
+      "prompt": "Evaluate two signals from an ecommerce stream: Signal A describes manual inventory count updates; Signal B describes checking courier tracking portals across 4 carrier websites.",
+      "expected_output": "Separates the signals into two distinct problem candidates (Candidate 1: Multi-channel inventory sync; Candidate 2: Carrier dispatch monitoring), rather than merging them under a generic ecommerce problem.",
+      "assertions": [
+        "Separates disparate operational tasks into distinct candidates",
+        "Prevents artificial problem merging based on generic ecommerce keywords",
+        "Maps independent 14-node workflows for each candidate",
+        "Assigns distinct candidate references PC-001 and PC-002"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Contradictory Evidence Preservation & Nuanced Interpretation",
+      "prompt": "Evaluate research where 3 merchants report extreme manual reconciliation pain, while 2 larger sellers state that existing software (A2X) completely automates the workflow for them.",
+      "expected_output": "Preserves both supporting and contradicting signal IDs in the candidate record, interprets the conflict as a segment divergence (SMB vs enterprise), and refrains from discarding contradicting signals.",
+      "assertions": [
+        "Preserves supporting and contradicting signal IDs separately",
+        "Explains discrepancy through segment or volume differences",
+        "Refrains from discarding opposing evidence to inflate priority",
+        "Evaluates workflow fit of incumbent alternative"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Insufficient Evidence Gate & Research Request Generation",
+      "prompt": "Evaluate a single vague signal where a user comments 'shipping is annoying' without specifying operator role, concrete steps, frequency, or workarounds.",
+      "expected_output": "Classifies evidence sufficiency as INSUFFICIENT, leaves research_score as null with status INSUFFICIENT_EVIDENCE, refuses to invent a numeric score, and generates structured research requests for evidence-research.",
+      "assertions": [
+        "Sets evidence_sufficiency to INSUFFICIENT",
+        "Sets research_score to null with INSUFFICIENT_EVIDENCE status",
+        "Generates actionable research_requests with targeted questions",
+        "Recommends REQUEST_MORE_EVIDENCE next action"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "SQLite Candidate Persistence & Signal Linking Contract",
+      "prompt": "Persist candidate PC-001 into the SQLite database, link supporting signals SIG-001 and SIG-002, and advance research run stage.",
+      "expected_output": "Inserts candidate record into candidates table, updates evidence_signals table to set candidate_id = 'CAND-001' for supporting signals, and updates research_runs stage to EVALUATED.",
+      "assertions": [
+        "Inserts candidate into SQLite candidates table with candidate_id",
+        "Updates evidence_signals linking supporting signal IDs",
+        "Updates research_runs current_stage to EVALUATED",
+        "Ensures soft-delete / non-destructive persistence invariant"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ValidationAssessment",
+  "description": "Standard assessment outcome schema for evaluated experiments.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "mode",
+    "experiment_id",
+    "candidate_id",
+    "status",
+    "experiment_completed",
+    "experiment_passed",
+    "observed_result",
+    "artifact_review",
+    "validation_assessment",
+    "supported_claims",
+    "unsupported_claims",
+    "remaining_unknowns",
+    "next_action"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0"] },
+    "mode": { "type": "string", "enum": ["ASSESS"] },
+    "experiment_id": { "type": "string" },
+    "candidate_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["EXPERIMENT_PASSED", "EXPERIMENT_FAILED", "INCOMPLETE", "INVALID_EXPERIMENT"]
+    },
+    "experiment_completed": { "type": "boolean" },
+    "experiment_passed": { "type": "boolean" },
+    "observed_result": { "type": "object" },
+    "artifact_review": { "type": "object" },
+    "validation_assessment": {
+      "type": "object",
+      "required": [
+        "problem_behavior_observed",
+        "market_demand_validated",
+        "willingness_to_pay_validated",
+        "solution_adoption_validated",
+        "retention_validated"
+      ],
+      "properties": {
+        "problem_behavior_observed": { "type": "boolean" },
+        "market_demand_validated": { "type": "boolean" },
+        "willingness_to_pay_validated": { "type": "boolean" },
+        "solution_adoption_validated": { "type": "boolean" },
+        "retention_validated": { "type": "boolean" }
+      }
+    },
+    "supported_claims": { "type": "array", "items": { "type": "string" } },
+    "unsupported_claims": { "type": "array", "items": { "type": "string" } },
+    "remaining_unknowns": { "type": "array", "items": { "type": "string" } },
+    "next_action": { "type": "string" }
+  }
+}

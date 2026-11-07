@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentSuiteManifest",
+  "type": "object",
+  "properties": {
+    "suite_name": { "type": "string" },
+    "topic_path": { "type": "string" },
+    "description": { "type": "string" },
+    "components": {
+      "type": "object",
+      "properties": {
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "archetype": { "enum": ["domain_knowledge", "procedural_execution"] },
+              "path": { "type": "string" }
+            },
+            "required": ["name", "archetype", "path"]
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "trigger": { "enum": ["model_decision", "glob", "always_on", "manual"] },
+              "path": { "type": "string" }
+            },
+            "required": ["name", "trigger", "path"]
+          }
+        }
+      },
+      "required": ["skills", "rules"]
+    }
+  },
+  "required": ["suite_name", "topic_path", "components"]
+}

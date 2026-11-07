@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "ai-agent-toolkit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Toolkit Architecture & Core Concepts Orientation",
+      "prompt": "I am working inside the ai-agent-toolkit repository. Can you explain the repository structure, how skills and rules are designed, and how to sync context?",
+      "expected_output": "Comprehensive architectural overview explaining consumer roots, dynamic tools families, the 5-pillar skill structure, Antigravity rule triggers, and context.sh usage.",
+      "assertions": [
+        "Identifies frameworks/, infra/, shared/, domains/ as consumer roots and tools/ as internal authoring tools",
+        "Explains the 5-pillar skill architecture (SKILL.md, references, scripts, assets, evals)",
+        "Explains dynamic tools/<family>/<tool-name>/ organization with generators as one family",
+        "Provides bin/context.sh workspace and Antigravity global examples"
+      ],
+      "files": [
+        "shared/ai-agent-toolkit/skills/SKILL.md",
+        "shared/ai-agent-toolkit/rules/ai-toolkit-authoring-rules.md",
+        "shared/ai-agent-toolkit/skills/references/tools-and-generators-guide.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "New Component Scaffolding & Validation Protocol",
+      "prompt": "How do I add a new skill or rule to ai-agent-toolkit, and how do I verify it before committing?",
+      "expected_output": "Step-by-step guidance utilizing /generate-agent-suite or generator tools, running automated python validators, and enforcing the sunset of legacy workflows.",
+      "assertions": [
+        "Recommends using /generate-agent-suite or dedicated generator skills",
+        "Mandates running validate_skill.py, validate_rule.py, or verify_suite.py CLI tools",
+        "Strictly prohibits creating legacy standalone .agents/workflows/*.md files",
+        "Enforces the Principal Architect mindset and zero-any type safety"
+      ],
+      "files": [
+        "tools/generators/generate-agent-suite/skills/scripts/verify_suite.py"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Internal Tool Placement & Generator Family",
+      "prompt": "Create a new toolkit generator that produces API contract agent context. Where should the generator live, and where should its generated NestJS consumer context live?",
+      "expected_output": "Places the generator under tools/generators/<name>/ using the standard module structure, while placing generated NestJS consumer context under frameworks/nestjs/... after taxonomy discovery.",
+      "assertions": [
+        "Places the generator under tools/generators/<generator-name>/",
+        "Uses skills/SKILL.md with references, scripts, assets, and evals as needed",
+        "Does not place the generator back under shared/",
+        "Does not assume generated output belongs under tools/",
+        "Places NestJS consumer context under frameworks/nestjs after deduplication discovery"
+      ],
+      "files": [
+        "shared/ai-agent-toolkit/skills/references/tools-and-generators-guide.md"
+      ]
+    }
+  ]
+}

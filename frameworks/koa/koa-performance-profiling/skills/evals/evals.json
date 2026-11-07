@@ -1,0 +1,63 @@
+{
+  "skill": "koa-performance-profiling",
+  "evals": [
+    {
+      "id": "eval-k6-suite-scenarios",
+      "prompt": "Create a k6 load test script for our Koa backend that tests concurrent traffic ramps from 5 up to 50 users and asserts p95 latency stays below 500ms.",
+      "assertions": [
+        {
+          "type": "content_match",
+          "pattern": "stages:\\s*\\[[\\s\\S]*?target:\\s*50",
+          "description": "Asserts k6 script ramps to 50 concurrent virtual users"
+        },
+        {
+          "type": "content_match",
+          "pattern": "thresholds:\\s*\\{[\\s\\S]*?p\\(95\\)<500",
+          "description": "Asserts p95 threshold is enforced below 500ms"
+        },
+        {
+          "type": "content_match",
+          "pattern": "http_req_failed:\\s*\\['rate<0\\.01'\\]",
+          "description": "Asserts error rate threshold stays below 1%"
+        }
+      ]
+    },
+    {
+      "id": "eval-timing-tracer-middleware",
+      "prompt": "Write a Koa middleware that records route execution duration in milliseconds, assigns a correlation x-request-id, and emits structured JSON logs.",
+      "assertions": [
+        {
+          "type": "content_match",
+          "pattern": "process\\.hrtime\\.bigint\\(\\)",
+          "description": "Verifies high-resolution timer is used for latency calculation"
+        },
+        {
+          "type": "content_match",
+          "pattern": "ctx\\.set\\('x-request-id'",
+          "description": "Verifies correlation ID is set on response header"
+        },
+        {
+          "type": "content_match",
+          "pattern": "durationMs",
+          "description": "Verifies duration in milliseconds is recorded in log payload"
+        }
+      ]
+    },
+    {
+      "id": "eval-sequelize-query-profiling",
+      "prompt": "Configure Sequelize to log queries that take longer than 200ms with their execution duration.",
+      "assertions": [
+        {
+          "type": "content_match",
+          "pattern": "benchmark:\\s*true",
+          "description": "Verifies Sequelize benchmark flag is enabled"
+        },
+        {
+          "type": "content_match",
+          "pattern": "timingMs|>\\s*200",
+          "description": "Verifies timing parameter is captured and filtered against 200ms threshold"
+        }
+      ]
+    }
+  ]
+}

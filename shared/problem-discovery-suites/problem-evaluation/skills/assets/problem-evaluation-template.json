@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0",
+  "research_id": "RUN-2026-001",
+  "status": "EVALUATED_WITH_GAPS",
+  "candidates": [
+    {
+      "candidate_ref": "PC-001",
+      "problem_title": "Manual Multi-Channel Inventory Synchronization",
+      "actors": [
+        "ecommerce seller"
+      ],
+      "supporting_signal_ids": [
+        "SIG-001"
+      ],
+      "contradicting_signal_ids": [],
+      "problem_statement": "Some ecommerce sellers experience inventory count drift and overselling risk when manually updating stock levels across multiple marketplace dashboards.",
+      "evidence_sufficiency": "PARTIAL",
+      "workflow_14_nodes": {
+        "actor": "ecommerce seller",
+        "trigger": "Inventory count changes after customer order",
+        "input": "Order confirmation notice",
+        "steps": [
+          "Check updated quantity on originating platform",
+          "Log in to secondary marketplace dashboard",
+          "Manually edit inventory field",
+          "Repeat for remaining sales channels"
+        ],
+        "tools": [
+          "Marketplace seller central",
+          "Excel shadow spreadsheet"
+        ],
+        "decisions": "UNKNOWN",
+        "handoffs": "Warehouse picker receiving dispatch slip",
+        "delays": "15-60 minute lag before manual adjustment",
+        "rework": "Repeated data entry across 3 tabs",
+        "errors": "Overselling out-of-stock items",
+        "output": "Synchronized inventory levels",
+        "cost": "5 hours/week reported in shadow workbook",
+        "risk": "Account suspension risk due to order cancellations",
+        "audit": "UNKNOWN"
+      },
+      "root_cause": {
+        "status": "UNVERIFIED",
+        "hypotheses": [
+          "Fragmented inventory databases across sales channels",
+          "High subscription barrier for commercial multi-channel sync SaaS"
+        ]
+      },
+      "alternatives_audit": {
+        "status": "PARTIAL",
+        "existing_alternative_found": true,
+        "workflow_fit": "UNKNOWN",
+        "commercial_alternative_fits_well": null,
+        "non_software_sufficient": null
+      },
+      "stop_checks": {
+        "triggered": false,
+        "reasons": []
+      },
+      "research_score": {
+        "status": "SCORED",
+        "total": 20,
+        "maximum": 35,
+        "scores": {
+          "frequency": 4,
+          "severity": 4,
+          "workaround": 4,
+          "wtp": 3,
+          "decision_maker": 3,
+          "feasibility": 4,
+          "discrepancy": 4
+        }
+      },
+      "validation_status": "UNVERIFIED",
+      "unknowns": [
+        "Measured financial impact of overselling penalties",
+        "Specific reason why incumbent synchronization tools are not adopted by target sellers"
+      ],
+      "research_requests": [
+        {
+          "request_id": "RR-001",
+          "priority": "HIGH",
+          "reason": "Existing synchronization tool workflow fit is unknown",
+          "question": "Why do SMB merchants avoid native multi-location inventory synchronization tools?",
+          "target_evidence": [
+            "G2 negative reviews",
+            "Shopify app store user complaints"
+          ]
+        }
+      ],
+      "recommended_next_action": "REQUEST_MORE_EVIDENCE"
+    }
+  ],
+  "next_action": "REQUEST_MORE_EVIDENCE"
+}

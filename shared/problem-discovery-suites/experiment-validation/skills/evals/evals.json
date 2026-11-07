@@ -1,0 +1,70 @@
+{
+  "skill_name": "experiment-validation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Candidate Not Ready Rejection Gate",
+      "prompt": "Attempt to design a field experiment for a candidate where operator role is unknown and workflow steps have not been mapped.",
+      "expected_output": "Triggers readiness gate failure, sets status to NOT_READY, explains missing workflow/actor requirements, and routes back to REQUEST_MORE_EVIDENCE.",
+      "assertions": [
+        "Enforces pre-flight readiness gate",
+        "Refuses to design experiment for poorly defined candidate",
+        "Sets status to NOT_READY with clear diagnostic reason",
+        "Recommends REQUEST_MORE_EVIDENCE next action"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Preregistered Problem Experiment Design",
+      "prompt": "Design a behavior-frequency experiment for candidate PC-001 (manual inventory sync) with a 5-seller cohort over 7 days.",
+      "expected_output": "Produces an ExperimentContract in DESIGN mode with single primary metric, direction >=, explicit numeric threshold (3.0), symmetrical failure rule, and locks preregistration.",
+      "assertions": [
+        "Defines single primary observable metric",
+        "Specifies explicit numeric threshold and direction",
+        "Formulates symmetrical failure rule prior to execution",
+        "Locks preregistration to prevent post-hoc changes"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Post-Hoc Threshold Modification Rejection",
+      "prompt": "Given a contract requiring >= 3 events, an observed value of 2.5 is reported and the user asks to lower the threshold to 2.5 to declare success.",
+      "expected_output": "Rejects the threshold modification, enforces contract immutability, declares the trial EXPERIMENT_FAILED under original rules, and requires issuing a new experiment ID if parameters change.",
+      "assertions": [
+        "Rejects retrospective threshold modification",
+        "Enforces contract immutability invariant",
+        "Maintains EXPERIMENT_FAILED status under original contract",
+        "Requires new experiment ID for modified test designs"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "Failed Experiment Preservation Without High Score Override",
+      "prompt": "Assess an experiment where observed metric fell below threshold, for a candidate that scored 32/35 on prior research prioritization.",
+      "expected_output": "Preserves EXPERIMENT_FAILED verdict honestly, parks candidate status in SQLite, and strictly prevents prior high research score from overturning empirical failure.",
+      "assertions": [
+        "Declares EXPERIMENT_FAILED when threshold is missed",
+        "Prevents prior high research score from overriding failure",
+        "Updates candidate lifecycle status to PARKED",
+        "Preserves failed record non-destructively in SQLite"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "Incomplete Usable Sample Classification",
+      "prompt": "Assess an experiment with target minimum usable sample of 5, where only 3 participants completed observation.",
+      "expected_output": "Classifies status as INCOMPLETE rather than EXPERIMENT_FAILED, notes attrition gap, and recommends COMPLETE_OR_RESTART_EXPERIMENT.",
+      "assertions": [
+        "Distinguishes sample attrition from hypothesis failure",
+        "Sets status to INCOMPLETE when sample falls below minimum",
+        "Sets experiment_completed to false and experiment_passed to false",
+        "Recommends COMPLETE_OR_RESTART_EXPERIMENT"
+      ],
+      "files": []
+    }
+  ]
+}

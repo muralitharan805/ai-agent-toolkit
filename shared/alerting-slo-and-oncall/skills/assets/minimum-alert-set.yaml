@@ -1,0 +1,121 @@
+# Minimum Alert Set — Prometheus AlertManager Rules Template
+# Coverage: HTTP SLO, pod health, DB pool, DLQ, cache, cron, error budget
+# Severity Routing:
+#   CRITICAL → PagerDuty/OpsGenie (page on-call)
+#   WARNING  → Slack #alerts (no page)
+#   INFO     → Slack #monitoring (digest)
+
+groups:
+  - name: http-slo-critical
+    rules:
+      # 5xx error rate > 1% for 5 minutes — page immediately
+      - alert: HTTP5xxRateHigh
+        expr: |
+          rate(http_requests_total{status=~"5.."}[5m])
+          / rate(http_requests_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "5xx rate {{ $value | humanizePercentage }} on {{ $labels.service }}"
+          runbook: "https://wiki.company.com/runbooks/http-5xx-spike"
+          dashboard: "https://grafana.company.com/d/service-overview"
+
+      # Zero healthy pods
+      - alert: NoHealthyPods
+        expr: kube_deployment_status_replicas_available == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No healthy pods for {{ $labels.deployment }}"
+          runbook: "https://wiki.company.com/runbooks/no-healthy-pods"
+
+      # DB connection pool saturation
+      - alert: DatabaseConnectionPoolSaturated
+        expr: db_connection_pool_active / db_connection_pool_max > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "DB pool {{ $value | humanizePercentage }} saturated for {{ $labels.service }}"
+          runbook: "https://wiki.company.com/runbooks/db-pool-saturated"
+
+  - name: http-slo-warning
+    rules:
+      # p99 latency > 1000ms
+      - alert: HighP99Latency
+        expr: histogram_quantile(0.99, rate(http_request_duration_ms_bucket[10m])) > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p99 latency {{ $value }}ms exceeds 1000ms threshold"
+          runbook: "https://wiki.company.com/runbooks/high-latency"
+
+      # 5xx rate > 0.1% (warning threshold)
+      - alert: HTTP5xxRateModerate
+        expr: |
+          rate(http_requests_total{status=~"5.."}[15m])
+          / rate(http_requests_total[15m]) > 0.001
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "5xx rate at {{ $value | humanizePercentage }} (warning threshold)"
+
+      # Dead Letter Queue backlog
+      - alert: DLQBacklogHigh
+        expr: message_queue_dlq_depth > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DLQ depth {{ $value }} messages exceeds 100 threshold"
+          runbook: "https://wiki.company.com/runbooks/dlq-backlog"
+
+      # Cache hit rate below 60%
+      - alert: CacheHitRateLow
+        expr: cache_hit_rate < 0.6
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache hit rate {{ $value | humanizePercentage }} below 60% threshold"
+
+      # Disk or memory pressure
+      - alert: ResourcePressureHigh
+        expr: >
+          (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.2) or
+          (node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.2)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Resource utilization > 80% on {{ $labels.instance }}"
+
+  - name: operational-info
+    rules:
+      # Cron job missed (tracked via last_run_at in DB, exposed as gauge)
+      - alert: CronJobMissed
+        expr: cron_job_last_run_seconds_ago > cron_job_expected_interval_seconds * 2
+        labels:
+          severity: info
+        annotations:
+          summary: "Cron job {{ $labels.job_name }} has not run in {{ $value }}s"
+
+      # Error budget < 20% remaining this month
+      - alert: ErrorBudgetLow
+        expr: slo_error_budget_remaining_ratio < 0.20
+        labels:
+          severity: info
+        annotations:
+          summary: "Error budget {{ $value | humanizePercentage }} remaining this month"
+
+# Inhibition rules: suppress correlated child alerts when parent fires
+inhibit_rules:
+  - source_matchers:
+      - alertname = "NoHealthyPods"
+    target_matchers:
+      - alertname =~ "HighP99Latency|HTTP5xxRateModerate|DatabaseConnectionPoolSaturated"
+    equal: ["service"]

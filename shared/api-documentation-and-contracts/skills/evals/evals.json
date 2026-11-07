@@ -1,0 +1,44 @@
+{
+  "skill_name": "api-documentation-and-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Comprehensive OpenAPI 3.x Endpoint & Error Modeling",
+      "prompt": "Document a customer registration endpoint using OpenAPI 3.x decorators, ensuring request body examples are realistic, and declaring explicit schema responses for 201 Created, 400 Bad Request, and 409 Conflict.",
+      "expected_output": "Decorates endpoint with @ApiOperation, @ApiBody examples, and @ApiResponse declaring success, 400 validation, and 409 duplicate errors.",
+      "assertions": [
+        "Defines explicit OpenAPI schema for request body with realistic examples",
+        "Documents HTTP 201 Created success response with typed response DTO",
+        "Documents HTTP 400 validation error response matching standard error envelope",
+        "Documents HTTP 409 conflict error response for duplicate account natural keys"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "Production Interactive Documentation Route Hardening",
+      "prompt": "Configure Swagger UI bootstrap in an API server, ensuring interactive documentation (/docs) and raw JSON specs are disabled or restricted in production environments.",
+      "expected_output": "Applies environment check to prevent mounting Swagger UI in production environments unless explicitly authorized.",
+      "assertions": [
+        "Inspects NODE_ENV or environment configuration before mounting documentation routes",
+        "Disables public Swagger UI interactive sandbox in production environments",
+        "Protects internal API route shapes and validation rules from unauthorized reconnaissance",
+        "Configures BearerAuth security scheme for authenticated sandbox execution in non-prod"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Consumer-Driven Contract Testing (Pact) Governance",
+      "prompt": "Set up a Consumer-Driven Contract Test workflow using the Pact framework to ensure backend changes do not break mobile client expectations before deployment.",
+      "expected_output": "Defines consumer pact expectations and configures backend provider verification step in CI/CD pipeline.",
+      "assertions": [
+        "Defines consumer contract interactions with expected request and response shapes",
+        "Executes provider pact verification against actual backend controller handlers",
+        "Enforces pre-deployment verification check (e.g. can-i-deploy) to block breaking changes",
+        "Prevents silent contract drift between frontend clients and backend APIs"
+      ],
+      "files": []
+    }
+  ]
+}

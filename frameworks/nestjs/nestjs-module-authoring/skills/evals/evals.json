@@ -1,0 +1,44 @@
+{
+  "skill_name": "nestjs-module-authoring",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Clean Architecture Boundary & Repository Token Binding",
+      "prompt": "Scaffold a NestJS feature module using abstract repository interfaces and Symbol tokens to decouple the service from concrete ORMs.",
+      "expected_output": "Defines IFeatureRepository interface with Symbol token FEATURE_REPOSITORY, bound to concrete repository in Module providers and injected via @Inject(FEATURE_REPOSITORY).",
+      "assertions": [
+        "Defines abstract repository interface and Symbol injection token",
+        "Binds repository interface token in feature module providers",
+        "Injects repository token in domain service via @Inject decorator",
+        "Prevents direct database ORM calls inside HTTP controllers"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "DTO Validation & OpenAPI Schema Inheritance",
+      "prompt": "Create validated DTOs for a NestJS feature using class-validator and PartialType from @nestjs/swagger for updates.",
+      "expected_output": "Creates CreateFeatureDto with @IsString, @IsNotEmpty, @ApiProperty and UpdateFeatureDto extending PartialType(CreateFeatureDto).",
+      "assertions": [
+        "Applies class-validator decorators to all request payload DTO fields",
+        "Extends CreateFeatureDto using PartialType for update payloads",
+        "Annotates controller endpoints with Swagger @ApiTags and @ApiOperation",
+        "Enforces strict typing with zero explicit any annotations"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "Isolated Unit Testing with Mocked Repositories",
+      "prompt": "Write isolated unit tests for a NestJS feature service using Test.createTestingModule and mocked repository methods.",
+      "expected_output": "Scaffolds service unit test spec injecting mocked repository provider and asserting create and findOne business logic.",
+      "assertions": [
+        "Configures unit testing module using Test.createTestingModule",
+        "Provides mock repository implementation using jest.fn methods",
+        "Tests domain exceptions including NotFoundException on missing records",
+        "Clears mock states in beforeEach hook"
+      ],
+      "files": []
+    }
+  ]
+}

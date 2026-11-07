@@ -1,0 +1,16 @@
+{
+  "/api": {
+    "target": "https://staging-api.yourdomain.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": "/v1"
+    }
+  },
+  "/socket.io": {
+    "target": "https://staging-api.yourdomain.com",
+    "secure": true,
+    "changeOrigin": true,
+    "ws": true
+  }
+}

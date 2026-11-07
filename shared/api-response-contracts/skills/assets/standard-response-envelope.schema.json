@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Standard API Response Envelope Schema",
+  "description": "Language-agnostic JSON API schema specification for Success, Paginated, and Error payloads.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SuccessEnvelope"
+    },
+    {
+      "$ref": "#/$defs/PaginatedEnvelope"
+    },
+    {
+      "$ref": "#/$defs/ErrorEnvelope"
+    }
+  ],
+  "$defs": {
+    "Meta": {
+      "type": "object",
+      "required": ["correlationId", "timestamp"],
+      "properties": {
+        "correlationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "SuccessEnvelope": {
+      "type": "object",
+      "required": ["success", "data", "meta"],
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "const": true
+        },
+        "data": {
+          "type": ["object", "array", "string", "number", "boolean", "null"]
+        },
+        "meta": {
+          "$ref": "#/$defs/Meta"
+        }
+      }
+    },
+    "Pagination": {
+      "type": "object",
+      "required": ["page", "pageSize", "totalItems", "totalPages", "hasNextPage", "hasPreviousPage"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "pageSize": { "type": "integer", "minimum": 1 },
+        "totalItems": { "type": "integer", "minimum": 0 },
+        "totalPages": { "type": "integer", "minimum": 0 },
+        "hasNextPage": { "type": "boolean" },
+        "hasPreviousPage": { "type": "boolean" }
+      }
+    },
+    "PaginatedEnvelope": {
+      "type": "object",
+      "required": ["success", "data", "pagination", "meta"],
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "const": true
+        },
+        "data": {
+          "type": "array"
+        },
+        "pagination": {
+          "$ref": "#/$defs/Pagination"
+        },
+        "meta": {
+          "$ref": "#/$defs/Meta"
+        }
+      }
+    },
+    "ErrorDetail": {
+      "type": "object",
+      "required": ["field", "message"],
+      "properties": {
+        "field": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    },
+    "ErrorEnvelope": {
+      "type": "object",
+      "required": ["success", "error", "meta"],
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "VALIDATION_ERROR",
+                "UNAUTHORIZED",
+                "FORBIDDEN",
+                "NOT_FOUND",
+                "CONFLICT",
+                "UNPROCESSABLE_ENTITY",
+                "RATE_LIMIT_EXCEEDED",
+                "INTERNAL_SERVER_ERROR",
+                "SERVICE_UNAVAILABLE"
+              ]
+            },
+            "message": { "type": "string" },
+            "details": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ErrorDetail"
+              }
+            }
+          }
+        },
+        "meta": {
+          "$ref": "#/$defs/Meta"
+        }
+      }
+    }
+  }
+}

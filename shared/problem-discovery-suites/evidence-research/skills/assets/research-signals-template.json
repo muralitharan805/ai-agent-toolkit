@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "research_run_id": "RUN-2026-001",
+  "original_request": "Ecommerce field la enaku unsolved problems kudu",
+  "scope": {
+    "domain": "ecommerce_operations",
+    "scope_type": "BROAD",
+    "geography": null,
+    "in_scope": [
+      "Catalog and inventory visibility",
+      "Marketplace payout reconciliation"
+    ],
+    "out_of_scope": [
+      "Solution software architecture",
+      "Market demand scoring"
+    ]
+  },
+  "status": "COMPLETED_WITH_GAPS",
+  "research_results": [
+    {
+      "stream_id": "RS-001",
+      "name": "Marketplace Settlement & Payout Reconciliation",
+      "research_questions": [
+        "What manual methods do online sellers use to cross-verify marketplace settlement reports against bank payouts?"
+      ],
+      "query_execution": [
+        {
+          "query_id": "RS-001-Q001",
+          "original_query": "\"marketplace seller\" \"settlement reconciliation\" \"manual\"",
+          "provider_runs": [
+            {
+              "provider": "reddit",
+              "executed_query": "marketplace seller settlement reconciliation manual",
+              "status": "COMPLETED",
+              "result_count": 1,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "signals": [
+        {
+          "signal_id": "SIG-001",
+          "raw_result_ids": ["RD-18x4yz"],
+          "query_ids": ["RS-001-Q001"],
+          "source": {
+            "platform": "REDDIT",
+            "url": "https://reddit.com/r/ecommerce/comments/18x4yz/settlement_reconciliation_nightmare",
+            "published_at": "2026-01-14T08:30:00Z",
+            "retrieved_at": "2026-09-26T12:00:00Z",
+            "inspection_status": "FULL_SOURCE_REVIEWED"
+          },
+          "actor": {
+            "role": "Amazon and Shopify merchant",
+            "role_is_self_reported": true
+          },
+          "observation": {
+            "reported_issue": "Seller reports losing 5 hours weekly matching payment batches to order deductions.",
+            "reported_workaround": "Maintains an 8-tab Excel workbook with VLOOKUP macros.",
+            "reported_frequency": "Weekly",
+            "reported_impact": "Occasional $200-$500 unidentified deductions"
+          },
+          "evidence": {
+            "classification": "L3",
+            "independently_corroborated": false,
+            "human_audited_primary_evidence": false,
+            "verification_status": "UNVERIFIED"
+          },
+          "unknowns": [
+            "Financial statements not audited",
+            "Whether similar friction affects single-channel sellers"
+          ]
+        }
+      ],
+      "alternative_evidence": [
+        {
+          "alternative_name": "A2X for Amazon",
+          "category": "INCUMBENT_SAAS",
+          "pricing_reference": "$19/mo to $139/mo",
+          "documented_limitations": [
+            "Does not support localized marketplace deduction codes in non-US regions",
+            "Requires QuickBooks Online or Xero subscription"
+          ]
+        }
+      ],
+      "unknowns": [
+        "Target geography",
+        "Total proportion of sellers experiencing untracked deductions"
+      ],
+      "next_verification": [
+        "Audit actual seller settlement CSV exports",
+        "Interview third-party marketplace accountants"
+      ]
+    }
+  ],
+  "research_limitations": [
+    "General web search tool was unconfigured; findings derived from public community discussions"
+  ],
+  "next_action": "EVALUATE_RESEARCH_SIGNALS"
+}
