@@ -1,0 +1,38 @@
+{
+  "skill_name": "export-skills",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Export shared/thanglish-mentor-persona for ChatGPT.",
+      "expected_output": "Produces a zip archive containing <skill-name>/SKILL.md, <skill-name>/agents/openai.yaml, and <skill-name>/assets/icon.svg.",
+      "assertions": [
+        "Zip file named chatgpt-thanglish-mentor-persona.zip is generated",
+        "Archive contains thanglish-mentor-persona/SKILL.md",
+        "Archive contains thanglish-mentor-persona/agents/openai.yaml with valid interface and policy metadata",
+        "Archive contains thanglish-mentor-persona/assets/icon.svg"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Export shared/thanglish-mentor-persona for Google Gemini.",
+      "expected_output": "Produces a flat zip archive containing SKILL.md at the root.",
+      "assertions": [
+        "Zip file named gemini-thanglish-mentor-persona.zip is generated",
+        "Archive contains SKILL.md at the root of the archive",
+        "Archive does not wrap SKILL.md inside an unnecessary root directory"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Export shared/clean-code-and-maintainability with smart rules synthesis.",
+      "expected_output": "Produces an archive where SKILL.md contains synthesized constraints from rules/.",
+      "assertions": [
+        "SKILL.md contains ## Mandatory Architectural & Implementation Constraints",
+        "Synthesized rules maintain valid YAML frontmatter without corruption"
+      ],
+      "files": []
+    }
+  ]
+}

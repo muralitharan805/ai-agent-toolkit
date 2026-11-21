@@ -66,7 +66,7 @@ For non-trivial technical issues, architectural decisions, and strategic plannin
 ### 1. Thanglish Architectural & Reversibility Response
 - **User Prompt**: `Angular project-la state management-ku NgRx store add pannalama bro?`
 - **Agent Response**:
-  ```text
+  ````text
   NgRx store introduce panradhuku munnadi architecture trade-off evaluate pannuvom!
 
   **1. What is happening:**
@@ -100,4 +100,4 @@ For non-trivial technical issues, architectural decisions, and strategic plannin
 
   **Curiosity Trigger:**
   *State management-la "Local first" and "Event Sourcing" pattern pathi kelvi patturukengala? High-reliability offline-first apps-la idhu romba powerful!*
-  ```
+  ````

@@ -64,20 +64,75 @@ class ContextV2IntegrationTests(unittest.TestCase):
             self.assertEqual(manifest["managed"]["skills/demo-module"]["tool"], "antigravity")
             self.assertEqual(manifest["managed"]["skills/demo-module"]["scope"], "workspace")
 
-    def test_codex_workspace_syncs_skills_only(self) -> None:
+    def test_codex_workspace_syncs_skills_and_project_instructions(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             source = root / "demo-module"
             target = root / "project"
             write_module(source)
+            target.mkdir()
+            instructions = target / "AGENTS.md"
+            user_text = b"# Project instructions\r\nKeep this text.\r\n"
+            instructions.write_bytes(user_text)
+            args = ("-w", "--tool", "codex", "--target", str(target))
 
-            result = self.run_context(
-                "-w", str(source), "--tool", "codex", "--target", str(target)
-            )
+            self.run_context(*args, str(source))
 
             self.assertTrue((target / ".agents" / "skills" / "demo-module" / "SKILL.md").is_file())
             self.assertFalse((target / ".agents" / "rules" / "demo-rule.md").exists())
-            self.assertIn("skipping rule", result.stdout)
+            combined = instructions.read_bytes()
+            self.assertTrue(combined.startswith(user_text))
+            self.assertIn(b"rule body", combined)
+            self.assertNotIn(b"trigger:", combined)
+            self.run_context(*args, str(source))
+            self.assertEqual(instructions.read_bytes(), combined)
+
+            self.run_context(*args, str(source), "--clean")
+            self.assertEqual(instructions.read_bytes(), user_text)
+            self.assertFalse((target / ".agents" / "skills" / "demo-module").exists())
+
+    def test_codex_rejects_invalid_markers_before_changing_managed_context(self) -> None:
+        for scope in ("workspace", "global"):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                source = root / "demo-module"
+                target = root / "project"
+                codex_home = root / "codex"
+                home = root / "home"
+                env = {"HOME": str(home), "CODEX_HOME": str(codex_home)}
+                write_module(source)
+                if scope == "workspace":
+                    args = ("-w", "--tool", "codex", "--target", str(target))
+                    instructions = target / "AGENTS.md"
+                    skill_root = target / ".agents"
+                else:
+                    args = ("-g", "--tool", "codex")
+                    instructions = codex_home / "AGENTS.md"
+                    skill_root = home / ".agents"
+                instructions.parent.mkdir(parents=True)
+                invalid = b"<!-- AGENT_TOOLKIT_START -->\n"
+                instructions.write_bytes(invalid)
+
+                result = self.run_context(*args, str(source), env=env, check=False)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Invalid toolkit block markers", result.stderr)
+                self.assertEqual(instructions.read_bytes(), invalid)
+                manifest = skill_root / ".toolkit-manifest.json"
+                skill = skill_root / "skills" / "demo-module" / "SKILL.md"
+                self.assertFalse(manifest.exists())
+                self.assertFalse(skill.exists())
+
+                instructions.write_text("# User instructions\n", encoding="utf-8")
+                self.run_context(*args, str(source), env=env)
+                installed = skill.read_bytes()
+                recorded = manifest.read_bytes()
+                instructions.write_bytes(invalid)
+                result = self.run_context(*args, "--clean", env=env, check=False)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Invalid toolkit block markers", result.stderr)
+                self.assertEqual(skill.read_bytes(), installed)
+                self.assertEqual(manifest.read_bytes(), recorded)
+                self.assertEqual(instructions.read_bytes(), invalid)
 
     def test_claude_workspace_uses_claude_skill_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -149,7 +204,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
             self.assertFalse(rule.exists())
             self.assertFalse(skill.exists())
 
-    def test_antigravity_cleanup_preserves_shared_skill_for_codex(self) -> None:
+    def test_shared_skill_survives_until_all_three_tools_release_it(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             source = root / "demo-module"
@@ -158,6 +213,8 @@ class ContextV2IntegrationTests(unittest.TestCase):
 
             self.run_context("-w", str(source), "--tool", "antigravity", "--target", str(target))
             self.run_context("-w", str(source), "--tool", "codex", "--target", str(target))
+
+            self.run_context("-w", str(source), "--tool", "cursor", "--target", str(target))
 
             rule = target / ".agents" / "rules" / "demo-rule.md"
             skill = target / ".agents" / "skills" / "demo-module"
@@ -170,11 +227,13 @@ class ContextV2IntegrationTests(unittest.TestCase):
             self.assertTrue(skill.exists())
             self.assertFalse(rule.exists())
             managed = json.loads(manifest_path.read_text(encoding="utf-8"))["managed"]
-            self.assertEqual(managed["skills/demo-module"]["tools"], ["codex"])
-            self.assertEqual(managed["skills/demo-module"]["tool"], "codex")
+            self.assertEqual(managed["skills/demo-module"]["tools"], ["codex", "cursor"])
+            self.assertEqual(managed["skills/demo-module"]["tool"], "cursor")
 
-            # Codex now owns the only remaining claim on the physical skill.
             self.run_context("-w", "--tool", "codex", "--target", str(target), "--clean")
+            self.assertTrue(skill.exists())
+
+            self.run_context("-w", "--tool", "cursor", "--target", str(target), "--clean")
             self.assertFalse(skill.exists())
 
     def test_cleaning_one_tool_does_not_affect_other_tool_modified_skill(self) -> None:
@@ -197,10 +256,57 @@ class ContextV2IntegrationTests(unittest.TestCase):
             self.assertIn("preserved locally modified", normal.stdout)
             self.assertTrue(skill_file.exists())
 
-    def test_codex_global_is_rejected(self) -> None:
-        result = self.run_context("-g", "--tool", "codex", check=False)
+    def test_cursor_global_is_rejected(self) -> None:
+        result = self.run_context("-g", "--tool", "cursor", check=False)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Global context is currently supported only for antigravity", result.stderr)
+        self.assertIn("Global context is supported for antigravity and codex", result.stderr)
+
+    def test_codex_global_sync_and_selective_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            home = root / "home"
+            codex_home = root / "custom-codex"
+            codex_home.mkdir()
+            env = {"HOME": str(home), "CODEX_HOME": str(codex_home)}
+            instructions = codex_home / "AGENTS.md"
+            user_prefix = b"# My instructions\r\n\r\nUse tabs.  \r\n"
+            user_suffix = b"\nRun tests before reporting results.  \n"
+            instructions.write_bytes(user_prefix)
+            first, second = root / "first", root / "second"
+            write_module(first, rule="FIRST RULE")
+            write_module(second, rule="SECOND RULE")
+            args = ("-g", "--tool", "codex")
+
+            self.run_context(*args, str(first), str(second), env=env)
+            combined = instructions.read_bytes()
+            self.assertTrue(combined.startswith(user_prefix))
+            self.assertIn(b"FIRST RULE", combined)
+            self.assertIn(b"SECOND RULE", combined)
+            self.assertNotIn(b"trigger:", combined)
+            self.assertEqual(combined.count(b"<!-- AGENT_TOOLKIT_START -->"), 1)
+            self.assertFalse((home / ".gemini").exists())
+            self.assertFalse((home / ".codex").exists())
+            skills = home / ".agents" / "skills"
+            self.assertTrue((skills / "first" / "SKILL.md").is_file())
+            self.assertTrue((skills / "second" / "SKILL.md").is_file())
+
+            instructions.write_bytes(combined + user_suffix)
+            self.run_context(*args, str(first), str(second), env=env)
+            self.assertEqual(instructions.read_bytes(), combined + user_suffix)
+
+            invalid = self.run_context(*args, "--clean", "nonexistent-module", env=env, check=False)
+            self.assertNotEqual(invalid.returncode, 0)
+            self.assertEqual(instructions.read_bytes(), combined + user_suffix)
+
+            self.run_context(*args, "--clean", str(first), env=env)
+            self.assertNotIn(b"FIRST RULE", instructions.read_bytes())
+            self.assertIn(b"SECOND RULE", instructions.read_bytes())
+            self.assertFalse((skills / "first").exists())
+            self.assertTrue((skills / "second").exists())
+
+            self.run_context(*args, "--clean", env=env)
+            self.assertEqual(instructions.read_bytes(), user_prefix + user_suffix)
+            self.assertFalse((skills / "second").exists())
 
     def test_antigravity_global_rules_are_tagged_and_cleanup_preserves_user_text(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -113,9 +113,9 @@ Run automated response verification against the Latin font exclusivity and envel
 python3 scripts/validate_thanglish_response.py --file response.txt --strict
 ```
 
-Run full skill compliance validation:
+From the AI Agent Toolkit source checkout, run full skill compliance validation:
 ```bash
-python3 shared/generators/generate-skill/skills/scripts/validate_skill.py shared/thanglish-mentor-persona/skills
+uv run tools/generators/generate-skill/skills/scripts/validate_skill.py shared/thanglish-mentor-persona/skills
 ```
 
 ---

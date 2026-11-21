@@ -44,12 +44,13 @@ jobs:
       - name: Run unit and integration tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Validate representative Agent Skill
+      - name: Validate representative Agent Skills
         run: |
-          # Smoke-test one real skill. Strict mode is intentionally deferred until
-          # the existing catalog is fully warning-free.
+          # Smoke-test representative skills from frameworks and shared.
           uv run tools/generators/generate-skill/skills/scripts/validate_skill.py \
             frameworks/angular/angular-enterprise-forms/skills
+          uv run tools/generators/generate-skill/skills/scripts/validate_skill.py \
+            --strict shared/thanglish-mentor-persona/skills
 
   security-scan:
     name: Gitleaks secret scanning

@@ -189,7 +189,7 @@ def record(
     target_hash = hash_path(target)
     source_key = normalized_source(source, toolkit_root)
 
-    # Antigravity and Codex can share the same .agents/skills/ target.
+    # Multiple tools can share the same .agents/skills/ target.
     # A re-sync of the same source adds the caller as an owner instead of
     # overwriting the previous owner. Different sources must not inherit claims.
     previous = manifest["managed"].get(key)
@@ -437,7 +437,7 @@ def parse_args() -> argparse.Namespace:
     clean_parser.add_argument("--force", action="store_true")
     clean_parser.add_argument("--source-prefix", action="append", default=[])
     clean_parser.add_argument("--kind", action="append", default=[])
-    clean_parser.add_argument("--tool", choices=["antigravity", "codex", "claude"])
+    clean_parser.add_argument("--tool", choices=["antigravity", "codex", "cursor", "claude"])
 
     aggregate_add_parser = subparsers.add_parser("aggregate-add")
     aggregate_add_parser.add_argument("--root", required=True)
