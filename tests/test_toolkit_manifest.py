@@ -15,6 +15,76 @@ SPEC.loader.exec_module(toolkit_manifest)
 
 
 class ToolkitManifestTests(unittest.TestCase):
+    def test_rule_aggregate_requires_toolkit_rule_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            toolkit = root / "toolkit"
+            manifest_root = root / "manifest"
+            rule = toolkit / "shared" / "example" / "rules" / "example.md"
+            rule.parent.mkdir(parents=True)
+            rule.write_text("Example rule\n")
+            toolkit_manifest.aggregate_add(manifest_root, "instructions", [rule], toolkit,
+                                           validate_rules=True)
+            current = toolkit_manifest.aggregate_list(manifest_root, "instructions")["sources"]
+            self.assertEqual(current, ["shared/example/rules/example.md"])
+            self.assertEqual(toolkit_manifest.validated_rule_path(toolkit, current[0]), rule)
+            with self.assertRaisesRegex(ValueError, "inside a toolkit rules directory"):
+                toolkit_manifest.aggregate_add(manifest_root, "instructions",
+                                               [toolkit / "README.md"], toolkit,
+                                               validate_rules=True)
+            self.assertEqual(toolkit_manifest.aggregate_list(manifest_root, "instructions")["sources"],
+                             current)
+
+    def test_destination_check_rejects_symlinks_and_incorrect_types(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            directory = root / "directory"
+            directory.mkdir()
+            link = root / "link"
+            link.symlink_to(directory, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, "Symlink destination"):
+                toolkit_manifest.check_destination(link / "instructions.md", directory=False)
+            with self.assertRaisesRegex(ValueError, "Unexpected destination type"):
+                toolkit_manifest.check_destination(directory, directory=False)
+            self.assertEqual(toolkit_manifest.check_destination(directory / ".." / "new"),
+                             root / "new")
+
+    def test_inventory_compares_registered_source_and_target(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest_root = root / "project" / ".agents"
+            toolkit = root / "toolkit"
+            source = toolkit / "demo" / "skills"
+            target = manifest_root / "skills" / "demo"
+            source.mkdir(parents=True)
+            target.mkdir(parents=True)
+            source_file = source / "SKILL.md"
+            target_file = target / "SKILL.md"
+            source_file.write_text("installed\n")
+            target_file.write_text("installed\n")
+            toolkit_manifest.record(manifest_root, "skills/demo", target, source, toolkit,
+                                    kind="skill", scope="workspace", tool="codex")
+            manifest = toolkit_manifest.manifest_path(manifest_root)
+            before = manifest.read_bytes()
+
+            def state() -> str:
+                return toolkit_manifest.inventory(manifest_root, toolkit, "codex")["items"][0]["status"]
+
+            self.assertEqual(toolkit_manifest.inventory(manifest_root, toolkit, "antigravity")["items"], [])
+            self.assertEqual(state(), "up-to-date")
+            source_file.write_text("new source\n")
+            self.assertEqual(state(), "update-available")
+            target_file.write_text("local customization\n")
+            self.assertEqual(state(), "locally-modified")
+            target_file.write_text("installed\n")
+            source_file.unlink()
+            source.rmdir()
+            self.assertEqual(state(), "source-unavailable")
+            target_file.unlink()
+            target.rmdir()
+            self.assertEqual(state(), "missing")
+            self.assertEqual(manifest.read_bytes(), before)
+
     def test_missing_target_is_missing(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / ".agents"

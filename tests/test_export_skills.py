@@ -25,6 +25,36 @@ class TestExportSkills(unittest.TestCase):
     def tearDown(self):
         self.temp_dir.cleanup()
 
+    def test_rejects_invalid_name_and_symlinked_reference(self):
+        root = Path(self.temp_dir.name)
+        bundle = root / "sample-skill"
+        references = bundle / "references"
+        references.mkdir(parents=True)
+        skill = bundle / "SKILL.md"
+        skill.write_text("---\nname: Sample Skill\n---\n# Sample skill\n")
+        command = ["python3", str(SCRIPT_PATH), str(bundle), "--tool", "both",
+                   "--mode", "zip", "--out", str(self.out_dir)]
+        result = subprocess.run(command, capture_output=True, text=True, cwd=REPO_ROOT)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("lowercase, hyphen-separated skill name", result.stderr)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+        skill.write_text("---\nname: sample-skill\n---\n# Sample skill\n")
+        example = references / "example.md"
+        example.write_text("Sample reference\n")
+        (references / "alias.md").symlink_to(example)
+        result = subprocess.run(command, capture_output=True, text=True, cwd=REPO_ROOT)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Symlink bundle input", result.stderr)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+        command[command.index("zip")] = "prompt"
+        command.extend(["--prompt-out", str(self.prompt_dir)])
+        result = subprocess.run(command, capture_output=True, text=True, cwd=REPO_ROOT)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Symlink bundle input", result.stderr)
+        self.assertEqual(list(self.prompt_dir.iterdir()), [])
+
     def test_export_zip_chatgpt_and_gemini_layout(self):
         """Verifies zip archives adhere to ChatGPT and Gemini structural specifications."""
         cmd = [

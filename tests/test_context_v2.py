@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -9,7 +10,6 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CONTEXT_SCRIPT = REPO_ROOT / "bin" / "context.sh"
 
 
 def write_module(module: Path, *, body: str = "skill body", rule: str = "rule body") -> None:
@@ -28,18 +28,28 @@ def write_module(module: Path, *, body: str = "skill body", rule: str = "rule bo
 
 
 class ContextV2IntegrationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.toolkit = Path(temporary.name)
+        self.sources = self.toolkit / "shared"
+        shutil.copytree(REPO_ROOT / "bin", self.toolkit / "bin",
+                        ignore=shutil.ignore_patterns("__pycache__"))
+
     def run_context(
         self,
         *args: str,
         env: dict[str, str] | None = None,
         check: bool = True,
+        use_repository: bool = False,
     ) -> subprocess.CompletedProcess[str]:
         merged_env = os.environ.copy()
         if env:
             merged_env.update(env)
+        toolkit = REPO_ROOT if use_repository else self.toolkit
         return subprocess.run(
-            ["bash", str(CONTEXT_SCRIPT), *args],
-            cwd=REPO_ROOT,
+            ["bash", str(toolkit / "bin" / "context.sh"), *args],
+            cwd=toolkit,
             check=check,
             text=True,
             capture_output=True,
@@ -49,7 +59,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
     def test_antigravity_workspace_syncs_skill_and_rule(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = root / "demo-module"
+            source = self.sources / "demo-module"
             target = root / "project"
             write_module(source)
 
@@ -67,7 +77,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
     def test_codex_workspace_syncs_skills_and_project_instructions(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = root / "demo-module"
+            source = self.sources / "demo-module"
             target = root / "project"
             write_module(source)
             target.mkdir()
@@ -91,11 +101,56 @@ class ContextV2IntegrationTests(unittest.TestCase):
             self.assertEqual(instructions.read_bytes(), user_text)
             self.assertFalse((target / ".agents" / "skills" / "demo-module").exists())
 
+    def test_codex_rejects_external_rule_and_can_clear_legacy_registration(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            external = root / "example"
+            write_module(external)
+            target = root / "project"
+            args = ("-w", "--tool", "codex", "--target", str(target))
+            result = self.run_context(*args, str(external), check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Registered rule must be inside the toolkit", result.stderr)
+            self.assertFalse((target / ".agents" / "skills" / "example").exists())
+
+            instructions = target / "AGENTS.md"
+            user_content = "# Existing user instructions\n"
+            instructions.write_text(
+                user_content + "<!-- AGENT_TOOLKIT_START -->\nLegacy instructions\n"
+                "<!-- AGENT_TOOLKIT_END -->\n",
+                encoding="utf-8",
+            )
+            manifest = target / ".agents" / ".toolkit-manifest.json"
+            manifest.write_text(json.dumps({
+                "version": 2,
+                "managed": {},
+                "aggregates": {"agents_rules": [str(external / "rules" / "demo-rule.md")]},
+            }), encoding="utf-8")
+            self.run_context(*args, "--clean")
+            self.assertEqual(instructions.read_text(encoding="utf-8"), user_content)
+            self.assertEqual(json.loads(manifest.read_text(encoding="utf-8"))["aggregates"], {})
+
+    def test_codex_rejects_unusable_backup_before_installing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp)
+            source = self.sources / "demo-module"
+            write_module(source)
+            instructions = target / "AGENTS.md"
+            instructions.write_text("# User instructions\n", encoding="utf-8")
+            (target / "AGENTS.md.bak").mkdir()
+
+            result = self.run_context("-w", "--tool", "codex", "--target", str(target),
+                                      str(source), check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Unexpected destination type", result.stderr)
+            self.assertEqual(instructions.read_text(encoding="utf-8"), "# User instructions\n")
+            self.assertFalse((target / ".agents").exists())
+
     def test_codex_rejects_invalid_markers_before_changing_managed_context(self) -> None:
         for scope in ("workspace", "global"):
             with self.subTest(scope=scope), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
-                source = root / "demo-module"
+                source = self.sources / "demo-module"
                 target = root / "project"
                 codex_home = root / "codex"
                 home = root / "home"
@@ -137,7 +192,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
     def test_claude_workspace_uses_claude_skill_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = root / "demo-module"
+            source = self.sources / "demo-module"
             target = root / "project"
             write_module(source)
 
@@ -151,7 +206,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
     def test_cleanup_removes_only_managed_content_and_preserves_modified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = root / "demo-module"
+            source = self.sources / "demo-module"
             target = root / "project"
             write_module(source)
 
@@ -176,7 +231,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
     def test_codex_cleanup_preserves_skill_still_used_by_antigravity(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = root / "demo-module"
+            source = self.sources / "demo-module"
             target = root / "project"
             write_module(source)
 
@@ -207,7 +262,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
     def test_shared_skill_survives_until_all_three_tools_release_it(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = root / "demo-module"
+            source = self.sources / "demo-module"
             target = root / "project"
             write_module(source)
 
@@ -239,7 +294,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
     def test_cleaning_one_tool_does_not_affect_other_tool_modified_skill(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = root / "demo-module"
+            source = self.sources / "demo-module"
             target = root / "project"
             write_module(source)
             self.run_context("-w", str(source), "--tool", "antigravity", "--target", str(target))
@@ -259,7 +314,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
     def test_cursor_global_is_rejected(self) -> None:
         result = self.run_context("-g", "--tool", "cursor", check=False)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Global context is supported for antigravity and codex", result.stderr)
+        self.assertIn("Use -w for cursor", result.stderr)
 
     def test_codex_global_sync_and_selective_cleanup(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -272,7 +327,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
             user_prefix = b"# My instructions\r\n\r\nUse tabs.  \r\n"
             user_suffix = b"\nRun tests before reporting results.  \n"
             instructions.write_bytes(user_prefix)
-            first, second = root / "first", root / "second"
+            first, second = self.sources / "first", self.sources / "second"
             write_module(first, rule="FIRST RULE")
             write_module(second, rule="SECOND RULE")
             args = ("-g", "--tool", "codex")
@@ -311,7 +366,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
     def test_antigravity_global_rules_are_tagged_and_cleanup_preserves_user_text(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = root / "demo-module"
+            source = self.sources / "demo-module"
             home = root / "home"
             gemini_dir = home / ".gemini"
             gemini_dir.mkdir(parents=True)
@@ -355,8 +410,8 @@ class ContextV2IntegrationTests(unittest.TestCase):
             home = root / "home"
             home.mkdir(parents=True)
 
-            first = root / "first"
-            second = root / "second"
+            first = self.sources / "first"
+            second = self.sources / "second"
             write_module(first, rule="FIRST RULE")
             write_module(second, rule="SECOND RULE")
 
@@ -387,6 +442,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
                 "generators/generate-skill",
                 "--target",
                 str(target),
+                use_repository=True,
             )
             self.assertTrue(
                 (target / ".agents" / "skills" / "generate-skill" / "SKILL.md").is_file()
@@ -400,6 +456,7 @@ class ContextV2IntegrationTests(unittest.TestCase):
                 "angular/angular-enterprise-forms",
                 "--target",
                 str(target),
+                use_repository=True,
             )
             self.assertTrue(
                 (target / ".agents" / "skills" / "angular-enterprise-forms" / "SKILL.md").is_file()
