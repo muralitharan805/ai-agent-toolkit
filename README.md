@@ -221,7 +221,7 @@ The authoring tools are not part of normal consumer sync. Ordinary users can clo
 `bin/context.sh` is the primary context lifecycle command. It resolves selected toolkit directories, routes supported context types to the selected AI tool, records ownership, and can safely clean up what it installed.
 
 ```bash
-./bin/context.sh -w [selectors...] [--tool antigravity|codex|claude] [--target <project>]
+./bin/context.sh -w [selectors...] [--tool antigravity|codex|cursor|claude] [--target <project>]
 ./bin/context.sh -g [selectors...] --tool antigravity
 ```
 
@@ -232,7 +232,8 @@ Antigravity is the default tool.
 | Tool | Workspace destination | Supported context |
 | :--- | :--- | :--- |
 | `antigravity` | `<project>/.agents/` | Skills, rules, workflows, plugins |
-| `codex` | `<project>/.agents/skills/` | Skills |
+| `codex` | `<project>/.agents/skills/` and `<project>/AGENTS.md` | Skills and instructions |
+| `cursor` | `<project>/.agents/skills/` | Skills |
 | `claude` | `<project>/.claude/skills/` | Skills |
 
 Unsupported context types are reported and skipped instead of being copied into an incorrect directory.
@@ -241,7 +242,7 @@ Unsupported context types are reported and skipped instead of being copied into 
 # Antigravity is the default
 ./bin/context.sh -w frameworks/angular --target ~/projects/app
 
-# Codex workspace skills
+# Codex workspace skills and instructions
 ./bin/context.sh -w angular/angular-enterprise-forms \
   --tool codex \
   --target ~/projects/app
@@ -252,9 +253,22 @@ Unsupported context types are reported and skipped instead of being copied into 
   --target ~/projects/app
 ```
 
+### Shared workspace skills
+
+Antigravity, Codex, and [Cursor](https://cursor.com/docs/skills) discover skills in the same `.agents/skills/` directory. To register all three tools as owners of a skill in one workspace, run:
+
+```bash
+for tool in antigravity codex cursor; do
+  ./bin/context.sh -w shared/thanglish-mentor-persona \
+    --tool "$tool" --target ~/projects/my-app
+done
+```
+
+Each tool gets its own manifest claim on the shared skill. Antigravity also installs the module's Antigravity rule.
+
 ### Global Routing
 
-Global context currently supports **Antigravity only**. Codex and Claude are intentionally workspace-only in this toolkit.
+Global sync supports **Antigravity and Codex**. Cursor and Claude use workspace sync in this toolkit.
 
 ```bash
 ./bin/context.sh -g shared/security-baseline --tool antigravity
@@ -269,6 +283,18 @@ Antigravity global context uses the configured Gemini/Antigravity directories. S
 ```
 
 Content outside those markers remains user-owned and is preserved.
+
+For Codex, global sync installs skills into `~/.agents/skills/` and combines selected rule bodies in the same toolkit-managed block in `${CODEX_HOME:-$HOME/.codex}/AGENTS.md`. The rule bodies become global instructions. Antigravity trigger metadata is stripped. With no selectors, the command uses the same curated shared modules as Antigravity.
+
+```bash
+./bin/context.sh -g --tool codex
+./bin/context.sh -g shared/thanglish-mentor-persona --tool codex
+./bin/context.sh -g --tool codex --clean
+```
+
+Codex workspace sync uses the same managed block in the project root `AGENTS.md`. In either scope, selected rule bodies become instructions for that scope, with Antigravity activation triggers removed. Antigravity workflows and plugins are reported as unsupported in Codex.
+
+Codex cleanup removes the selected skill claims and managed instructions. Pass a selector with `--clean` to remove only that module. Sync and cleanup reject malformed toolkit block markers before changing installed context. Start a new Codex session to load updated instructions.
 
 ### Directory, Parent, Nested, and Glob Selectors
 
@@ -295,7 +321,7 @@ Selectors may point to a whole parent, a nested child, or a glob. Quote globs so
 
 `bin/context.sh` is the installer/router. `bin/toolkit_manifest.py` is the ownership ledger used before and after filesystem changes.
 
-For an Antigravity or Codex workspace the manifest is stored under `<project>/.agents/.toolkit-manifest.json`; for a Claude workspace it is stored under `<project>/.claude/.toolkit-manifest.json`.
+For an Antigravity, Codex, or Cursor workspace the manifest is stored under `<project>/.agents/.toolkit-manifest.json`; for a Claude workspace it is stored under `<project>/.claude/.toolkit-manifest.json`.
 
 Each managed entry records the source, exact target, context kind, scope, last sync tool, **all tools currently using the context** (`tools`), and installed hash:
 
@@ -321,9 +347,9 @@ This provides the safety boundary:
 - Existing content not present in the manifest is treated as user-owned and is not overwritten by default.
 - Toolkit-managed content with local modifications is preserved by default.
 - `--force` explicitly allows replacement during sync.
-- Cleanup considers only manifest-owned paths **claimed by the selected tool**. For shared `.agents/skills/`, Antigravity and Codex claims are recorded independently in `tools`.
+- Cleanup considers only manifest-owned paths **claimed by the selected tool**. For shared `.agents/skills/`, Antigravity, Codex, and Cursor claims are recorded independently in `tools`.
 - Cleanup from one tool releases only its claim when another tool still uses the skill. The physical shared skill is removed only when the last tool cleans it (and local modifications are not protected by the normal cleanup mode).
-- Codex workspace cleanup is skill-scoped, so Antigravity rules sharing the same `.agents` root are preserved.
+- Codex workspace cleanup releases skill claims and reconciles the managed block in `AGENTS.md`. Antigravity rule files under `.agents/rules/` are preserved.
 - The legacy `tool` field is the most recent sync tool for compatibility; check the `tools` array to see every owner. Older manifests with one `tool` are upgraded when context is re-synced; for already-shared projects, re-sync once with **each** tool to register all claims.
 - Antigravity global rule sources are tracked as a manifest aggregate so selective cleanup can rebuild the combined toolkit block correctly.
 - `GEMINI.md` is not treated as a toolkit-owned file; only the tagged toolkit block is managed.
@@ -355,6 +381,29 @@ For Antigravity global cleanup:
 ```
 
 This removes manifest-owned global context and only the toolkit marker block from `GEMINI.md`; unrelated user content remains.
+
+### Packaging & Exporting for External LLMs (ChatGPT & Gemini)
+
+The toolkit provides a first-class **Dual-Mode Export Pipeline** to package skills for external platforms:
+- **Zip Archives (`dist/skills/`)**: Full multi-file bundles compatible with OpenAI Agent Skills and Google Gemini Skills.
+- **Copy-Paste System Prompts (`dist/prompts/`)**: Pre-formatted, XML-structured system instructions (`<role>`, `<instructions>`, `<constraints>`, `<knowledge_references>`) with an automated **Character Budget Guard** checking against ChatGPT's 8,000 character limit.
+
+```bash
+# Export single module in Dual-Mode (both zip archives and system prompts)
+./bin/context.sh -e shared/thanglish-mentor-persona --tool both
+
+# Shortcut to export raw system prompt and copy directly to clipboard
+./bin/context.sh -P shared/thanglish-mentor-persona -c
+
+# Export prompt only for ChatGPT
+./bin/context.sh -e 'shared/*' --tool chatgpt --mode prompt
+
+# Export zip archives only
+./bin/context.sh -e frameworks/angular --mode zip
+```
+
+> [!NOTE]
+> All build artifacts are written to `dist/` and are automatically ignored by git (`.gitignore`) to keep repository diffs clean.
 
 ---
 
@@ -405,9 +454,13 @@ Sync specific context modules to your preferred AI coding assistant:
 
 # Antigravity Global Machine Defaults (~/.gemini/GEMINI.md)
 ./bin/context.sh -g --tool antigravity
+
+# External LLM Export (ChatGPT & Google Gemini Skills / Prompts)
+./bin/context.sh -e shared/thanglish-mentor-persona --tool both
+./bin/context.sh -P shared/thanglish-mentor-persona -c
 ```
 
-The toolkit repository remains the source of truth; the manifest tracks only what the toolkit installs into each destination. After syncing, open your target app in the selected AI coding tool and work with the installed skills. Antigravity supports skills plus applicable rules; Codex and Claude workspace sync installs skills only.
+The toolkit repository remains the source of truth; the manifest tracks only what the toolkit installs into each destination. After syncing, open your target app in the selected AI coding tool and work with the installed skills. Antigravity installs skills and applicable rules. Codex installs skills and adds selected rule bodies to `AGENTS.md`. Cursor and Claude workspace sync installs skills.
 
 ### 3. Optional: install authoring skills for the toolkit maintainer
 
@@ -422,7 +475,7 @@ This step is **not required** to consume existing context. To create/update skil
   --tool antigravity --target .
 ```
 
-For Codex or Claude Code, change `--tool` accordingly; these targets install skills only (not Antigravity rules). Open the **toolkit repository** in your chosen agent and invoke/mention the installed `generate-agent-suite` skill in that agent's supported syntax. Keep the source repository writable for authoring.
+For Codex or Claude Code, change `--tool` accordingly. Codex also merges selected rule bodies into the project `AGENTS.md`. Open the **toolkit repository** in your chosen agent and invoke/mention the installed `generate-agent-suite` skill in that agent's supported syntax. Keep the source repository writable for authoring.
 
 ---
 

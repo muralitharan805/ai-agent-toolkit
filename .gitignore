@@ -20,3 +20,8 @@ domains/*
 !domains/README.md
 .venv/
 venv/
+temp
+AGENTS.md
+
+# Build & Export Artifacts
+dist/

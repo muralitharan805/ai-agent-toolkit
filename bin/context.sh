@@ -11,8 +11,15 @@ TARGET_TOOL="antigravity"
 FORCE=false
 CLEAN=false
 SYNC_ALL=false
+EXPORT_MODE=false
+EXPORT_SKILLS_MODE="both"
+EXPORT_OUT="dist/skills"
+EXPORT_PROMPT_OUT="dist/prompts"
+EXPORT_COPY=false
+EXPORT_SCRIPT="${TOOLKIT_ROOT}/tools/packagers/export-skills/skills/scripts/export_skills.py"
 SELECTORS=()
-GLOBAL_RULE_FILES=()
+AGGREGATED_RULE_FILES=()
+INSTRUCTIONS_FILE=""
 START_TAG="<!-- AGENT_TOOLKIT_START -->"
 END_TAG="<!-- AGENT_TOOLKIT_END -->"
 
@@ -22,8 +29,7 @@ CONSUMER_ROOTS=("frameworks" "infra" "domains" "shared")
 # Workspace destinations are resolved relative to --target.
 # Global destinations are absolute under HOME and are enabled only for tools
 # explicitly supported by parse_arguments/setup_scope_paths.
-ANTIGRAVITY_WORKSPACE_ROOT=".agents"
-CODEX_WORKSPACE_ROOT=".agents"
+SHARED_WORKSPACE_ROOT=".agents"
 CLAUDE_WORKSPACE_ROOT=".claude"
 
 ANTIGRAVITY_GLOBAL_ROOT="${HOME}/.gemini"
@@ -44,20 +50,31 @@ DEFAULT_GLOBAL_MODULES=(
 usage() {
   cat <<'EOF'
 Usage:
-  context.sh -w [selectors...] [--tool antigravity|codex|claude] [--target <project>] [--force]
-  context.sh -g [selectors...] [--tool antigravity] [--force]
+  context.sh -w [selectors...] [--tool antigravity|codex|cursor|claude] [--target <project>] [--force]
+  context.sh -g [selectors...] [--tool antigravity|codex] [--force]
   context.sh -w| -g [selectors...] --clean [--force]
+  context.sh -e [selectors...] [--tool chatgpt|gemini|both] [--mode zip|prompt|both] [--out dist/skills] [--prompt-out dist/prompts] [-c|--copy]
+  context.sh -P, --prompt [selectors...] [--tool chatgpt|gemini|both] [-c|--copy]
 
 Scope:
   -w, --workspace           Sync into a project workspace. Default scope.
   -g, --global              Sync into the selected tool's global context.
+  -e, --export, --export-zip Package selectors into ChatGPT/Gemini skill zip files / prompts.
+  -P, --prompt              Shortcut to export selectors directly as raw system prompts.
+
+Export options:
+      --mode MODE           Export mode: zip, prompt, or both (default: both).
+  -c, --copy                Copy generated system prompt directly to system clipboard.
+      --prompt-out PATH     Output directory for prompt markdown files (default: dist/prompts).
 
 Tool selection:
-  -T, --tool, --tools NAME  antigravity (default), codex, or claude.
-                            Global sync currently supports antigravity only.
+  -T, --tool, --tools NAME  antigravity (default), codex, cursor, or claude.
+                            Global sync supports antigravity and codex.
+                            Export mode (-e, -P) supports chatgpt, gemini, both, or all.
 
 Targeting:
       --target PATH         Workspace project root. Default: current directory.
+      --out PATH            Output directory for exported zip archives (default: dist/skills).
 
 Selectors:
   Pass toolkit paths, shorthand paths, parent directories, or globs.
@@ -68,6 +85,10 @@ Selectors:
   context.sh -w frameworks/angular --target ~/work/app
   context.sh -w tools/generators/generate-skill --target ~/work/toolkit-dev
   context.sh -g shared/security-baseline --tool antigravity
+  context.sh -g --tool codex
+  context.sh -e shared/thanglish-mentor-persona --tool both
+  context.sh -P shared/thanglish-mentor-persona -c
+  context.sh -e 'shared/*' --tool chatgpt --mode prompt
 
 Options:
   -a, --all                 Sync all consumer catalog roots (frameworks, infra, domains, shared).
@@ -90,9 +111,21 @@ need_value() {
 }
 
 validate_tool() {
+  if [[ "$EXPORT_MODE" == true ]]; then
+    case "$TARGET_TOOL" in
+      chatgpt|gemini|both|all) ;;
+      antigravity) TARGET_TOOL="both" ;;
+      *) fail "Unsupported export tool '$TARGET_TOOL'. Supported: chatgpt, gemini, both, all" ;;
+    esac
+    case "$EXPORT_SKILLS_MODE" in
+      zip|prompt|both) ;;
+      *) fail "Unsupported export mode '$EXPORT_SKILLS_MODE'. Supported: zip, prompt, both" ;;
+    esac
+    return
+  fi
   case "$TARGET_TOOL" in
-    antigravity|codex|claude) ;;
-    *) fail "Unsupported tool '$TARGET_TOOL'. Supported: antigravity, codex, claude" ;;
+    antigravity|codex|cursor|claude) ;;
+    *) fail "Unsupported tool '$TARGET_TOOL'. Supported: antigravity, codex, cursor, claude" ;;
   esac
 }
 
@@ -118,6 +151,34 @@ parse_arguments() {
       -g|--global)
         MODE="global"
         shift
+        ;;
+      -e|--export|--export-zip)
+        EXPORT_MODE=true
+        shift
+        ;;
+      -P|--prompt)
+        EXPORT_MODE=true
+        EXPORT_SKILLS_MODE="prompt"
+        shift
+        ;;
+      --mode)
+        need_value "$@"
+        EXPORT_SKILLS_MODE="$2"
+        shift 2
+        ;;
+      -c|--copy)
+        EXPORT_COPY=true
+        shift
+        ;;
+      --prompt-out)
+        need_value "$@"
+        EXPORT_PROMPT_OUT="$2"
+        shift 2
+        ;;
+      --out)
+        need_value "$@"
+        EXPORT_OUT="$2"
+        shift 2
         ;;
       -T|--tool|--tools)
         need_value "$@"
@@ -198,11 +259,14 @@ parse_arguments() {
   done
 
   validate_tool
+  if [[ "$EXPORT_MODE" == true ]]; then
+    return 0
+  fi
   if [[ "$MODE" == "global" && "$TARGET_DIR" != "." ]]; then
     fail "--target is workspace-only. Global destinations are tool-defined."
   fi
-  if [[ "$MODE" == "global" && "$TARGET_TOOL" != "antigravity" ]]; then
-    fail "Global context is currently supported only for antigravity. Use -w for ${TARGET_TOOL}."
+  if [[ "$MODE" == "global" && "$TARGET_TOOL" != "antigravity" && "$TARGET_TOOL" != "codex" ]]; then
+    fail "Global context is supported for antigravity and codex. Use -w for ${TARGET_TOOL}."
   fi
 }
 
@@ -214,14 +278,14 @@ setup_scope_paths() {
 
     case "$TARGET_TOOL" in
       antigravity)
-        MANIFEST_ROOT="${project_root}/${ANTIGRAVITY_WORKSPACE_ROOT}"
+        MANIFEST_ROOT="${project_root}/${SHARED_WORKSPACE_ROOT}"
         TARGET_SKILLS_DIR="${MANIFEST_ROOT}/skills"
         TARGET_RULES_DIR="${MANIFEST_ROOT}/rules"
         TARGET_WORKFLOWS_DIR="${MANIFEST_ROOT}/workflows"
         TARGET_PLUGINS_DIR="${MANIFEST_ROOT}/plugins"
         ;;
-      codex)
-        MANIFEST_ROOT="${project_root}/${CODEX_WORKSPACE_ROOT}"
+      codex|cursor)
+        MANIFEST_ROOT="${project_root}/${SHARED_WORKSPACE_ROOT}"
         TARGET_SKILLS_DIR="${MANIFEST_ROOT}/skills"
         TARGET_RULES_DIR=""
         TARGET_WORKFLOWS_DIR=""
@@ -235,17 +299,37 @@ setup_scope_paths() {
         TARGET_PLUGINS_DIR=""
         ;;
     esac
+    if [[ "$TARGET_TOOL" == "codex" ]]; then
+      INSTRUCTIONS_FILE="${project_root}/AGENTS.md"
+      INSTRUCTIONS_MANIFEST_ROOT="$MANIFEST_ROOT"
+      INSTRUCTIONS_AGGREGATE="agents_rules"
+    fi
     SCOPE_LABEL="workspace:${project_root} (${TARGET_TOOL})"
   else
-    MANIFEST_ROOT="${ANTIGRAVITY_GLOBAL_ROOT}"
-    TARGET_SKILLS_DIR="${ANTIGRAVITY_GLOBAL_SKILLS_LEGACY}"
-    MIRROR_SKILLS_DIR="${ANTIGRAVITY_GLOBAL_SKILLS}"
     TARGET_RULES_DIR=""
-    TARGET_WORKFLOWS_DIR="${ANTIGRAVITY_GLOBAL_WORKFLOWS}"
-    TARGET_GLOBAL_WORKFLOWS_DIR="${ANTIGRAVITY_GLOBAL_GLOBAL_WORKFLOWS}"
-    TARGET_PLUGINS_DIR="${ANTIGRAVITY_GLOBAL_PLUGINS}"
-    GLOBAL_GEMINI_MD="${ANTIGRAVITY_GLOBAL_RULES_FILE}"
-    SCOPE_LABEL="global:${HOME}/.gemini (antigravity)"
+    case "$TARGET_TOOL" in
+      antigravity)
+        MANIFEST_ROOT="${ANTIGRAVITY_GLOBAL_ROOT}"
+        TARGET_SKILLS_DIR="${ANTIGRAVITY_GLOBAL_SKILLS_LEGACY}"
+        MIRROR_SKILLS_DIR="${ANTIGRAVITY_GLOBAL_SKILLS}"
+        TARGET_WORKFLOWS_DIR="${ANTIGRAVITY_GLOBAL_WORKFLOWS}"
+        TARGET_GLOBAL_WORKFLOWS_DIR="${ANTIGRAVITY_GLOBAL_GLOBAL_WORKFLOWS}"
+        TARGET_PLUGINS_DIR="${ANTIGRAVITY_GLOBAL_PLUGINS}"
+        INSTRUCTIONS_FILE="${ANTIGRAVITY_GLOBAL_RULES_FILE}"
+        INSTRUCTIONS_MANIFEST_ROOT="$MANIFEST_ROOT"
+        INSTRUCTIONS_AGGREGATE="gemini_rules"
+        ;;
+      codex)
+        MANIFEST_ROOT="${HOME}/.agents"
+        TARGET_SKILLS_DIR="${MANIFEST_ROOT}/skills"
+        TARGET_WORKFLOWS_DIR=""
+        TARGET_PLUGINS_DIR=""
+        INSTRUCTIONS_MANIFEST_ROOT="${CODEX_HOME:-${HOME}/.codex}"
+        INSTRUCTIONS_FILE="${INSTRUCTIONS_MANIFEST_ROOT}/AGENTS.md"
+        INSTRUCTIONS_AGGREGATE="agents_rules"
+        ;;
+    esac
+    SCOPE_LABEL="global:${INSTRUCTIONS_MANIFEST_ROOT} (${TARGET_TOOL})"
   fi
 
   mkdir -p "$MANIFEST_ROOT" "$TARGET_SKILLS_DIR"
@@ -255,8 +339,7 @@ setup_scope_paths() {
   [[ -n "${MIRROR_SKILLS_DIR:-}" ]] && mkdir -p "$MIRROR_SKILLS_DIR"
   [[ -n "${TARGET_GLOBAL_WORKFLOWS_DIR:-}" ]] && mkdir -p "$TARGET_GLOBAL_WORKFLOWS_DIR"
   if [[ "$MODE" == "global" ]]; then
-    mkdir -p "$(dirname "$GLOBAL_GEMINI_MD")"
-    touch "$GLOBAL_GEMINI_MD"
+    mkdir -p "$INSTRUCTIONS_MANIFEST_ROOT"
   fi
 }
 
@@ -265,7 +348,7 @@ tool_supports_kind() {
   if [[ "$TARGET_TOOL" == "antigravity" ]]; then
     return 0
   fi
-  [[ "$MODE" == "workspace" && "$kind" == "skill" ]]
+  [[ "$kind" == "skill" ]]
 }
 
 skip_unsupported() {
@@ -382,21 +465,21 @@ sync_single_skill() {
   fi
 }
 
-append_global_rule() {
+append_aggregated_rule() {
   local rule_file="$1"
   local existing
-  for existing in "${GLOBAL_RULE_FILES[@]:-}"; do
+  for existing in "${AGGREGATED_RULE_FILES[@]:-}"; do
     [[ "$existing" == "$rule_file" ]] && return 0
   done
-  GLOBAL_RULE_FILES+=("$rule_file")
+  AGGREGATED_RULE_FILES+=("$rule_file")
 }
 
 sync_single_rule() {
   local rule_file="$1"
   [[ -f "$rule_file" ]] || return 0
 
-  if [[ "$MODE" == "global" ]]; then
-    append_global_rule "$rule_file"
+  if [[ -n "${INSTRUCTIONS_FILE:-}" ]]; then
+    append_aggregated_rule "$rule_file"
     return 0
   fi
 
@@ -590,36 +673,39 @@ sync_all_consumer_context() {
   done
 }
 
-register_global_rules() {
-  [[ "$MODE" == "global" && "$TARGET_TOOL" == "antigravity" ]] || return 0
-  [[ "${#GLOBAL_RULE_FILES[@]}" -gt 0 ]] || return 0
+register_aggregated_rules() {
+  [[ -n "${INSTRUCTIONS_FILE:-}" ]] || return 0
+  [[ "${#AGGREGATED_RULE_FILES[@]}" -gt 0 ]] || return 0
 
   local -a cmd=(
     python3 "$MANIFEST_HELPER" aggregate-add
-    --root "$MANIFEST_ROOT"
-    --name "gemini_rules"
+    --root "$INSTRUCTIONS_MANIFEST_ROOT"
+    --name "$INSTRUCTIONS_AGGREGATE"
     --toolkit-root "$TOOLKIT_ROOT"
   )
   local rule_file
-  for rule_file in "${GLOBAL_RULE_FILES[@]}"; do
+  for rule_file in "${AGGREGATED_RULE_FILES[@]}"; do
     cmd+=(--source "$rule_file")
   done
   "${cmd[@]}" >/dev/null
 }
 
-registered_global_rules() {
+registered_rule_sources() {
   python3 "$MANIFEST_HELPER" aggregate-list \
-    --root "$MANIFEST_ROOT" \
-    --name "gemini_rules" \
+    --root "$INSTRUCTIONS_MANIFEST_ROOT" \
+    --name "$INSTRUCTIONS_AGGREGATE" \
     | python3 -c 'import json,sys; [print(x) for x in json.load(sys.stdin)["sources"]]'
 }
 
-render_global_gemini_md() {
-  [[ "$MODE" == "global" && "$TARGET_TOOL" == "antigravity" ]] || return 0
+render_instructions() {
+  [[ -n "${INSTRUCTIONS_FILE:-}" ]] || return 0
 
-  local temp
-  temp="$(mktemp)"
-  : > "$temp"
+  local mode="${1:-write}"
+  local sources temp=""
+  if [[ "$mode" == "write" ]]; then
+    sources="$(registered_rule_sources)"
+    temp="$(mktemp)"
+  fi
 
   local source absolute
   while IFS= read -r source; do
@@ -635,52 +721,56 @@ render_global_gemini_md() {
     else
       echo "  [Global Rule] ! source missing: $source"
     fi
-  done < <(registered_global_rules)
+  done <<< "${sources:-}"
 
-  python3 - "$GLOBAL_GEMINI_MD" "$temp" "$START_TAG" "$END_TAG" <<'PY'
+  local render_status=0
+  python3 - "$INSTRUCTIONS_FILE" "$temp" "$START_TAG" "$END_TAG" "$mode" <<'PY' || render_status=$?
 from pathlib import Path
 import sys
 
 path = Path(sys.argv[1])
-buffer = Path(sys.argv[2]).read_text(encoding="utf-8").strip()
 start, end = sys.argv[3], sys.argv[4]
-existing = path.read_text(encoding="utf-8") if path.exists() else ""
+existing = path.read_bytes().decode("utf-8") if path.exists() else ""
+lines = existing.splitlines(keepends=True)
+starts = [i for i, line in enumerate(lines) if line.rstrip("\r\n") == start]
+ends = [i for i, line in enumerate(lines) if line.rstrip("\r\n") == end]
+if (starts or ends) and (len(starts) != 1 or len(ends) != 1 or starts[0] >= ends[0]):
+    sys.exit(f"Invalid toolkit block markers in {path}.")
+if sys.argv[5] == "check":
+    sys.exit(0)
 
-def without_block(text: str) -> str:
-    if start not in text or end not in text:
-        return text
-    s = text.index(start)
-    e = text.index(end, s) + len(end)
-    return (text[:s].rstrip() + "\n\n" + text[e:].lstrip()).strip()
+buffer = Path(sys.argv[2]).read_text(encoding="utf-8").strip()
+block = f"{start}\n\n{buffer}\n\n{end}\n" if buffer else ""
 
-base = without_block(existing)
-if buffer:
-    block = f"{start}\n\n{buffer}\n\n{end}"
-    updated = (base + "\n\n" if base else "") + block
+if starts:
+    updated = "".join(lines[:starts[0]]) + block + "".join(lines[ends[0] + 1:])
+elif block:
+    separator = "\n" if existing and not existing.endswith("\n") else ""
+    updated = existing + separator + block
 else:
-    updated = base
-    block = ""
+    updated = existing
 
-if updated != existing.strip():
+if updated != existing:
     if existing:
-        path.with_name(path.name + ".bak").write_text(existing, encoding="utf-8")
-    path.write_text((updated + "\n") if updated else "", encoding="utf-8")
+        path.with_name(path.name + ".bak").write_bytes(existing.encode("utf-8"))
+    path.write_bytes(updated.encode("utf-8"))
 
-CHAR_BUDGET_LIMIT = 12000
-total_chars = len(updated)
-if total_chars > CHAR_BUDGET_LIMIT:
-    print(
-        f"  ⚠️  [Warning] {path.name} total size is {total_chars:,} characters "
-        f"(toolkit block: {len(block):,} chars).\n"
-        f"      Exceeds recommended {CHAR_BUDGET_LIMIT:,} character budget! "
-        f"Antigravity IDE may truncate rules beyond this limit.\n"
-        f"      Consider keeping only universal invariants in global and moving domain rules to workspace mode (-w).",
-        file=sys.stderr,
-    )
+if path.name == "GEMINI.md" and len(updated) > 12000:
+    print(f"  [Warning] {path.name} exceeds the recommended 12,000-character budget.", file=sys.stderr)
+if path.name == "AGENTS.md" and len(updated.encode("utf-8")) > 32768:
+    print(f"  [Warning] {path.name} exceeds Codex's default 32 KiB instruction budget.", file=sys.stderr)
+if path.name == "AGENTS.md":
+    override = path.with_name("AGENTS.override.md")
+    if override.is_file() and override.stat().st_size:
+        print(f"  [Warning] Codex prioritizes {override} over {path.name}.", file=sys.stderr)
+
 PY
 
-  rm -f "$temp"
-  echo "Global rules: reconciled toolkit block in $GLOBAL_GEMINI_MD"
+  [[ -z "$temp" ]] || rm -f "$temp"
+  [[ "$render_status" -eq 0 ]] || return "$render_status"
+  if [[ "$mode" == "write" ]]; then
+    echo "Instructions: reconciled toolkit block in $INSTRUCTIONS_FILE"
+  fi
 }
 
 
@@ -700,20 +790,21 @@ PY
 
 run_cleanup() {
   local -a prefixes=()
-  local selector resolved
+  local selector resolved matches
 
   if [[ "${#SELECTORS[@]}" -gt 0 ]]; then
     for selector in "${SELECTORS[@]}"; do
+      matches="$(resolve_selector "$selector")" || fail "No context matches '$selector'; cleanup canceled."
       while IFS= read -r resolved; do
         [[ -n "$resolved" ]] && prefixes+=("$(normalized_source_prefix "$resolved")")
-      done < <(resolve_selector "$selector" || true)
+      done <<< "$matches"
     done
   fi
 
   local -a cmd=(python3 "$MANIFEST_HELPER" clean --root "$MANIFEST_ROOT")
   [[ "$FORCE" == true ]] && cmd+=(--force)
-  if [[ "$MODE" == "workspace" ]]; then
-    # .agents is shared by Antigravity and Codex: release only this tool's claim.
+  if [[ "$MODE" == "workspace" || "$TARGET_TOOL" == "codex" ]]; then
+    # Release only this tool's claim, including when .agents is shared.
     cmd+=(--tool "$TARGET_TOOL")
     if [[ "$TARGET_TOOL" != "antigravity" ]]; then
       cmd+=(--kind skill)
@@ -738,23 +829,48 @@ for key in r["released"]:
 print(f"Cleanup complete. Remaining managed entries: {r['remaining']}")
 PY
 
-  if [[ "$MODE" == "global" && "$TARGET_TOOL" == "antigravity" ]]; then
+  if [[ -n "${INSTRUCTIONS_FILE:-}" ]]; then
     local -a aggregate_cmd=(
       python3 "$MANIFEST_HELPER" aggregate-remove
-      --root "$MANIFEST_ROOT"
-      --name "gemini_rules"
+      --root "$INSTRUCTIONS_MANIFEST_ROOT"
+      --name "$INSTRUCTIONS_AGGREGATE"
     )
     for prefix in "${prefixes[@]}"; do
       aggregate_cmd+=(--source-prefix "$prefix")
     done
     "${aggregate_cmd[@]}" >/dev/null
-    render_global_gemini_md
+    render_instructions
   fi
 }
 
 main() {
   parse_arguments "$@"
+
+  if [[ "$EXPORT_MODE" == true ]]; then
+    local -a export_args=()
+    if [[ "${#SELECTORS[@]}" -gt 0 ]]; then
+      export_args+=("${SELECTORS[@]}")
+    elif [[ "$SYNC_ALL" == true ]]; then
+      export_args+=("shared/*" "frameworks/*" "infra/*" "domains/*")
+    else
+      export_args+=("shared/*")
+    fi
+    local -a export_cmd=(
+      python3 "$EXPORT_SCRIPT" "${export_args[@]}"
+      --tool "$TARGET_TOOL"
+      --mode "$EXPORT_SKILLS_MODE"
+      --out "$EXPORT_OUT"
+      --prompt-out "$EXPORT_PROMPT_OUT"
+    )
+    if [[ "$EXPORT_COPY" == true ]]; then
+      export_cmd+=(--copy)
+    fi
+    "${export_cmd[@]}"
+    exit 0
+  fi
+
   setup_scope_paths
+  render_instructions check
 
   echo "AI Agent Toolkit Context"
   echo "Scope : $SCOPE_LABEL"
@@ -775,8 +891,8 @@ main() {
     sync_selectors shared
   fi
 
-  register_global_rules
-  render_global_gemini_md
+  register_aggregated_rules
+  render_instructions
   echo "Context sync complete."
 }
 

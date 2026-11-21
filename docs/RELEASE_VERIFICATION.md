@@ -34,7 +34,7 @@ test -f "$TARGET/.agents/.toolkit-manifest.json"
 
 Expected: Angular Forms skill + rules copied into `.agents/` with an ownership manifest. Re-running the same `context.sh` command should succeed without modifying the skill's contents or damaging user-owned files.
 
-For an equivalent fresh **Codex** workspace, use `--tool codex`; expect `.agents/skills/angular-enterprise-forms/SKILL.md` and **no copied Antigravity rule**.
+For equivalent fresh **Codex** and **Cursor** workspaces, use `--tool codex` or `--tool cursor`; expect `.agents/skills/angular-enterprise-forms/SKILL.md` and **no copied Antigravity rule**.
 
 For a fresh **Claude Code** workspace, use `--tool claude`; expect `.claude/skills/angular-enterprise-forms/SKILL.md` and **no copied Antigravity rule**.
 
@@ -80,6 +80,7 @@ Repeat Step 2 against a **disposable real Angular application**, then open that 
 | --- | --- |
 | Google Antigravity | Workspace skill appears under `.agents/skills/`; relevant Angular rules under `.agents/rules/` |
 | OpenAI Codex | Workspace skill appears under `.agents/skills/`; Antigravity rules are not installed |
+| Cursor | Workspace skill appears under `.agents/skills/`; verify discovery in Cursor Agent |
 | Claude Code | Workspace skill appears under `.claude/skills/`; Antigravity rules are not installed |
 
 Ask the agent to **use the installed `angular-enterprise-forms` skill** and implement a small typed reactive form with validation. Confirm the agent can access the installed skill and its references, creates correct app code, and that the Angular project's own build/tests pass.

@@ -25,13 +25,15 @@ flowchart TD
         AGY["Google Antigravity IDE<br/>(<project>/.agents/ & ~/.gemini/)"]
         CLAUDE["Claude Code<br/>(<project>/.claude/)"]
         CODEX["OpenAI Codex<br/>(<project>/.agents/skills/)"]
+        CURSOR["Cursor<br/>(<project>/.agents/skills/)"]
     end
 
     SSoT --> CLI
     CLI <--> MAN
     CLI -->|Workspace & Global Sync| AGY
     CLI -->|Workspace Skills| CLAUDE
-    CLI -->|Workspace Skills| CODEX
+    CLI -->|Workspace Skills & Global Sync| CODEX
+    CLI -->|Workspace Skills| CURSOR
 ```
 
 ---
@@ -97,9 +99,11 @@ Rules enforce hard invariants, coding standards, and negative boundaries (what t
 | Tool | Target Workspace | Supported Contexts | Behavior for Unsupported Types |
 | :--- | :--- | :--- | :--- |
 | **Google Antigravity** | `<project>/.agents/` | Skills (`skills/`), Rules (`rules/`), Plugins | Ingests full catalog into native agent structures. |
-| **OpenAI Codex** | `<project>/.agents/skills/` | Skills (`skills/`) only | Installs skills; rules are reported and skipped cleanly. |
+| **OpenAI Codex** | `<project>/.agents/skills/` and `<project>/AGENTS.md` | Skills and project instructions | Combines selected rule bodies in a toolkit-managed block. Reports Antigravity workflows and plugins as unsupported. |
+| **Cursor** | `<project>/.agents/skills/` | Skills (`skills/`) only | Shares workspace skill files and tracks its own manifest claim. |
 | **Claude Code** | `<project>/.claude/skills/` | Skills (`skills/`) only | Installs skills into `.claude/`; rules skipped cleanly. |
 | **Global Scope (Antigravity)** | `~/.gemini/` | Global rules and skills | Appends managed rules inside `<!-- AGENT_TOOLKIT_START -->` block in `~/.gemini/GEMINI.md`. |
+| **Global Scope (Codex)** | `~/.agents/skills/` and `${CODEX_HOME:-$HOME/.codex}/AGENTS.md` | Global skills and instructions | Updates the toolkit block and preserves surrounding instructions. |
 
 ### Three-Way Ownership & Hash Safety State Machine
 

@@ -2,7 +2,7 @@
 
 These tests run bin/context.sh against isolated app folders, not synthetic
 toolkit modules, so a fresh checkout verifies the public README flow.
-Actual Antigravity/Codex/Claude agent invocation still needs manual testing.
+Actual agent invocation still needs manual testing.
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ class ConsumerLifecycleEndToEndTests(unittest.TestCase):
         return result
 
     def test_real_angular_context_install_resync_protection_and_cleanup(self) -> None:
-        for tool in ("antigravity", "codex", "claude"):
+        for tool in ("antigravity", "codex", "cursor", "claude"):
             with self.subTest(tool=tool), tempfile.TemporaryDirectory() as tmp:
                 target = Path(tmp) / "consumer-app"
                 target.mkdir()
@@ -110,7 +110,7 @@ class ConsumerLifecycleEndToEndTests(unittest.TestCase):
                 self.assertTrue(app_file.is_file())
 
     def test_unmanaged_existing_skill_is_never_replaced_or_removed_by_default(self) -> None:
-        for tool in ("antigravity", "codex", "claude"):
+        for tool in ("antigravity", "codex", "cursor", "claude"):
             with self.subTest(tool=tool), tempfile.TemporaryDirectory() as tmp:
                 target = Path(tmp) / "consumer-app"
                 context_root = workspace_root(target, tool)

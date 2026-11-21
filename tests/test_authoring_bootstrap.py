@@ -43,7 +43,7 @@ class AuthoringBootstrapTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + "\n" + result.stderr)
 
     def test_installed_authoring_skill_links_and_companions(self) -> None:
-        for tool in ("antigravity", "codex", "claude"):
+        for tool in ("antigravity", "codex", "cursor", "claude"):
             with self.subTest(tool=tool), tempfile.TemporaryDirectory() as tmp:
                 target = Path(tmp)
                 skill_root = target / (".claude" if tool == "claude" else ".agents") / "skills"
