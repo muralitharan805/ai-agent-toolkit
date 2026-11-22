@@ -19,7 +19,7 @@ The **Mandatory 6-File Topology** cleanly splits concerns across dedicated layer
 - **Secrets**: Reference environment variables exclusively:
   ```yaml
   environment:
-    - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret}
+    - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET before starting Compose}
     - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@${DB_HOST:-db}:${DB_PORT:-5432}/${DB_NAME:-app}
   ```
 

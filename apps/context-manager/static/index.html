@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Context Manager · SeyaliCraft</title><meta name="description" content="Explore your AI Agent Toolkit and safely sync context into local projects."><link rel="stylesheet" href="./style.css"><script defer src="./app.js"></script></head>
+<body>
+<section id="pair-panel" class="pair-panel" hidden>
+<h1>Connect Context Manager</h1>
+<p id="pair-instructions">Start Context Manager on this computer, then enter the pairing code printed in your terminal.</p>
+<pre><code id="pair-command">python3 apps/context-manager/server.py --pair-with https://seyalicraft.com</code></pre>
+<form id="pair-form">
+<label><span id="pair-code-label">Pairing code</span><input id="pair-code" type="password" autocomplete="off" spellcheck="false" required></label>
+<label>Local port<input id="pair-port" type="number" min="1" max="65535" value="8765" required></label>
+<button type="submit">Connect to local Context Manager</button>
+</form>
+<p id="pair-error" role="alert" hidden></p>
+</section>
+<aside><a class="brand" href="/">◈ <span>SeyaliCraft<small>CONTEXT MANAGER</small></span></a><div class="nav active">▦ &nbsp; Context library</div><div class="sidebar-label">YOUR WORKSPACE</div><div id="project-list"></div><button id="add-project" class="outline">＋ Target directory</button><button id="open-installed" class="outline" disabled>Installed context</button><button id="open-global" class="outline" disabled>Global sync</button><div class="local-note"><span class="dot"></span> Running locally<small>Your files stay on this machine.</small></div></aside>
+<main><header><div class="eyebrow">AI AGENT TOOLKIT / LIBRARY</div><button id="pair-disconnect" type="button" hidden>Disconnect</button><span class="badge">LOCAL WORKSPACE</span></header><section class="intro"><div><h1>The right context.<br><span>In every project.</span></h1><p>Explore your toolkit. Review every change. Sync with confidence.</p></div><div class="summary"><strong id="count">—</strong><span>reusable bundles</span></div></section>
+<section class="toolbar"><label class="search">⌕ <input id="search" type="search" placeholder="Search skills, frameworks, or capabilities…" aria-label="Search contexts"></label><select id="category" aria-label="Category"><option value="">All categories</option><option>frameworks</option><option>infra</option><option>shared</option><option>domains</option></select></section>
+<div class="section-heading"><h2>Context library</h2><span id="results"></span></div><div id="catalog" class="cards"></div><div id="empty" hidden>No matching contexts. Try another search.</div></main>
+<dialog id="installed-dialog" aria-labelledby="installed-title">
+<div class="dialog-head"><h2 id="installed-title">Installed context</h2><button class="close" aria-label="Close">×</button></div>
+<div class="installed-controls">
+<label>Scope<select id="installed-scope"><option value="workspace">Target directory</option><option value="global">Global</option></select></label>
+<label id="installed-target-field">Target directory<select id="installed-target"></select></label>
+<label>Agent<select id="installed-agent"><option value="codex">Codex</option><option value="antigravity">Antigravity</option><option value="claude">Claude Code</option></select></label>
+</div>
+<div class="installed-toolbar">
+<label><input id="installed-updates" type="checkbox"> Updates available only</label>
+<button id="refresh-installed" type="button">Refresh</button>
+</div>
+<p id="installed-status" role="status"></p>
+<div id="installed-list"></div>
+</dialog>
+<dialog id="detail"><div class="dialog-head"><span class="eyebrow">BUNDLE DETAILS</span><button class="close" aria-label="Close">×</button></div><h2 id="detail-title"></h2><p id="detail-description"></p><code id="detail-path"></code>
+<button id="back-to-installed" type="button" hidden>Back to installed context</button>
+<section id="zip-downloads" aria-label="Skill ZIP exports">
+<div class="zip-downloads">
+<button type="button" data-zip="chatgpt">Download ChatGPT ZIP</button>
+<button type="button" data-zip="gemini">Download Gemini ZIP</button>
+</div>
+<p id="zip-status" role="status" hidden></p>
+<details>
+<summary>How to upload a skill ZIP</summary>
+<p><strong>ChatGPT</strong> In an eligible workspace, go to Plugins → Skills → Create → Upload from your computer. Choose the ChatGPT ZIP. <a href="https://help.openai.com/en/articles/20001066-skills-in-chatgpt" target="_blank" rel="noopener noreferrer">ChatGPT Skills guide</a></p>
+<p><strong>Gemini</strong> Go to Customize → Skills → Create → Upload. Choose the Gemini ZIP, then review and create the skill. <a href="https://support.google.com/gemini/answer/17094296?co=GENIE.Platform%3DDesktop&amp;hl=en" target="_blank" rel="noopener noreferrer">Gemini Skills guide</a></p>
+</details>
+</section>
+<div class="tabs" id="detail-tabs"><button id="tab-content" class="active">Instructions</button><button id="tab-sync">Review & sync</button></div><pre id="content"></pre><section id="sync-panel" hidden>
+<label id="scope-field">Scope<select id="scope"><option value="workspace">Target directory</option><option value="global">Global</option></select></label>
+<label id="operation-field">Action<select id="sync-operation"><option value="sync">Install or update</option><option value="remove">Remove</option></select></label>
+<div id="workspace-options">
+<label>Target directory<select id="target"></select></label>
+<button id="add-target" type="button">Choose target directory</button>
+<label>Agent<select id="workspace-agent"><option value="codex">Codex</option><option value="antigravity">Antigravity</option><option value="claude">Claude Code</option></select></label>
+</div>
+<div id="global-options" hidden>
+<label>Agent<select id="global-agent"><option value="codex">Codex</option><option value="antigravity">Antigravity</option><option value="claude">Claude Code</option></select></label>
+<label>Context<select id="global-bundle"><option value="default">Default global bundle</option><option value="selected">Selected context</option><option id="all-global-context" value="all" hidden disabled>All installed toolkit context</option></select></label>
+<p id="all-global-hint" class="hint" hidden>Review all toolkit context installed globally for the selected agent.</p>
+<ul id="global-modules" class="global-list"></ul>
+<details><summary>Install paths</summary><ul id="global-paths" class="global-list"></ul></details>
+<p id="global-scope-hint" class="hint">Global changes affect skills and bundled instructions for your user account.</p>
+</div>
+<p class="hint">Review changes to skills and agent instructions before applying. Removal preserves locally edited skill files and files managed by other agents.</p><button id="preview">Preview changes</button><p id="sync-error" role="alert" hidden></p><div id="preview-result" hidden><h3 id="change-count"></h3><div id="diffs"></div><details><summary>Engine output</summary><pre id="logs"></pre></details><button id="sync">Apply reviewed sync</button></div></section></dialog>
+<dialog id="project-dialog"><div class="dialog-head"><span class="eyebrow">LOCAL WORKSPACE</span><button class="close" aria-label="Close">×</button></div><h2>Target directory</h2><p>Browse to an existing folder or enter its path.</p><form id="project-form"><div class="folder-field">
+<label>Directory path<input id="project-path" name="path" required placeholder="/home/you/projects/my-app"></label>
+<button id="browse-folders" type="button" aria-expanded="false" aria-controls="folder-picker">Browse folders</button>
+</div>
+<section id="folder-picker" aria-label="Browse local folders" hidden>
+<p id="folder-location" aria-live="polite"></p>
+<div class="folder-actions"><button id="folder-up" type="button">Parent folder</button><button id="folder-use" type="button">Use this folder</button></div>
+<div id="folder-list"></div>
+</section>
+<p id="project-error" role="alert" hidden></p><button type="submit">Save target directory</button></form></dialog><div id="notice" role="status" hidden></div></body></html>

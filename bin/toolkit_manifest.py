@@ -20,6 +20,39 @@ from typing import Any, Iterable
 MANIFEST_FILENAME = ".toolkit-manifest.json"
 MANIFEST_VERSION = 2
 SUPPORTED_VERSIONS = {1, 2}
+RULE_ROOTS = {"frameworks", "infra", "shared", "domains", "tools"}
+
+
+def check_destination(path: Path, *, directory: bool | None = None) -> Path:
+    path = path.expanduser().absolute()
+    if any(part.is_symlink() for part in (*path.parents, path)):
+        raise ValueError(f"Symlink destination is not supported: {path}")
+    path = Path(os.path.abspath(path))
+    if path.exists() and (directory is not None and
+                          not (path.is_dir() if directory else path.is_file())):
+        raise ValueError(f"Unexpected destination type: {path}")
+    return path
+
+
+def validated_rule_path(toolkit_root: Path, source: str) -> Path:
+    if not isinstance(source, str) or any(ch in source for ch in "\r\n\0"):
+        raise ValueError("Invalid registered rule source")
+    relative = Path(source)
+    if (relative.is_absolute() or ".." in relative.parts or len(relative.parts) < 3
+            or relative.parts[0] not in RULE_ROOTS or relative.parent.name != "rules"
+            or relative.suffix != ".md"):
+        raise ValueError(f"Registered rule must be inside a toolkit rules directory: {source}")
+    return check_destination(toolkit_root.resolve() / relative, directory=False)
+
+
+def rule_source_key(toolkit_root: Path, source: Path) -> str:
+    toolkit_root = toolkit_root.resolve()
+    try:
+        relative = source.absolute().relative_to(toolkit_root).as_posix()
+    except ValueError:
+        raise ValueError(f"Registered rule must be inside the toolkit: {source}") from None
+    validated_rule_path(toolkit_root, relative)
+    return relative
 
 
 def hash_path(path: Path) -> str:
@@ -63,6 +96,7 @@ def manifest_path(root: Path) -> Path:
 
 def load_manifest(root: Path) -> dict[str, Any]:
     path = manifest_path(root)
+    check_destination(path, directory=False)
     if not path.exists():
         return {"version": MANIFEST_VERSION, "managed": {}, "aggregates": {}}
 
@@ -90,6 +124,7 @@ def load_manifest(root: Path) -> dict[str, Any]:
 
 
 def save_manifest(root: Path, data: dict[str, Any]) -> None:
+    check_destination(manifest_path(root), directory=False)
     root.mkdir(parents=True, exist_ok=True)
     target = manifest_path(root)
     data["version"] = MANIFEST_VERSION
@@ -235,15 +270,41 @@ def source_matches(source: str | None, prefixes: Iterable[str]) -> bool:
 
 
 def safe_target(root: Path, entry_key: str, entry: dict[str, Any]) -> Path:
-    target_rel = entry.get("target") or entry_key
-    target = root / target_rel
-    root_resolved = root.resolve()
-    target_resolved = target.resolve(strict=False)
-    try:
-        target_resolved.relative_to(root_resolved)
-    except ValueError as exc:
-        raise ValueError(f"Manifest target escapes root: {target_rel}") from exc
-    return target
+    target_rel = Path(entry.get("target") or entry_key)
+    if not target_rel.parts or target_rel.is_absolute() or ".." in target_rel.parts:
+        raise ValueError(f"Manifest target escapes root: {target_rel}")
+    return check_destination(root / target_rel)
+
+
+def inventory(root: Path, toolkit_root: Path, tool: str) -> dict[str, Any]:
+    """Compare a tool's recorded files to their installed and current source versions."""
+    manifest = load_manifest(root)
+    toolkit_root = toolkit_root.resolve()
+    items = []
+    for key, entry in manifest["managed"].items():
+        if not isinstance(entry, dict) or tool not in entry_tools(entry):
+            continue
+        target = safe_target(root, key, entry)
+        source = (toolkit_root / entry["source"]).resolve() if entry.get("source") else None
+        if not target.exists() and not target.is_symlink():
+            state = "missing"
+        else:
+            installed_hash = hash_path(target)
+            if installed_hash != entry.get("hash"):
+                state = "locally-modified"
+            elif source is None or not source.is_relative_to(toolkit_root) or not source.exists():
+                state = "source-unavailable"
+            elif hash_path(source) != installed_hash:
+                state = "update-available"
+            else:
+                state = "up-to-date"
+        items.append({
+            "source": entry.get("source"),
+            "target": str(target),
+            "kind": entry.get("kind"),
+            "status": state,
+        })
+    return {"items": items, "aggregates": manifest["aggregates"]}
 
 
 def prune_empty_parents(path: Path, root: Path) -> None:
@@ -270,7 +331,7 @@ def clean(
     Without a tool filter, retain the original all-owners cleanup behavior.
     Locally modified targets remain protected unless force=True.
     """
-    root = root.expanduser().resolve()
+    root = check_destination(root, directory=True)
     manifest = load_manifest(root)
     removed: list[str] = []
     missing: list[str] = []
@@ -348,6 +409,8 @@ def aggregate_add(
     name: str,
     sources: Iterable[Path],
     toolkit_root: Path | None,
+    *,
+    validate_rules: bool = False,
 ) -> dict[str, Any]:
     """Add normalized source files to a named aggregate without duplicates."""
     manifest = load_manifest(root)
@@ -356,10 +419,12 @@ def aggregate_add(
     if not isinstance(current, list):
         raise ValueError(f"Aggregate '{name}' must be a list")
 
-    normalized = [
-        normalized_source(source, toolkit_root)
-        for source in sources
-    ]
+    if validate_rules:
+        if toolkit_root is None:
+            raise ValueError("Rule aggregates require a toolkit root")
+        normalized = [rule_source_key(toolkit_root, source) for source in sources]
+    else:
+        normalized = [normalized_source(source, toolkit_root) for source in sources]
     merged = list(dict.fromkeys([*current, *normalized]))
     aggregates[name] = merged
     save_manifest(root, manifest)
@@ -412,11 +477,24 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Manage AI Agent Toolkit sync ownership.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    paths_parser = subparsers.add_parser("check-destinations")
+    paths_parser.add_argument("--directory", action="append", default=[])
+    paths_parser.add_argument("--file", action="append", default=[])
+
+    rule_parser = subparsers.add_parser("check-rule")
+    rule_parser.add_argument("--toolkit-root", required=True)
+    rule_parser.add_argument("--source", required=True)
+
     status_parser = subparsers.add_parser("status")
     status_parser.add_argument("--root", required=True)
     status_parser.add_argument("--key", required=True)
     status_parser.add_argument("--target", required=True)
     status_parser.add_argument("--source")
+
+    inventory_parser = subparsers.add_parser("inventory", help="Inspect tracked files without changing them")
+    inventory_parser.add_argument("--root", required=True)
+    inventory_parser.add_argument("--toolkit-root", required=True)
+    inventory_parser.add_argument("--tool", required=True)
 
     record_parser = subparsers.add_parser("record")
     record_parser.add_argument("--root", required=True)
@@ -444,10 +522,12 @@ def parse_args() -> argparse.Namespace:
     aggregate_add_parser.add_argument("--name", required=True)
     aggregate_add_parser.add_argument("--source", action="append", required=True)
     aggregate_add_parser.add_argument("--toolkit-root")
+    aggregate_add_parser.add_argument("--validate-rules", action="store_true")
 
     aggregate_list_parser = subparsers.add_parser("aggregate-list")
     aggregate_list_parser.add_argument("--root", required=True)
     aggregate_list_parser.add_argument("--name", required=True)
+    aggregate_list_parser.add_argument("--toolkit-root")
 
     aggregate_remove_parser = subparsers.add_parser("aggregate-remove")
     aggregate_remove_parser.add_argument("--root", required=True)
@@ -459,6 +539,15 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if args.command == "check-destinations":
+        for path in args.directory:
+            check_destination(Path(path), directory=True)
+        for path in args.file:
+            check_destination(Path(path), directory=False)
+        return 0
+    if args.command == "check-rule":
+        rule_source_key(Path(args.toolkit_root), Path(args.source))
+        return 0
     root = Path(args.root).expanduser()
 
     if args.command == "status":
@@ -468,6 +557,8 @@ def main() -> int:
             Path(args.target).expanduser(),
             Path(args.source).expanduser() if args.source else None,
         )
+    elif args.command == "inventory":
+        result = inventory(root, Path(args.toolkit_root), args.tool)
     elif args.command == "record":
         result = record(
             root,
@@ -493,9 +584,13 @@ def main() -> int:
             args.name,
             [Path(source).expanduser() for source in args.source],
             Path(args.toolkit_root).expanduser() if args.toolkit_root else None,
+            validate_rules=args.validate_rules,
         )
     elif args.command == "aggregate-list":
         result = aggregate_list(root, args.name)
+        if args.toolkit_root:
+            result["sources"] = [str(validated_rule_path(Path(args.toolkit_root), source))
+                                 for source in result["sources"]]
     elif args.command == "aggregate-remove":
         result = aggregate_remove(
             root,

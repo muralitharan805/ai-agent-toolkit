@@ -14,6 +14,7 @@ Emits structured JSON report to stdout and diagnostic progress to stderr.
 """
 
 import argparse
+from contextlib import contextmanager
 import glob
 import json
 import os
@@ -21,6 +22,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -29,6 +31,53 @@ import yaml
 SCRIPT_DIR = Path(__file__).resolve().parent
 TOOL_ROOT = SCRIPT_DIR.parent
 DEFAULT_ICON_PATH = TOOL_ROOT / "assets" / "default_icon.svg"
+
+
+def checked_skill_name(name: str) -> str:
+    if not isinstance(name, str) or len(name) > 64 or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
+        raise ValueError("Expected a lowercase, hyphen-separated skill name of at most 64 characters")
+    return name
+
+
+def checked_bundle_path(bundle: Path, path: Path) -> Path:
+    root = bundle.absolute()
+    path = path.absolute()
+    if not path.is_relative_to(root) or not path.resolve().is_relative_to(root.resolve()):
+        raise ValueError(f"Bundle input escapes its source directory: {path}")
+    if any(part.is_symlink() for part in (path, *path.parents) if part.is_relative_to(root)):
+        raise ValueError(f"Symlink bundle input is not supported: {path}")
+    return path
+
+
+@contextmanager
+def output_file(directory: Path, name: str):
+    if name in (".", "..") or Path(name).name != name or "\\" in name:
+        raise ValueError("Invalid export filename")
+    directory = directory.resolve()
+    destination = directory / name
+    if destination.is_symlink() or (destination.exists() and not destination.is_file()):
+        raise ValueError(f"Invalid export destination: {destination}")
+    fd, temporary = tempfile.mkstemp(prefix=".toolkit-export-", dir=directory)
+    os.close(fd)
+    try:
+        yield Path(temporary)
+        os.replace(temporary, destination)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
+def reference_files(bundle: Path):
+    directory = checked_bundle_path(bundle, bundle / "skills" / "references")
+    if not directory.is_dir():
+        directory = checked_bundle_path(bundle, bundle / "references")
+    if directory.is_dir():
+        for path in sorted(directory.rglob("*")):
+            checked_bundle_path(bundle, path)
+            if path.is_file():
+                relative_path = path.relative_to(directory).as_posix()
+                if "\\" in relative_path:
+                    raise ValueError(f"Invalid reference filename: {path.name}")
+                yield path, relative_path
 
 
 def find_toolkit_root(start_dir: Path) -> Path:
@@ -125,10 +174,12 @@ def extract_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
         return {}, content
     try:
         data = yaml.safe_load(match.group(1)) or {}
-        return data, match.group(2)
-    except Exception as exc:
+    except yaml.YAMLError as exc:
         sys.stderr.write(f"Warning: Failed to parse YAML frontmatter: {exc}\n")
         return {}, content
+    if not isinstance(data, dict):
+        raise ValueError("Expected a mapping in skill frontmatter")
+    return data, match.group(2)
 
 
 def format_display_name(raw_name: str, body: str) -> str:
@@ -167,13 +218,13 @@ def extract_rule_constraints(rule_path: Path) -> Optional[str]:
 
 def synthesize_skill_content(skill_path: Path, bundle_dir: Path, with_rules: bool) -> Tuple[Dict[str, Any], str]:
     """Reads SKILL.md and optionally appends rules constraints."""
-    raw_content = skill_path.read_text(encoding="utf-8")
+    raw_content = checked_bundle_path(bundle_dir, skill_path).read_text(encoding="utf-8")
     frontmatter, body = extract_frontmatter(raw_content)
 
     if not with_rules:
         return frontmatter, raw_content
 
-    rules_dir = bundle_dir / "rules"
+    rules_dir = checked_bundle_path(bundle_dir, bundle_dir / "rules")
     if not rules_dir.is_dir():
         return frontmatter, raw_content
 
@@ -183,7 +234,7 @@ def synthesize_skill_content(skill_path: Path, bundle_dir: Path, with_rules: boo
 
     collected_constraints: List[str] = []
     for r_file in rule_files:
-        constraints = extract_rule_constraints(r_file)
+        constraints = extract_rule_constraints(checked_bundle_path(bundle_dir, r_file))
         if constraints:
             rule_title = r_file.stem.replace("-", " ").title()
             collected_constraints.append(f"### {rule_title}\n\n{constraints}")
@@ -211,13 +262,19 @@ def resolve_bundle_dirs(toolkit_root: Path, selector: str) -> List[Path]:
     # 1. Direct path check
     direct = Path(selector)
     if not direct.is_absolute():
-        direct = (Path.cwd() / selector).resolve()
+        direct = (Path.cwd() / selector).absolute()
         if not direct.exists():
-            direct = (toolkit_root / selector).resolve()
+            direct = (toolkit_root / selector).absolute()
 
     def check_and_add(candidate: Path):
         if not candidate.is_dir():
             return
+        # Resolve only after rejecting links in discovered bundle roots.
+        if Path(os.path.abspath(candidate)) != candidate.resolve():
+            if (candidate / "SKILL.md").is_file() or (candidate / "skills" / "SKILL.md").is_file():
+                raise ValueError(f"Symlink bundle directory is not supported: {candidate}")
+            return
+        candidate = candidate.resolve()
         if (candidate / "skills" / "SKILL.md").is_file():
             resolved.append(candidate)
         elif (candidate / "SKILL.md").is_file():
@@ -239,7 +296,7 @@ def resolve_bundle_dirs(toolkit_root: Path, selector: str) -> List[Path]:
         matched_dirs = set()
         for pat in patterns:
             for match in glob.glob(pat):
-                matched_dirs.add(Path(match).resolve())
+                matched_dirs.add(Path(match).absolute())
 
         for m_dir in sorted(matched_dirs):
             check_and_add(m_dir)
@@ -256,7 +313,7 @@ def resolve_bundle_dirs(toolkit_root: Path, selector: str) -> List[Path]:
         else:
             # Try searching under known toolkit roots
             for root in ["shared", "frameworks", "infra", "domains", "tools"]:
-                candidate = (toolkit_root / root / selector).resolve()
+                candidate = (toolkit_root / root / selector).absolute()
                 if candidate.exists() and candidate.is_dir():
                     check_and_add(candidate)
                     for sub in sorted(candidate.iterdir()):
@@ -280,7 +337,7 @@ def package_chatgpt_skill(
     icon_source: Optional[Path],
 ) -> Path:
     """Builds ChatGPT format zip archive: <skill-name>/SKILL.md, agents/openai.yaml, assets/icon.svg."""
-    skill_name = frontmatter.get("name") or bundle_dir.name
+    skill_name = checked_skill_name(frontmatter.get("name", bundle_dir.name))
     display_name = format_display_name(skill_name, skill_content)
     description = frontmatter.get("description", f"Expert skill for {skill_name}")
 
@@ -302,9 +359,9 @@ def package_chatgpt_skill(
     icon_data: bytes
     if icon_source and icon_source.is_file():
         icon_data = icon_source.read_bytes()
-    elif (bundle_dir / "skills" / "assets" / "icon.svg").is_file():
+    elif checked_bundle_path(bundle_dir, bundle_dir / "skills" / "assets" / "icon.svg").is_file():
         icon_data = (bundle_dir / "skills" / "assets" / "icon.svg").read_bytes()
-    elif (bundle_dir / "assets" / "icon.svg").is_file():
+    elif checked_bundle_path(bundle_dir, bundle_dir / "assets" / "icon.svg").is_file():
         icon_data = (bundle_dir / "assets" / "icon.svg").read_bytes()
     elif DEFAULT_ICON_PATH.is_file():
         icon_data = DEFAULT_ICON_PATH.read_bytes()
@@ -314,7 +371,9 @@ def package_chatgpt_skill(
     zip_filename = f"chatgpt-{skill_name}.zip"
     zip_path = out_dir / zip_filename
 
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    with output_file(out_dir, zip_filename) as temporary, zipfile.ZipFile(
+        temporary, "w", compression=zipfile.ZIP_DEFLATED
+    ) as zf:
         # 1. SKILL.md
         zf.writestr(f"{skill_name}/SKILL.md", skill_content)
         # 2. agents/openai.yaml
@@ -323,14 +382,8 @@ def package_chatgpt_skill(
         zf.writestr(f"{skill_name}/assets/icon.svg", icon_data)
 
         # 4. references/ (if present in skills/references)
-        ref_dir = bundle_dir / "skills" / "references"
-        if not ref_dir.is_dir():
-            ref_dir = bundle_dir / "references"
-        if ref_dir.is_dir():
-            for ref_file in sorted(ref_dir.rglob("*")):
-                if ref_file.is_file():
-                    arcname = f"{skill_name}/references/{ref_file.relative_to(ref_dir)}"
-                    zf.write(ref_file, arcname=arcname)
+        for ref_file, relative in reference_files(bundle_dir):
+            zf.write(ref_file, arcname=f"{skill_name}/references/{relative}")
 
     return zip_path
 
@@ -342,23 +395,19 @@ def package_gemini_skill(
     out_dir: Path,
 ) -> Path:
     """Builds Gemini format zip archive: SKILL.md at root."""
-    skill_name = frontmatter.get("name") or bundle_dir.name
+    skill_name = checked_skill_name(frontmatter.get("name", bundle_dir.name))
     zip_filename = f"gemini-{skill_name}.zip"
     zip_path = out_dir / zip_filename
 
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    with output_file(out_dir, zip_filename) as temporary, zipfile.ZipFile(
+        temporary, "w", compression=zipfile.ZIP_DEFLATED
+    ) as zf:
         # 1. SKILL.md at root
         zf.writestr("SKILL.md", skill_content)
 
         # 2. references/ (if present)
-        ref_dir = bundle_dir / "skills" / "references"
-        if not ref_dir.is_dir():
-            ref_dir = bundle_dir / "references"
-        if ref_dir.is_dir():
-            for ref_file in sorted(ref_dir.rglob("*")):
-                if ref_file.is_file():
-                    arcname = f"references/{ref_file.relative_to(ref_dir)}"
-                    zf.write(ref_file, arcname=arcname)
+        for ref_file, relative in reference_files(bundle_dir):
+            zf.write(ref_file, arcname=f"references/{relative}")
 
     return zip_path
 
@@ -393,19 +442,10 @@ def copy_to_clipboard(text: str) -> Tuple[bool, str]:
 
 def generate_references_overview(bundle_dir: Path) -> str:
     """Scans references directory and creates a structured knowledge index."""
-    ref_dir = bundle_dir / "skills" / "references"
-    if not ref_dir.is_dir():
-        ref_dir = bundle_dir / "references"
-    if not ref_dir.is_dir():
-        return ""
-
-    ref_files = sorted(ref_dir.rglob("*.md"))
-    if not ref_files:
-        return ""
-
     ref_lines: List[str] = []
-    for rf in ref_files:
-        rel = rf.relative_to(ref_dir)
+    for rf, rel in reference_files(bundle_dir):
+        if rf.suffix != ".md":
+            continue
         summary = "Architectural reference guide"
         try:
             for line in rf.read_text(encoding="utf-8").splitlines():
@@ -413,9 +453,12 @@ def generate_references_overview(bundle_dir: Path) -> str:
                 if line.startswith("#"):
                     summary = re.sub(r"^#+\s*", "", line).strip()
                     break
-        except Exception:
+        except (OSError, UnicodeError):
             pass
         ref_lines.append(f"- `{rel}`: {summary}")
+
+    if not ref_lines:
+        return ""
 
     return (
         "<knowledge_references>\n"
@@ -433,7 +476,7 @@ def synthesize_structured_prompt(
     with_rules: bool = True,
 ) -> Tuple[str, Dict[str, Any]]:
     """Synthesizes high-adherence structured XML/Markdown prompt with character budget guard."""
-    skill_name = frontmatter.get("name") or bundle_dir.name
+    skill_name = checked_skill_name(frontmatter.get("name", bundle_dir.name))
     display_name = format_display_name(skill_name, skill_content)
     description = frontmatter.get("description", f"Expert skill for {skill_name}")
 
@@ -441,18 +484,19 @@ def synthesize_structured_prompt(
     skill_path = bundle_dir / "skills" / "SKILL.md"
     if not skill_path.is_file():
         skill_path = bundle_dir / "SKILL.md"
+    skill_path = checked_bundle_path(bundle_dir, skill_path)
     raw_content = skill_path.read_text(encoding="utf-8") if skill_path.is_file() else skill_content
     _, raw_body = extract_frontmatter(raw_content)
 
     # Collect rule constraints
     constraints_text = ""
     if with_rules:
-        rules_dir = bundle_dir / "rules"
+        rules_dir = checked_bundle_path(bundle_dir, bundle_dir / "rules")
         if rules_dir.is_dir():
             rule_files = sorted(rules_dir.glob("*.md"))
             constraints_list: List[str] = []
             for r_file in rule_files:
-                c = extract_rule_constraints(r_file)
+                c = extract_rule_constraints(checked_bundle_path(bundle_dir, r_file))
                 if c:
                     r_title = r_file.stem.replace("-", " ").title()
                     constraints_list.append(f"#### {r_title}\n{c}")
@@ -499,9 +543,10 @@ def write_prompt_file(
 ) -> Path:
     """Writes synthesized prompt to markdown file in prompt_out_dir."""
     prompt_out_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"{platform}-{skill_name}.md"
+    filename = f"{platform}-{checked_skill_name(skill_name)}.md"
     file_path = prompt_out_dir / filename
-    file_path.write_text(prompt_text, encoding="utf-8")
+    with output_file(prompt_out_dir, filename) as temporary:
+        temporary.write_text(prompt_text, encoding="utf-8")
     return file_path
 
 
@@ -562,7 +607,7 @@ def main():
             continue
 
         frontmatter, synthesized_content = synthesize_skill_content(skill_path, bundle, args.with_rules)
-        skill_name = frontmatter.get("name") or bundle.name
+        skill_name = checked_skill_name(frontmatter.get("name", bundle.name))
 
         bundle_result: Dict[str, Any] = {
             "name": skill_name,
@@ -657,4 +702,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (ValueError, OSError) as error:
+        sys.exit(f"Error: {error}")

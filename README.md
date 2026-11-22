@@ -14,19 +14,38 @@ Instead of hand-crafting agent instructions and context repeatedly inside every 
 
 ## 📑 Table of Contents
 
-1. [Why This Toolkit Exists](#-why-this-toolkit-exists)
-2. [Core Concepts: Skills vs. Rules](#-core-concepts-skills-vs-rules)
-3. [The 5-Pillar Modular Agent Skill Architecture](#-the-5-pillar-modular-agent-skill-architecture)
-4. [Antigravity Rules & Activation Trigger Strategies](#-antigravity-rules--activation-trigger-strategies)
-5. [Repository Directory Layout](#-repository-directory-layout)
-6. [Built-in AI Generators & Developer Tooling](#-built-in-ai-generators--developer-tooling)
-7. [Tool-Aware Context CLI (`context.sh`)](#-tool-aware-context-cli-contextsh)
-8. [Quickstart Guide for New Users](#-quickstart-guide-for-new-users)
-9. [End-to-End Walkthrough: Angular Reactive Forms](#-end-to-end-walkthrough-angular-reactive-forms)
-10. [Supporting Documentation](#-supporting-documentation)
-11. [How to Contribute to the Open-Source Toolkit](#-how-to-contribute-to-the-open-source-toolkit)
+1. [Local Context Manager (GUI)](#local-context-manager-gui)
+2. [Why This Toolkit Exists](#-why-this-toolkit-exists)
+3. [Core Concepts: Skills vs. Rules](#-core-concepts-skills-vs-rules)
+4. [The 5-Pillar Modular Agent Skill Architecture](#-the-5-pillar-modular-agent-skill-architecture)
+5. [Antigravity Rules & Activation Trigger Strategies](#-antigravity-rules--activation-trigger-strategies)
+6. [Repository Directory Layout](#-repository-directory-layout)
+7. [Built-in AI Generators & Developer Tooling](#-built-in-ai-generators--developer-tooling)
+8. [Tool-Aware Context CLI (`context.sh`)](#-tool-aware-context-cli-contextsh)
+9. [Quickstart Guide for New Users](#-quickstart-guide-for-new-users)
+10. [End-to-End Walkthrough: Angular Reactive Forms](#-end-to-end-walkthrough-angular-reactive-forms)
+11. [Supporting Documentation](#-supporting-documentation)
+12. [How to Contribute to the Open-Source Toolkit](#-how-to-contribute-to-the-open-source-toolkit)
 
 ---
+
+## Local Context Manager (GUI)
+
+Context Manager is a local browser UI for getting reusable toolkit context into
+your projects. Browse Skills and Rules, preview a diff, and install, update, or
+remove context for Codex, Antigravity, and Claude Code. The GUI also shows what's installed
+for each project or global agent and exports skill ZIPs for ChatGPT and Gemini.
+
+From the repository root, with Python 3.11+, Bash, and PyYAML installed:
+
+```bash
+python3 apps/context-manager/server.py
+```
+
+Open [Context Manager](http://127.0.0.1:8765/) and enter the local access code
+printed in your terminal. See the
+[Context Manager overview](docs/CONTEXT_MANAGER.md) for features and architecture,
+or the [GUI usage guide](apps/context-manager/README.md) for step-by-step setup.
 
 ## 🎯 Why This Toolkit Exists
 
@@ -238,6 +257,11 @@ Antigravity is the default tool.
 
 Unsupported context types are reported and skipped instead of being copied into an incorrect directory.
 
+Rules combined into `AGENTS.md` or `GEMINI.md` must come from a `rules/` directory
+under a toolkit category. To migrate an older install that used rules from an
+external folder, move the bundle into the toolkit, run `--clean` without a
+selector for the affected tool and scope, then sync the desired bundles again.
+
 ```bash
 # Antigravity is the default
 ./bin/context.sh -w frameworks/angular --target ~/projects/app
@@ -268,7 +292,7 @@ Each tool gets its own manifest claim on the shared skill. Antigravity also inst
 
 ### Global Routing
 
-Global sync supports **Antigravity and Codex**. Cursor and Claude use workspace sync in this toolkit.
+Global sync supports **Antigravity, Codex, and Claude Code**. Cursor uses workspace sync.
 
 ```bash
 ./bin/context.sh -g shared/security-baseline --tool antigravity
@@ -295,6 +319,15 @@ For Codex, global sync installs skills into `~/.agents/skills/` and combines sel
 Codex workspace sync uses the same managed block in the project root `AGENTS.md`. In either scope, selected rule bodies become instructions for that scope, with Antigravity activation triggers removed. Antigravity workflows and plugins are reported as unsupported in Codex.
 
 Codex cleanup removes the selected skill claims and managed instructions. Pass a selector with `--clean` to remove only that module. Sync and cleanup reject malformed toolkit block markers before changing installed context. Start a new Codex session to load updated instructions.
+
+Claude Code global sync installs personal skills under `~/.claude/skills/`
+or `$CLAUDE_CONFIG_DIR/skills/` when configured. The same curated default
+selectors apply. Claude Code sync installs skills and tracks ownership in its
+own manifest.
+
+```bash
+./bin/context.sh -g shared/pnpm-package-management --tool claude
+```
 
 ### Directory, Parent, Nested, and Glob Selectors
 
@@ -385,8 +418,11 @@ This removes manifest-owned global context and only the toolkit marker block fro
 ### Packaging & Exporting for External LLMs (ChatGPT & Gemini)
 
 The toolkit provides a first-class **Dual-Mode Export Pipeline** to package skills for external platforms:
-- **Zip Archives (`dist/skills/`)**: Full multi-file bundles compatible with OpenAI Agent Skills and Google Gemini Skills.
+- **ZIP archives (`dist/skills/`)**: Platform-specific skill packages with `SKILL.md` and available reference files. The exporter folds bundled rule constraints into `SKILL.md` by default. Skill scripts and authored assets stay in the source bundle.
 - **Copy-Paste System Prompts (`dist/prompts/`)**: Pre-formatted, XML-structured system instructions (`<role>`, `<instructions>`, `<constraints>`, `<knowledge_references>`) with an automated **Character Budget Guard** checking against ChatGPT's 8,000 character limit.
+
+**Thanglish Mentor Persona** is a sample export in these commands. Replace its
+selector with the context you want to install.
 
 ```bash
 # Export single module in Dual-Mode (both zip archives and system prompts)
@@ -401,6 +437,14 @@ The toolkit provides a first-class **Dual-Mode Export Pipeline** to package skil
 # Export zip archives only
 ./bin/context.sh -e frameworks/angular --mode zip
 ```
+
+- **ChatGPT:** In an eligible workspace, open **Plugins → Skills → Create →
+  Upload from your computer**, then choose the `chatgpt-*.zip` file.
+  [ChatGPT Skills guide](https://help.openai.com/en/articles/20001066-skills-in-chatgpt)
+- **Gemini:** Open **Customize → Skills → Create → Upload**, select the
+  `gemini-*.zip` file, then review and create the skill. Gemini expects
+  `SKILL.md` at the archive root.
+  [Gemini Skills guide](https://support.google.com/gemini/answer/17094296?co=GENIE.Platform%3DDesktop&hl=en)
 
 > [!NOTE]
 > All build artifacts are written to `dist/` and are automatically ignored by git (`.gitignore`) to keep repository diffs clean.
@@ -475,7 +519,30 @@ This step is **not required** to consume existing context. To create/update skil
   --tool antigravity --target .
 ```
 
-For Codex or Claude Code, change `--tool` accordingly. Codex also merges selected rule bodies into the project `AGENTS.md`. Open the **toolkit repository** in your chosen agent and invoke/mention the installed `generate-agent-suite` skill in that agent's supported syntax. Keep the source repository writable for authoring.
+For Codex, change the tool to `--tool codex`. Codex also merges selected rule
+bodies into the project `AGENTS.md`.
+
+#### Author context with Claude Code
+
+From the writable toolkit checkout, install the authoring suite into that checkout:
+
+```bash
+./bin/context.sh -w \
+  tools/generators/generate-agent-suite \
+  tools/generators/generate-skill \
+  tools/generators/generate-rule \
+  shared/ai-agent-toolkit \
+  --tool claude --target .
+```
+
+Open Claude Code in the same repository and invoke the installed skill by name:
+
+```text
+/generate-agent-suite Create or update context for PostgreSQL query design and indexing.
+```
+
+The authoring suite creates or updates the source bundles in the repo. Use the
+GUI or CLI to distribute the finished context to consuming projects.
 
 ---
 

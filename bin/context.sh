@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TOOLKIT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+TOOLKIT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
 MANIFEST_HELPER="${SCRIPT_DIR}/toolkit_manifest.py"
 
 MODE="workspace"
@@ -11,6 +11,7 @@ TARGET_TOOL="antigravity"
 FORCE=false
 CLEAN=false
 SYNC_ALL=false
+DESCRIBE_GLOBAL=false
 EXPORT_MODE=false
 EXPORT_SKILLS_MODE="both"
 EXPORT_OUT="dist/skills"
@@ -31,6 +32,7 @@ CONSUMER_ROOTS=("frameworks" "infra" "domains" "shared")
 # explicitly supported by parse_arguments/setup_scope_paths.
 SHARED_WORKSPACE_ROOT=".agents"
 CLAUDE_WORKSPACE_ROOT=".claude"
+CLAUDE_GLOBAL_ROOT="${CLAUDE_CONFIG_DIR:-${HOME}/.claude}"
 
 ANTIGRAVITY_GLOBAL_ROOT="${HOME}/.gemini"
 ANTIGRAVITY_GLOBAL_SKILLS_LEGACY="${HOME}/.gemini/antigravity/skills"
@@ -51,7 +53,8 @@ usage() {
   cat <<'EOF'
 Usage:
   context.sh -w [selectors...] [--tool antigravity|codex|cursor|claude] [--target <project>] [--force]
-  context.sh -g [selectors...] [--tool antigravity|codex] [--force]
+  context.sh -g [selectors...] [--tool antigravity|codex|claude] [--force]
+  context.sh --describe-global --tool antigravity|codex|claude
   context.sh -w| -g [selectors...] --clean [--force]
   context.sh -e [selectors...] [--tool chatgpt|gemini|both] [--mode zip|prompt|both] [--out dist/skills] [--prompt-out dist/prompts] [-c|--copy]
   context.sh -P, --prompt [selectors...] [--tool chatgpt|gemini|both] [-c|--copy]
@@ -59,6 +62,7 @@ Usage:
 Scope:
   -w, --workspace           Sync into a project workspace. Default scope.
   -g, --global              Sync into the selected tool's global context.
+  --describe-global         Print global paths and default selectors as JSON without writing files.
   -e, --export, --export-zip Package selectors into ChatGPT/Gemini skill zip files / prompts.
   -P, --prompt              Shortcut to export selectors directly as raw system prompts.
 
@@ -69,7 +73,7 @@ Export options:
 
 Tool selection:
   -T, --tool, --tools NAME  antigravity (default), codex, cursor, or claude.
-                            Global sync supports antigravity and codex.
+                            Global sync supports antigravity, codex, and claude.
                             Export mode (-e, -P) supports chatgpt, gemini, both, or all.
 
 Targeting:
@@ -150,6 +154,11 @@ parse_arguments() {
         ;;
       -g|--global)
         MODE="global"
+        shift
+        ;;
+      --describe-global)
+        MODE="global"
+        DESCRIBE_GLOBAL=true
         shift
         ;;
       -e|--export|--export-zip)
@@ -265,13 +274,14 @@ parse_arguments() {
   if [[ "$MODE" == "global" && "$TARGET_DIR" != "." ]]; then
     fail "--target is workspace-only. Global destinations are tool-defined."
   fi
-  if [[ "$MODE" == "global" && "$TARGET_TOOL" != "antigravity" && "$TARGET_TOOL" != "codex" ]]; then
-    fail "Global context is supported for antigravity and codex. Use -w for ${TARGET_TOOL}."
+  if [[ "$MODE" == "global" && "$TARGET_TOOL" == "cursor" ]]; then
+    fail "Global context is supported for antigravity, codex, and claude. Use -w for cursor."
   fi
 }
 
 setup_scope_paths() {
   if [[ "$MODE" == "workspace" ]]; then
+    python3 "$MANIFEST_HELPER" check-destinations --directory "$TARGET_DIR"
     mkdir -p "$TARGET_DIR"
     local project_root
     project_root="$(cd "$TARGET_DIR" && pwd)"
@@ -328,17 +338,63 @@ setup_scope_paths() {
         INSTRUCTIONS_FILE="${INSTRUCTIONS_MANIFEST_ROOT}/AGENTS.md"
         INSTRUCTIONS_AGGREGATE="agents_rules"
         ;;
+      claude)
+        MANIFEST_ROOT="$CLAUDE_GLOBAL_ROOT"
+        TARGET_SKILLS_DIR="${MANIFEST_ROOT}/skills"
+        TARGET_WORKFLOWS_DIR=""
+        TARGET_PLUGINS_DIR=""
+        ;;
     esac
-    SCOPE_LABEL="global:${INSTRUCTIONS_MANIFEST_ROOT} (${TARGET_TOOL})"
+    SCOPE_LABEL="global:${INSTRUCTIONS_MANIFEST_ROOT:-$MANIFEST_ROOT} (${TARGET_TOOL})"
   fi
 
+  if [[ "$DESCRIBE_GLOBAL" == true ]]; then
+    python3 - "$TARGET_SKILLS_DIR" "${MIRROR_SKILLS_DIR:-}" "$INSTRUCTIONS_FILE" \
+      "$MANIFEST_ROOT" "${INSTRUCTIONS_MANIFEST_ROOT:-}" "${TARGET_WORKFLOWS_DIR:-}" \
+      "${TARGET_GLOBAL_WORKFLOWS_DIR:-}" "${TARGET_PLUGINS_DIR:-}" "${DEFAULT_GLOBAL_MODULES[@]}" <<'PY'
+import json
+from pathlib import Path
+import sys
+
+skills, mirror, instructions, manifest, aggregate, workflows, global_workflows, plugins = sys.argv[1:9]
+files = [str(Path(root) / ".toolkit-manifest.json") for root in (manifest, aggregate) if root]
+if instructions:
+    files.extend([instructions, instructions + ".bak"])
+if Path(instructions).name == "AGENTS.md":
+    files.append(str(Path(instructions).with_name("AGENTS.override.md")))
+print(json.dumps(dict(
+    scopeRoot=aggregate or manifest,
+    instructions=instructions or None,
+    destinations=[p for p in (skills, mirror, instructions, workflows, global_workflows, plugins) if p],
+    trees=[p for p in (skills, mirror, workflows, global_workflows, plugins) if p],
+    files=list(dict.fromkeys(files)),
+    defaults=sys.argv[9:],
+)))
+PY
+    return
+  fi
+  local -a check=(python3 "$MANIFEST_HELPER" check-destinations
+    --file "$MANIFEST_ROOT/.toolkit-manifest.json")
+  local destination
+  for destination in "$MANIFEST_ROOT" "$TARGET_SKILLS_DIR" "${TARGET_RULES_DIR:-}" \
+    "${TARGET_WORKFLOWS_DIR:-}" "${TARGET_PLUGINS_DIR:-}" "${MIRROR_SKILLS_DIR:-}" \
+    "${TARGET_GLOBAL_WORKFLOWS_DIR:-}" "${INSTRUCTIONS_MANIFEST_ROOT:-}"; do
+    if [[ -n "$destination" ]]; then
+      check+=(--directory "$destination")
+    fi
+  done
+  if [[ -n "$INSTRUCTIONS_FILE" ]]; then
+    check+=(--file "$INSTRUCTIONS_FILE" --file "$INSTRUCTIONS_FILE.bak"
+      --file "$INSTRUCTIONS_MANIFEST_ROOT/.toolkit-manifest.json")
+  fi
+  "${check[@]}"
   mkdir -p "$MANIFEST_ROOT" "$TARGET_SKILLS_DIR"
   [[ -n "${TARGET_RULES_DIR:-}" ]] && mkdir -p "$TARGET_RULES_DIR"
   [[ -n "${TARGET_WORKFLOWS_DIR:-}" ]] && mkdir -p "$TARGET_WORKFLOWS_DIR"
   [[ -n "${TARGET_PLUGINS_DIR:-}" ]] && mkdir -p "$TARGET_PLUGINS_DIR"
   [[ -n "${MIRROR_SKILLS_DIR:-}" ]] && mkdir -p "$MIRROR_SKILLS_DIR"
   [[ -n "${TARGET_GLOBAL_WORKFLOWS_DIR:-}" ]] && mkdir -p "$TARGET_GLOBAL_WORKFLOWS_DIR"
-  if [[ "$MODE" == "global" ]]; then
+  if [[ -n "${INSTRUCTIONS_MANIFEST_ROOT:-}" ]]; then
     mkdir -p "$INSTRUCTIONS_MANIFEST_ROOT"
   fi
 }
@@ -410,6 +466,9 @@ manifest_record() {
 sync_managed_path() {
   local source="$1" target="$2" kind="$3" label="$4"
   local key state
+  local path_type="--file"
+  [[ ! -d "$source" ]] || path_type="--directory"
+  python3 "$MANIFEST_HELPER" check-destinations "$path_type" "$target"
   key="$(manifest_key_for_target "$target")"
   state="$(manifest_status "$key" "$target" "$source")"
 
@@ -471,6 +530,7 @@ append_aggregated_rule() {
   for existing in "${AGGREGATED_RULE_FILES[@]:-}"; do
     [[ "$existing" == "$rule_file" ]] && return 0
   done
+  python3 "$MANIFEST_HELPER" check-rule --toolkit-root "$TOOLKIT_ROOT" --source "$rule_file"
   AGGREGATED_RULE_FILES+=("$rule_file")
 }
 
@@ -524,6 +584,11 @@ sync_module_dir() {
   module_name="$(basename "$module_dir")"
   echo "Module: ${module_dir#"$TOOLKIT_ROOT"/}"
 
+  local r
+  if [[ -n "$INSTRUCTIONS_FILE" && -d "$module_dir/rules" ]]; then
+    for r in "$module_dir"/rules/*.md; do [[ -f "$r" ]] && append_aggregated_rule "$r"; done
+  fi
+
   if [[ -f "$module_dir/skills/SKILL.md" ]]; then
     sync_single_skill "$module_dir/skills" "$module_name"
   elif [[ -d "$module_dir/skills" ]]; then
@@ -533,8 +598,7 @@ sync_module_dir() {
     done
   fi
 
-  if [[ -d "$module_dir/rules" ]]; then
-    local r
+  if [[ -z "$INSTRUCTIONS_FILE" && -d "$module_dir/rules" ]]; then
     for r in "$module_dir"/rules/*.md; do [[ -f "$r" ]] && sync_single_rule "$r"; done
   fi
 
@@ -682,6 +746,7 @@ register_aggregated_rules() {
     --root "$INSTRUCTIONS_MANIFEST_ROOT"
     --name "$INSTRUCTIONS_AGGREGATE"
     --toolkit-root "$TOOLKIT_ROOT"
+    --validate-rules
   )
   local rule_file
   for rule_file in "${AGGREGATED_RULE_FILES[@]}"; do
@@ -693,6 +758,7 @@ register_aggregated_rules() {
 registered_rule_sources() {
   python3 "$MANIFEST_HELPER" aggregate-list \
     --root "$INSTRUCTIONS_MANIFEST_ROOT" \
+    --toolkit-root "$TOOLKIT_ROOT" \
     --name "$INSTRUCTIONS_AGGREGATE" \
     | python3 -c 'import json,sys; [print(x) for x in json.load(sys.stdin)["sources"]]'
 }
@@ -702,21 +768,20 @@ render_instructions() {
 
   local mode="${1:-write}"
   local sources temp=""
+  if [[ "$mode" != "clear-check" ]]; then
+    sources="$(registered_rule_sources)" || return
+  fi
   if [[ "$mode" == "write" ]]; then
-    sources="$(registered_rule_sources)"
     temp="$(mktemp)"
+  else
+    sources=""
   fi
 
-  local source absolute
+  local source
   while IFS= read -r source; do
     [[ -n "$source" ]] || continue
-    if [[ "$source" = /* ]]; then
-      absolute="$source"
-    else
-      absolute="$TOOLKIT_ROOT/$source"
-    fi
-    if [[ -f "$absolute" ]]; then
-      strip_yaml_frontmatter "$absolute" >> "$temp"
+    if [[ -f "$source" ]]; then
+      strip_yaml_frontmatter "$source" >> "$temp"
       printf '\n\n' >> "$temp"
     else
       echo "  [Global Rule] ! source missing: $source"
@@ -726,17 +791,51 @@ render_instructions() {
   local render_status=0
   python3 - "$INSTRUCTIONS_FILE" "$temp" "$START_TAG" "$END_TAG" "$mode" <<'PY' || render_status=$?
 from pathlib import Path
+import os
+import secrets
+import stat
 import sys
 
-path = Path(sys.argv[1])
+path = Path(sys.argv[1]).absolute()
 start, end = sys.argv[3], sys.argv[4]
-existing = path.read_bytes().decode("utf-8") if path.exists() else ""
+flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+parent_fd = os.open(path.anchor, flags)
+for part in path.parent.parts[1:]:
+    next_fd = os.open(part, flags, dir_fd=parent_fd)
+    os.close(parent_fd)
+    parent_fd = next_fd
+
+def read_instructions(name):
+    try:
+        fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent_fd)
+    except FileNotFoundError:
+        return "", 0o644
+    with os.fdopen(fd, "rb") as handle:
+        mode = os.fstat(handle.fileno()).st_mode
+        if not stat.S_ISREG(mode):
+            raise ValueError(f"Expected regular instruction file: {name}")
+        return handle.read().decode("utf-8"), stat.S_IMODE(mode)
+
+def atomic_write(name, content, mode):
+    temporary = ".toolkit-instructions-" + secrets.token_hex(16)
+    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode, dir_fd=parent_fd)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(content.encode("utf-8"))
+        os.replace(temporary, name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+    finally:
+        try:
+            os.unlink(temporary, dir_fd=parent_fd)
+        except FileNotFoundError:
+            pass
+
+existing, mode = read_instructions(path.name)
 lines = existing.splitlines(keepends=True)
 starts = [i for i, line in enumerate(lines) if line.rstrip("\r\n") == start]
 ends = [i for i, line in enumerate(lines) if line.rstrip("\r\n") == end]
 if (starts or ends) and (len(starts) != 1 or len(ends) != 1 or starts[0] >= ends[0]):
     sys.exit(f"Invalid toolkit block markers in {path}.")
-if sys.argv[5] == "check":
+if sys.argv[5] != "write":
     sys.exit(0)
 
 buffer = Path(sys.argv[2]).read_text(encoding="utf-8").strip()
@@ -752,8 +851,8 @@ else:
 
 if updated != existing:
     if existing:
-        path.with_name(path.name + ".bak").write_bytes(existing.encode("utf-8"))
-    path.write_bytes(updated.encode("utf-8"))
+        atomic_write(path.name + ".bak", existing, 0o600)
+    atomic_write(path.name, updated, mode)
 
 if path.name == "GEMINI.md" and len(updated) > 12000:
     print(f"  [Warning] {path.name} exceeds the recommended 12,000-character budget.", file=sys.stderr)
@@ -803,7 +902,7 @@ run_cleanup() {
 
   local -a cmd=(python3 "$MANIFEST_HELPER" clean --root "$MANIFEST_ROOT")
   [[ "$FORCE" == true ]] && cmd+=(--force)
-  if [[ "$MODE" == "workspace" || "$TARGET_TOOL" == "codex" ]]; then
+  if [[ "$MODE" == "workspace" || "$TARGET_TOOL" != "antigravity" ]]; then
     # Release only this tool's claim, including when .agents is shared.
     cmd+=(--tool "$TARGET_TOOL")
     if [[ "$TARGET_TOOL" != "antigravity" ]]; then
@@ -870,7 +969,14 @@ main() {
   fi
 
   setup_scope_paths
-  render_instructions check
+  if [[ "$DESCRIBE_GLOBAL" == true ]]; then
+    return
+  fi
+  if [[ "$CLEAN" == true && "${#SELECTORS[@]}" -eq 0 ]]; then
+    render_instructions clear-check
+  else
+    render_instructions check
+  fi
 
   echo "AI Agent Toolkit Context"
   echo "Scope : $SCOPE_LABEL"

@@ -23,7 +23,7 @@ flowchart TD
 
     subgraph Targets["Supported AI Coding Environments"]
         AGY["Google Antigravity IDE<br/>(<project>/.agents/ & ~/.gemini/)"]
-        CLAUDE["Claude Code<br/>(<project>/.claude/)"]
+        CLAUDE["Claude Code<br/>(<project>/.claude/ & ~/.claude/)"]
         CODEX["OpenAI Codex<br/>(<project>/.agents/skills/)"]
         CURSOR["Cursor<br/>(<project>/.agents/skills/)"]
     end
@@ -31,7 +31,7 @@ flowchart TD
     SSoT --> CLI
     CLI <--> MAN
     CLI -->|Workspace & Global Sync| AGY
-    CLI -->|Workspace Skills| CLAUDE
+    CLI -->|Workspace & Global Skills| CLAUDE
     CLI -->|Workspace Skills & Global Sync| CODEX
     CLI -->|Workspace Skills| CURSOR
 ```
@@ -104,6 +104,7 @@ Rules enforce hard invariants, coding standards, and negative boundaries (what t
 | **Claude Code** | `<project>/.claude/skills/` | Skills (`skills/`) only | Installs skills into `.claude/`; rules skipped cleanly. |
 | **Global Scope (Antigravity)** | `~/.gemini/` | Global rules and skills | Appends managed rules inside `<!-- AGENT_TOOLKIT_START -->` block in `~/.gemini/GEMINI.md`. |
 | **Global Scope (Codex)** | `~/.agents/skills/` and `${CODEX_HOME:-$HOME/.codex}/AGENTS.md` | Global skills and instructions | Updates the toolkit block and preserves surrounding instructions. |
+| **Global Scope (Claude Code)** | `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/` | Global skills | Tracks and removes toolkit-owned skills through the Claude manifest. |
 
 ### Three-Way Ownership & Hash Safety State Machine
 
